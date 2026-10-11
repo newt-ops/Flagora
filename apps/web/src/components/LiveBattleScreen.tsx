@@ -161,7 +161,7 @@ export function LiveBattleScreen({
     <div className="relative flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
       {isReconnecting && (
         <div
-          className="fixed top-[calc(var(--app-safe-top,0px)+0.75rem)] z-50 flex items-center gap-2 rounded-full bg-tg-button/90 px-4 py-1.5 text-xs font-bold text-tg-button-text shadow-lg backdrop-blur-sm"
+          className="fixed top-[calc(var(--app-safe-top,0px)+0.75rem)] z-50 flex items-center gap-2 rounded-full bg-tg-button/90 px-4 py-1.5 text-xs font-bold text-tg-button-text shadow-lg backdrop-blur-sm animate-float animate-pulse-glow"
         >
           <WifiOff className="h-3.5 w-3.5 animate-pulse" />
           <span>Reconnecting to battle...</span>
@@ -185,7 +185,12 @@ export function LiveBattleScreen({
                 <div className="mt-1 flex items-center gap-1.5">
                   <span className="text-xl font-black text-tg-text">{runningScore}</span>
                   {comboCount > 0 && (
-                    <span className="flex items-center gap-1 rounded bg-tg-button/20 px-1.5 py-0.5 text-[10px] font-extrabold text-tg-button">
+                    <span
+                      key={comboCount}
+                      className={`flex items-center gap-1 rounded bg-tg-button/20 px-1.5 py-0.5 text-[10px] font-extrabold text-tg-button animate-scale-pop ${
+                        comboMultiplier >= 1.3 ? 'ring-1 ring-tg-button/40 animate-pulse-glow' : ''
+                      }`}
+                    >
                       <Zap className="h-2.5 w-2.5" />
                       {comboMultiplier}x
                     </span>
@@ -195,7 +200,7 @@ export function LiveBattleScreen({
 
               <div className="flex flex-col items-end">
                 <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-tg-hint">
-                  <Trophy className="h-3 w-3 text-tg-button" />
+                  <Trophy className="h-3 w-3 text-tg-button animate-float" />
                   Live Leaders
                 </span>
                 <div className="mt-1 flex items-center gap-2">
@@ -239,7 +244,12 @@ export function LiveBattleScreen({
               <div className="mt-1 flex items-center gap-1.5">
                 <span className="text-lg font-black text-tg-text">{runningScore}</span>
                 {comboCount > 0 && (
-                  <span className="flex items-center gap-1 rounded bg-tg-button/20 px-1.5 py-0.5 text-[10px] font-extrabold text-tg-button">
+                  <span
+                    key={comboCount}
+                    className={`flex items-center gap-1 rounded bg-tg-button/20 px-1.5 py-0.5 text-[10px] font-extrabold text-tg-button animate-scale-pop ${
+                      comboMultiplier >= 1.3 ? 'ring-1 ring-tg-button/40 animate-pulse-glow' : ''
+                    }`}
+                  >
                     <Zap className="h-2.5 w-2.5" />
                     {comboMultiplier}x
                   </span>
@@ -264,8 +274,8 @@ export function LiveBattleScreen({
                   <span
                     className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black ${
                       opponentProgress.correct
-                        ? 'bg-tg-button/20 text-tg-button'
-                        : 'bg-tg-destructive/15 text-tg-destructive'
+                        ? 'bg-tg-button/20 text-tg-button animate-scale-pop'
+                        : 'bg-tg-destructive/15 text-tg-destructive animate-shake-subtle'
                     }`}
                   >
                     {opponentProgress.correct ? '+' : 'x'}
@@ -279,7 +289,7 @@ export function LiveBattleScreen({
           </div>
         )}
 
-        <div>
+        <div className={timerSeconds <= 10 ? 'animate-pulse-urgent rounded-xl p-1 -m-1' : ''}>
           <div className="flex items-center justify-between text-[11px] font-medium text-tg-hint">
             <span className="flex items-center gap-1">
               <Timer className="h-3 w-3" />
@@ -502,14 +512,17 @@ export function LiveBattleScreen({
       ) : (
         currentFlag && (
           <div className="flex w-full flex-col items-center gap-4">
-            <div className="flex aspect-[3/2] w-full items-center justify-center overflow-hidden rounded-2xl bg-tg-section p-6 shadow-sm">
+            <div
+              key={currentFlagIndex}
+              className="flex aspect-[3/2] w-full items-center justify-center overflow-hidden rounded-2xl bg-tg-section p-6 shadow-sm animate-slide-up"
+            >
               <span
                 className={`fi fi-${currentFlag.isoCode.toLowerCase()} text-8xl rounded-lg shadow-sm`}
               />
             </div>
 
             {feedback && (
-              <div className="flex items-center gap-2 text-xs font-semibold">
+              <div className="flex items-center gap-2 text-xs font-semibold animate-scale-pop">
                 {feedback.correct ? (
                   <>
                     <span className="flex items-center gap-1 text-tg-button">
@@ -519,7 +532,7 @@ export function LiveBattleScreen({
                     {feedback.isTier4 && (
                       <span
                         data-testid="tier4-mastery-flourish"
-                        className="inline-flex items-center gap-1 rounded-full bg-tg-button/15 px-2 py-0.5 text-[11px] font-bold text-tg-button"
+                        className="inline-flex items-center gap-1 rounded-full bg-tg-button/15 px-2 py-0.5 text-[11px] font-bold text-tg-button animate-float"
                       >
                         <Sparkles className="h-3 w-3 text-tg-button" />
                         <span>Tier 4 Mastery</span>
@@ -543,10 +556,10 @@ export function LiveBattleScreen({
                 if (isSelected) {
                   if (feedback) {
                     buttonStyle = feedback.correct
-                      ? 'bg-tg-button text-tg-button-text font-bold'
-                      : 'bg-tg-destructive text-tg-button-text font-bold';
+                      ? 'bg-tg-button text-tg-button-text font-bold animate-scale-pop shadow-md ring-2 ring-tg-button/50'
+                      : 'bg-tg-destructive text-tg-button-text font-bold animate-shake-subtle ring-2 ring-tg-destructive/50';
                   } else {
-                    buttonStyle = 'bg-tg-button text-tg-button-text font-bold';
+                    buttonStyle = 'bg-tg-button text-tg-button-text font-bold animate-scale-pop';
                   }
                 }
 
@@ -556,7 +569,7 @@ export function LiveBattleScreen({
                     type="button"
                     onClick={() => void handleSelectChoice(choice)}
                     disabled={isSubmitting || timeExpired}
-                    className={`flex min-h-14 items-center justify-center rounded-xl p-3 text-center text-sm font-medium transition-opacity duration-150 active:opacity-75 disabled:pointer-events-none ${buttonStyle}`}
+                    className={`flex min-h-14 items-center justify-center rounded-xl p-3 text-center text-sm font-medium transition-all duration-150 active:scale-[0.98] disabled:pointer-events-none ${buttonStyle}`}
                   >
                     <span className="line-clamp-2">{choice}</span>
                   </button>

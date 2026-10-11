@@ -91,7 +91,6 @@ export function ProfileCard({
   const seasonName = formatSeasonName(rankStatus?.season);
   const TierIcon = getTierIcon(currentTier);
 
-  // Level & XP Progress calculation (500 XP per level config)
   const currentLevel = profile.level;
   const xpInCurrentLevel = profile.xp % 500;
   const xpProgressPercent = Math.min(100, Math.max(0, Math.round((xpInCurrentLevel / 500) * 100)));
@@ -140,9 +139,7 @@ export function ProfileCard({
 
   return (
     <div className="flex w-full max-w-md mx-auto flex-col gap-2.5 text-tg-text">
-      {/* 1. Hero Profile Card - Clean Apple Inset */}
       <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-5 text-center shadow-none">
-        {/* Avatar */}
         <div className="relative flex h-16 w-16 items-center justify-center">
           {profile.photoUrl ? (
             <img
@@ -162,7 +159,6 @@ export function ProfileCard({
           )}
         </div>
 
-        {/* Name & Checkmark */}
         <div className="mt-3 flex items-center justify-center gap-1.5 flex-wrap">
           <h2 className="text-lg font-bold text-tg-text">
             {profile.firstName || displayName}
@@ -178,21 +174,23 @@ export function ProfileCard({
           </p>
         )}
 
-        {/* Level & XP Progression */}
         <div className="w-full mt-4">
           <div className="flex items-center justify-between text-xs text-tg-hint mb-1.5">
             <span>Level {currentLevel}</span>
             <span>{xpInCurrentLevel} / 500 XP</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-tg-secondary-bg overflow-hidden">
-            <div
-              className="h-full rounded-full bg-tg-button transition-all duration-300"
-              style={{ width: `${xpProgressPercent}%` }}
+          <svg className="h-1.5 w-full overflow-hidden rounded-full bg-tg-secondary-bg">
+            <rect
+              x="0"
+              y="0"
+              width={`${xpProgressPercent}%`}
+              height="100%"
+              rx="3"
+              className="fill-tg-button transition-all duration-300"
             />
-          </div>
+          </svg>
         </div>
 
-        {/* Pro Status or 1-Star Upgrade CTA */}
         {proStatus?.isActive ? (
           <div className="mt-3.5 flex items-center justify-center gap-1.5 text-xs text-tg-hint">
             <Crown className="h-3.5 w-3.5 text-tg-button" />
@@ -224,7 +222,6 @@ export function ProfileCard({
         )}
       </div>
 
-      {/* 2. Ranked Season Card */}
       <div
         data-testid="profile-rank-card"
         className="flex w-full items-center justify-between rounded-2xl bg-tg-section p-4 shadow-none"
@@ -256,7 +253,6 @@ export function ProfileCard({
         </div>
       </div>
 
-      {/* 3. Performance Matrix (4 Metric Cells) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="flex flex-col items-center rounded-2xl bg-tg-section p-3 text-center shadow-none">
           <div className="flex items-center gap-1.5 text-tg-hint">
@@ -291,7 +287,6 @@ export function ProfileCard({
         </div>
       </div>
 
-      {/* 4. Daily Streak Tracker */}
       <div className="flex w-full items-center justify-between rounded-2xl bg-tg-section p-4 shadow-none">
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tg-secondary-bg text-tg-button">
@@ -325,7 +320,6 @@ export function ProfileCard({
         </div>
       )}
 
-      {/* 5. Invite Friends */}
       <div className="flex w-full flex-col rounded-2xl bg-tg-section p-4 text-left shadow-none">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -372,7 +366,6 @@ export function ProfileCard({
         </div>
       </div>
 
-      {/* Conditionally rendered Game Actions for standalone embedding */}
       {showGameActions && (
         <div className="mt-2 flex flex-col gap-2.5">
           <div className="rounded-2xl bg-tg-section p-4">
@@ -489,7 +482,6 @@ export function ProfileCard({
         </div>
       )}
 
-      {/* Flagora Pro Upgrade Modal */}
       <ProUpgradeModal
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}

@@ -49,7 +49,7 @@ describe('ProfileCard UI Rendering (Apple Human Interface)', () => {
     lastName: 'Al-Mansoor',
     username: 'tariq_flag',
     pins: 850,
-    xp: 650, // 650 XP -> Level 2, 150/500 in level (30%)
+    xp: 650,
     level: 2,
     currentStreak: 4,
     longestStreak: 9,
@@ -70,7 +70,7 @@ describe('ProfileCard UI Rendering (Apple Human Interface)', () => {
 
     assert.ok(html.includes('Level 2'));
     assert.ok(html.includes('150 / 500 XP'));
-    assert.ok(html.includes('width:30%'));
+    assert.ok(html.includes('30%'));
   });
 
   it('renders 1-Star Get Verified upgrade card when user is free', () => {
@@ -127,13 +127,13 @@ describe('ProfileCard UI Rendering (Apple Human Interface)', () => {
       }),
     );
 
-    assert.ok(html.includes('850')); // Pins
+    assert.ok(html.includes('850'));
     assert.ok(html.includes('Pins'));
-    assert.ok(html.includes('650')); // Total XP
+    assert.ok(html.includes('650'));
     assert.ok(html.includes('Total XP'));
-    assert.ok(html.includes('1,120')); // Best Score
+    assert.ok(html.includes('1,120'));
     assert.ok(html.includes('Best Score'));
-    assert.ok(html.includes('25')); // Games Played
+    assert.ok(html.includes('25'));
     assert.ok(html.includes('Games'));
   });
 

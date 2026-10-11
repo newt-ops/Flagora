@@ -4,7 +4,6 @@ import { startRun } from './client.js';
 
 describe('startRun API Client', () => {
   it('safely handles circular object arguments without throwing JSON serialization error', async () => {
-    // Construct a circular structure resembling a React SyntheticEvent with DOM nodes
     const circularObj: Record<string, unknown> = {
       type: 'click',
       target: {},
@@ -33,7 +32,6 @@ describe('startRun API Client', () => {
     try {
       const result = await startRun('test-token', circularObj as unknown as undefined);
       assert.equal(result.runId, 'run-123');
-      // Verify body was undefined or not serialized with circular object
       assert.equal(interceptedBody, undefined);
     } finally {
       globalThis.fetch = originalFetch;

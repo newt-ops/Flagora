@@ -9,7 +9,6 @@ export function VerifiedBadge({
   size,
   title = 'Verified',
 }: VerifiedBadgeProps) {
-  const style = size ? { width: size, height: size } : undefined;
 
   return (
     <svg
@@ -17,7 +16,8 @@ export function VerifiedBadge({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`inline-block select-none align-middle ${className}`}
-      style={style}
+      width={size}
+      height={size}
       aria-label={title}
       role="img"
     >

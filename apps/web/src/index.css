@@ -138,3 +138,190 @@ body {
 .tg-button:active {
   opacity: 0.85;
 }
+
+@keyframes scalePop {
+  0% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shakeSubtle {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(36, 129, 204, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 8px rgba(36, 129, 204, 0);
+  }
+}
+
+@keyframes pulseGlowDestructive {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes countdownPop {
+  0% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+  55% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes podiumRiseFirst {
+  0% {
+    opacity: 0;
+    transform: translateY(32px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes podiumRiseSecond {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes podiumRiseThird {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rippleRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes liveBreath {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.animate-scale-pop {
+  animation: scalePop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-shake-subtle {
+  animation: shakeSubtle 0.35s ease-in-out;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.2s infinite ease-in-out;
+}
+
+.animate-pulse-urgent {
+  animation: pulseGlowDestructive 1s infinite ease-in-out;
+}
+
+.animate-float {
+  animation: floatSlow 3s ease-in-out infinite;
+}
+
+.animate-countdown-pop {
+  animation: countdownPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-podium-first {
+  animation: podiumRiseFirst 0.6s cubic-bezier(0.34, 1.25, 0.64, 1) 0.05s both;
+}
+
+.animate-podium-second {
+  animation: podiumRiseSecond 0.5s cubic-bezier(0.34, 1.25, 0.64, 1) 0.18s both;
+}
+
+.animate-podium-third {
+  animation: podiumRiseThird 0.45s cubic-bezier(0.34, 1.25, 0.64, 1) 0.28s both;
+}
+
+.animate-ripple {
+  animation: rippleRing 1.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.animate-live-breath {
+  animation: liveBreath 1.5s ease-in-out infinite;
+}
+

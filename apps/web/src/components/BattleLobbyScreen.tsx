@@ -116,14 +116,20 @@ export function BattleLobbyScreen({
   return (
     <div className="relative flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
       {countdown !== null && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-tg-bg/90 backdrop-blur-md overflow-hidden">
-          <p className="relative z-10 text-xs font-bold uppercase tracking-widest text-tg-button">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-tg-bg/90 backdrop-blur-md overflow-hidden animate-scale-pop">
+          <p className="relative z-10 text-xs font-bold uppercase tracking-widest text-tg-button animate-pulse-glow">
             Battle Starting In
           </p>
-          <div className="relative z-10 mt-4 flex h-28 w-28 items-center justify-center rounded-full bg-tg-button/20 text-6xl font-black text-tg-button animate-pulse">
-            {countdown > 0 ? countdown : 'GO!'}
+          <div className="relative z-10 mt-6 flex h-28 w-28 items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-tg-button/20 animate-ripple" />
+            <div
+              key={countdown}
+              className="flex h-28 w-28 items-center justify-center rounded-full bg-tg-button/20 text-6xl font-black text-tg-button shadow-lg ring-2 ring-tg-button/40 animate-countdown-pop"
+            >
+              {countdown > 0 ? countdown : 'GO!'}
+            </div>
           </div>
-          <p className="relative z-10 mt-4 text-xs font-semibold text-tg-hint">Get Ready!</p>
+          <p className="relative z-10 mt-6 text-xs font-semibold text-tg-hint animate-live-breath">Get Ready!</p>
         </div>
       )}
 
@@ -187,7 +193,7 @@ export function BattleLobbyScreen({
               return (
                 <div
                   key={p.userId || idx}
-                  className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-3 relative"
+                  className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-3 relative animate-scale-pop"
                 >
                   <div className="relative flex h-12 w-12 items-center justify-center">
                     {p.photoUrl ? (
@@ -202,7 +208,7 @@ export function BattleLobbyScreen({
                       </div>
                     )}
                     {isPlayerHost && (
-                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-tg-button text-tg-button-text ring-2 ring-tg-section">
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-tg-button text-tg-button-text ring-2 ring-tg-section animate-float">
                         <Crown className="h-3 w-3" />
                       </span>
                     )}
@@ -230,7 +236,7 @@ export function BattleLobbyScreen({
             {Array.from({ length: Math.max(0, maxPlayers - participants.length) }).map((_, i) => (
               <div
                 key={`empty-${i}`}
-                className="flex flex-col items-center justify-center rounded-xl border border-dashed border-tg-separator p-4 text-center"
+                className="flex flex-col items-center justify-center rounded-xl border border-dashed border-tg-separator p-4 text-center animate-live-breath"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-tg-secondary-bg text-tg-hint">
                   <User className="h-5 w-5" />
@@ -321,9 +327,11 @@ export function BattleLobbyScreen({
           </div>
         </div>
       ) : (
-        <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-5 text-center shadow-sm">
+        <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-5 text-center shadow-sm animate-scale-pop">
           <div className="grid w-full grid-cols-2 gap-3">
-            <div className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4">
+            <div className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
+              challengerIsReady ? 'ring-1 ring-tg-button/40 bg-tg-button/10 animate-pulse-glow' : ''
+            }`}>
               <div className="relative flex h-14 w-14 items-center justify-center">
                 {challengerPhoto ? (
                   <img
@@ -346,7 +354,7 @@ export function BattleLobbyScreen({
               <span
                 className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                   challengerIsReady
-                    ? 'bg-tg-button/15 text-tg-button'
+                    ? 'bg-tg-button/15 text-tg-button font-bold'
                     : 'bg-tg-hint/15 text-tg-hint'
                 }`}
               >
@@ -354,7 +362,9 @@ export function BattleLobbyScreen({
               </span>
             </div>
 
-            <div className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4">
+            <div className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
+              opponentIsReady ? 'ring-1 ring-tg-button/40 bg-tg-button/10 animate-pulse-glow' : ''
+            }`}>
               {hasOpponent ? (
                 <>
                   <div className="relative flex h-14 w-14 items-center justify-center">
@@ -379,7 +389,7 @@ export function BattleLobbyScreen({
                   <span
                     className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                       opponentIsReady
-                        ? 'bg-tg-button/15 text-tg-button'
+                        ? 'bg-tg-button/15 text-tg-button font-bold'
                         : 'bg-tg-hint/15 text-tg-hint'
                     }`}
                   >
@@ -387,7 +397,7 @@ export function BattleLobbyScreen({
                   </span>
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center py-2 text-center">
+                <div className="flex flex-col items-center justify-center py-2 text-center animate-live-breath">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-tg-separator text-tg-hint">
                     <User className="h-6 w-6" />
                   </div>

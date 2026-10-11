@@ -11,6 +11,8 @@ import {
 } from './battleHelpers.js';
 import { getRatingDeltaDisplay, checkTierPromotion } from './rankHelpers.js';
 import { TierBadge } from './TierBadge.js';
+import { ConfettiCanvas } from './ConfettiCanvas.js';
+import { AnimatedCounter } from './AnimatedCounter.js';
 
 interface BattleResultScreenProps {
   battleId: string;
@@ -67,11 +69,13 @@ export function BattleResultScreen({
     const thirdPlace = podium.find((p) => p.rank === 3) || podium[2];
     const runnersUp = podium.filter((p) => p.rank > 3);
     const myResult = podium.find((p) => p.userId === currentUserId);
+    const isFirstPlaceMe = myResult?.rank === 1;
 
     return (
       <div className="flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
-        <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-6 text-center shadow-sm">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button ring-1 ring-tg-button/20 shadow-sm">
+        {isFirstPlaceMe && <ConfettiCanvas active={true} />}
+        <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-6 text-center shadow-sm animate-scale-pop">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button ring-1 ring-tg-button/20 shadow-sm animate-float">
             <Trophy className="h-8 w-8" />
           </div>
 
@@ -83,10 +87,10 @@ export function BattleResultScreen({
           </p>
 
           {myResult && (
-            <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2 text-xs font-semibold">
+            <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2 text-xs font-semibold animate-scale-pop">
               <span className="text-tg-hint">Your Result:</span>
               <span className="flex items-center gap-1 font-bold text-tg-button">
-                {myResult.rank === 1 && <Crown className="h-3.5 w-3.5 text-tg-button" />}
+                {myResult.rank === 1 && <Crown className="h-3.5 w-3.5 text-tg-button animate-float" />}
                 {myResult.rank === 2 && <Medal className="h-3.5 w-3.5 text-tg-button" />}
                 {myResult.rank === 3 && <Award className="h-3.5 w-3.5 text-tg-button" />}
                 <span>
@@ -100,10 +104,13 @@ export function BattleResultScreen({
                 </span>
               </span>
               <span className="text-tg-hint">•</span>
-              <span className="font-bold text-tg-text">{myResult.score} pts</span>
+              <span className="font-bold text-tg-text">
+                <AnimatedCounter value={myResult.score} /> pts
+              </span>
               <span className="text-tg-hint">•</span>
               <span className="flex items-center gap-1 font-bold text-tg-button">
-                <span>+{myResult.pinsEarned}</span>
+                <span>+</span>
+                <AnimatedCounter value={myResult.pinsEarned} />
                 <Coins className="h-3.5 w-3.5 text-tg-button" />
               </span>
             </div>
@@ -111,7 +118,7 @@ export function BattleResultScreen({
 
           <div className="mt-6 flex w-full items-end justify-center gap-2 pt-8">
             {secondPlace && (
-              <div className="flex flex-1 flex-col items-center">
+              <div className="flex flex-1 flex-col items-center animate-podium-second">
                 <div className="relative mb-2 flex flex-col items-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tg-button/20 text-tg-button">
                     {secondPlace.photoUrl ? (
@@ -143,12 +150,12 @@ export function BattleResultScreen({
             )}
 
             {firstPlace && (
-              <div className="flex flex-1 flex-col items-center">
+              <div className="flex flex-1 flex-col items-center animate-podium-first">
                 <div className="relative mb-2 flex flex-col items-center">
-                  <span className="mb-0.5 text-tg-button">
+                  <span className="mb-0.5 text-tg-button animate-float">
                     <Crown className="h-5 w-5" />
                   </span>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-tg-button-text ring-2 ring-tg-button ring-offset-2 ring-offset-tg-section">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-tg-button-text ring-2 ring-tg-button ring-offset-2 ring-offset-tg-section animate-pulse-glow">
                     {firstPlace.photoUrl ? (
                       <img
                         src={firstPlace.photoUrl}
@@ -178,7 +185,7 @@ export function BattleResultScreen({
             )}
 
             {thirdPlace && (
-              <div className="flex flex-1 flex-col items-center">
+              <div className="flex flex-1 flex-col items-center animate-podium-third">
                 <div className="relative mb-2 flex flex-col items-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tg-button/10 text-tg-button">
                     {thirdPlace.photoUrl ? (
@@ -211,7 +218,7 @@ export function BattleResultScreen({
           </div>
 
           {runnersUp.length > 0 && (
-            <div className="mt-4 flex w-full flex-col gap-1.5 rounded-xl bg-tg-secondary-bg p-3">
+            <div className="mt-4 flex w-full flex-col gap-1.5 rounded-xl bg-tg-secondary-bg p-3 animate-slide-up">
               <span className="text-left text-[10px] font-bold uppercase tracking-wider text-tg-hint">
                 Other Standings
               </span>
@@ -381,20 +388,24 @@ export function BattleResultScreen({
     setTimeout(() => setCopiedShare(false), 2000);
   };
 
+  const viewerWon = (isChallengerViewer && challengerWon) || (isOpponentViewer && opponentWon);
+  const show1v1Confetti = viewerWon || promotionMoment.isPromoted;
+
   return (
     <div className="flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
+      {show1v1Confetti && <ConfettiCanvas active={true} />}
       {promotionMoment.isPromoted && promotionMoment.newTier && (
         <div
           data-testid="battle-promotion-banner"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-tg-button/15 p-3.5 text-sm font-bold text-tg-button"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-tg-button/15 p-3.5 text-sm font-bold text-tg-button animate-scale-pop animate-pulse-glow"
         >
           <Sparkles className="h-4 w-4 text-tg-button" />
           <span>Promoted to {promotionMoment.newTier}!</span>
         </div>
       )}
 
-      <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-6 text-center shadow-sm">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button ring-1 ring-tg-button/20 shadow-sm">
+      <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-6 text-center shadow-sm animate-scale-pop">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button ring-1 ring-tg-button/20 shadow-sm animate-float">
           <Trophy className="h-8 w-8" />
         </div>
 
@@ -406,7 +417,7 @@ export function BattleResultScreen({
         {viewerResult && viewerDelta && (
           <div
             data-testid="battle-rating-change"
-            className="mt-3.5 flex items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-3.5 py-1.5 text-xs font-semibold"
+            className="mt-3.5 flex items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-3.5 py-1.5 text-xs font-semibold animate-scale-pop"
           >
             <span className="text-tg-hint">Rating:</span>
             <span className="font-bold text-tg-text">
@@ -424,7 +435,7 @@ export function BattleResultScreen({
         <div className="mt-6 grid w-full grid-cols-2 gap-3">
           <div
             className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              challengerWon ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm' : ''
+              challengerWon ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm animate-pulse-glow' : 'opacity-90'
             }`}
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
@@ -442,7 +453,7 @@ export function BattleResultScreen({
                 </div>
               )}
               {challengerWon && (
-                <span className="absolute -bottom-1 -right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tg-button text-tg-button-text shadow-sm ring-2 ring-tg-section">
+                <span className="absolute -bottom-1 -right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tg-button text-tg-button-text shadow-sm ring-2 ring-tg-section animate-float">
                   <Crown className="h-3.5 w-3.5" />
                 </span>
               )}
@@ -457,7 +468,7 @@ export function BattleResultScreen({
 
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-2xl font-extrabold text-tg-text">
-                {challengerScore.toLocaleString()}
+                <AnimatedCounter value={challengerScore} />
               </span>
               <span className="text-[11px] font-semibold text-tg-hint">pts</span>
             </div>
@@ -488,7 +499,7 @@ export function BattleResultScreen({
 
           <div
             className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              opponentWon ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm' : ''
+              opponentWon ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm animate-pulse-glow' : 'opacity-90'
             }`}
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
@@ -506,7 +517,7 @@ export function BattleResultScreen({
                 </div>
               )}
               {opponentWon && (
-                <span className="absolute -bottom-1 -right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tg-button text-tg-button-text shadow-sm ring-2 ring-tg-section">
+                <span className="absolute -bottom-1 -right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tg-button text-tg-button-text shadow-sm ring-2 ring-tg-section animate-float">
                   <Crown className="h-3.5 w-3.5" />
                 </span>
               )}
@@ -521,7 +532,7 @@ export function BattleResultScreen({
 
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-2xl font-extrabold text-tg-text">
-                {opponentScore.toLocaleString()}
+                <AnimatedCounter value={opponentScore} />
               </span>
               <span className="text-[11px] font-semibold text-tg-hint">pts</span>
             </div>

@@ -137,7 +137,7 @@ export function PlayScreen({
           </div>
 
           <div className="flex items-center gap-1.5 rounded-full bg-tg-secondary-bg px-2.5 py-1 text-xs font-bold text-tg-text">
-            <Flame className="h-3.5 w-3.5 fill-current text-tg-button" />
+            <Flame className="h-3.5 w-3.5 fill-current text-tg-button animate-float" />
             <span>{profile.currentStreak}</span>
           </div>
         </div>
@@ -213,7 +213,7 @@ export function PlayScreen({
               Completed
             </span>
           ) : (
-            <span className="rounded-full bg-tg-button/15 px-2.5 py-0.5 text-[11px] font-bold text-tg-button shrink-0">
+            <span className="rounded-full bg-tg-button/15 px-2.5 py-0.5 text-[11px] font-bold text-tg-button shrink-0 animate-pulse-glow">
               Available
             </span>
           )}
@@ -276,7 +276,7 @@ export function PlayScreen({
             type="button"
             onClick={() => onPlayPractice?.()}
             disabled={isStarting}
-            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
+            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
             <Play className={`h-3.5 w-3.5 fill-current ${isStarting ? 'animate-spin' : ''}`} />
             <span>{isStarting ? 'Starting...' : 'Play Solo'}</span>
@@ -287,7 +287,7 @@ export function PlayScreen({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tg-button/10 text-tg-button">
-                <Globe className="h-5 w-5" />
+                <Globe className="h-5 w-5 animate-float" />
               </div>
               <div className="text-left min-w-0">
                 <h3 className="text-sm font-bold text-tg-text truncate">Custom Mode</h3>
@@ -298,7 +298,7 @@ export function PlayScreen({
           <button
             type="button"
             onClick={() => setIsCustomModalOpen(true)}
-            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg font-bold text-tg-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75"
+            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg font-bold text-tg-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75"
           >
             <Sliders className="h-3.5 w-3.5 text-tg-button" />
             <span>Customize & Play</span>
@@ -309,7 +309,7 @@ export function PlayScreen({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tg-button/10 text-tg-button">
-                <Zap className="h-5 w-5" />
+                <Zap className="h-5 w-5 animate-float text-tg-button" />
               </div>
               <div className="text-left min-w-0">
                 <h3 className="text-sm font-bold text-tg-text truncate">Live 1v1 Battle</h3>
@@ -321,7 +321,7 @@ export function PlayScreen({
             type="button"
             onClick={onBattleFriend}
             disabled={isStartingBattle}
-            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
+            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
             <Zap className={`h-3.5 w-3.5 ${isStartingBattle ? 'animate-spin' : ''}`} />
             <span>{isStartingBattle ? 'Creating Battle...' : 'Battle Live'}</span>
@@ -332,7 +332,7 @@ export function PlayScreen({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tg-button/10 text-tg-button">
-                <Swords className="h-5 w-5" />
+                <Swords className="h-5 w-5 animate-float" />
               </div>
               <div className="text-left min-w-0">
                 <h3 className="text-sm font-bold text-tg-text truncate">Duel a Friend</h3>
@@ -344,7 +344,7 @@ export function PlayScreen({
             type="button"
             onClick={onChallengeFriend}
             disabled={isStartingChallenge}
-            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
+            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
             <Swords className={`h-3.5 w-3.5 ${isStartingChallenge ? 'animate-spin' : ''}`} />
             <span>{isStartingChallenge ? 'Creating Challenge...' : 'Start Duel'}</span>
@@ -356,7 +356,7 @@ export function PlayScreen({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tg-button/10 text-tg-button">
-                  <Users className="h-5 w-5" />
+                  <Users className="h-5 w-5 animate-float" />
                 </div>
                 <div className="text-left min-w-0">
                   <h3 className="text-sm font-bold text-tg-text truncate">Group Battle (2–15 Players)</h3>
@@ -368,7 +368,7 @@ export function PlayScreen({
               type="button"
               onClick={onStartGroupBattle}
               disabled={isStartingGroupBattle}
-              className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
+              className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
             >
               <Users className={`h-3.5 w-3.5 ${isStartingGroupBattle ? 'animate-spin' : ''}`} />
               <span>{isStartingGroupBattle ? 'Creating Group Lobby...' : 'Host Group Battle'}</span>

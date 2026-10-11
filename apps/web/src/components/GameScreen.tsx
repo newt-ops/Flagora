@@ -185,7 +185,12 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
 
           <div className="flex items-center gap-2">
             {comboCount > 0 && (
-              <div className="flex items-center gap-1.5 rounded-full bg-tg-button/15 px-2.5 py-0.5 text-xs font-bold text-tg-button">
+              <div
+                key={comboCount}
+                className={`flex items-center gap-1.5 rounded-full bg-tg-button/15 px-2.5 py-0.5 text-xs font-bold text-tg-button animate-scale-pop ${
+                  comboMultiplier >= 1.3 ? 'ring-1 ring-tg-button/40 animate-pulse-glow' : ''
+                }`}
+              >
                 <Zap className="h-3 w-3" />
                 <span>{comboMultiplier}x</span>
               </div>
@@ -198,7 +203,7 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
           </div>
         </div>
 
-        <div className="mt-3">
+        <div className={`mt-3 ${timerSeconds <= 10 ? 'animate-pulse-urgent rounded-xl p-1 -m-1' : ''}`}>
           <div className="flex items-center justify-between text-xs font-medium text-tg-hint">
             <span className="flex items-center gap-1">
               <Timer className="h-3.5 w-3.5" />
@@ -227,7 +232,7 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
       </div>
 
       {timeExpired && (
-        <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-tg-destructive/15 p-3 text-sm font-semibold text-tg-destructive">
+        <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-tg-destructive/15 p-3 text-sm font-semibold text-tg-destructive animate-scale-pop">
           <AlertCircle className="h-4 w-4" />
           <span>Time Expired! Wrapping up run...</span>
         </div>
@@ -235,14 +240,17 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
 
       {currentFlag && !timeExpired && (
         <div className="flex w-full flex-col items-center gap-4">
-          <div className="flex aspect-[3/2] w-full items-center justify-center overflow-hidden rounded-2xl bg-tg-section p-6 shadow-sm">
+          <div
+            key={currentFlagIndex}
+            className="flex aspect-[3/2] w-full items-center justify-center overflow-hidden rounded-2xl bg-tg-section p-6 shadow-sm animate-slide-up"
+          >
             <span
               className={`fi fi-${currentFlag.isoCode.toLowerCase()} text-8xl rounded-lg shadow-sm`}
             />
           </div>
 
           {feedback && (
-            <div className="flex items-center gap-2 text-xs font-semibold">
+            <div className="flex items-center gap-2 text-xs font-semibold animate-scale-pop">
               {feedback.correct ? (
                 <>
                   <span className="flex items-center gap-1 text-tg-button">
@@ -252,7 +260,7 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
                   {feedback.isTier4 && (
                     <span
                       data-testid="tier4-mastery-flourish"
-                      className="inline-flex items-center gap-1 rounded-full bg-tg-button/15 px-2 py-0.5 text-[11px] font-bold text-tg-button"
+                      className="inline-flex items-center gap-1 rounded-full bg-tg-button/15 px-2 py-0.5 text-[11px] font-bold text-tg-button animate-float"
                     >
                       <Sparkles className="h-3 w-3 text-tg-button" />
                       <span>Tier 4 Mastery</span>
@@ -269,7 +277,7 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
           )}
 
           {submitError && (
-            <div className="flex items-center gap-1.5 text-xs text-tg-destructive bg-tg-destructive/15 px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-1.5 text-xs text-tg-destructive bg-tg-destructive/15 px-3 py-1.5 rounded-xl animate-shake-subtle">
               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
               <span>{submitError}</span>
             </div>
@@ -287,13 +295,13 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
               if (isSelected) {
                 if (feedback) {
                   buttonStyle = feedback.correct
-                    ? 'bg-tg-button text-tg-button-text font-bold'
-                    : 'bg-tg-destructive text-tg-button-text font-bold';
+                    ? 'bg-tg-button text-tg-button-text font-bold animate-scale-pop shadow-md ring-2 ring-tg-button/50'
+                    : 'bg-tg-destructive text-tg-button-text font-bold animate-shake-subtle ring-2 ring-tg-destructive/50';
                 } else {
-                  buttonStyle = 'bg-tg-button text-tg-button-text font-bold';
+                  buttonStyle = 'bg-tg-button text-tg-button-text font-bold animate-scale-pop';
                 }
               } else if (isCorrectReveal) {
-                buttonStyle = 'bg-tg-button text-tg-button-text font-bold';
+                buttonStyle = 'bg-tg-button text-tg-button-text font-bold animate-scale-pop shadow-sm';
               }
 
               return (
@@ -302,7 +310,7 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
                   type="button"
                   onClick={() => void handleSelectChoice(choice)}
                   disabled={isSubmitting || timeExpired}
-                  className={`flex min-h-14 items-center justify-center rounded-xl p-3 text-center text-sm font-medium transition-colors duration-150 active:opacity-75 disabled:pointer-events-none ${buttonStyle}`}
+                  className={`flex min-h-14 items-center justify-center rounded-xl p-3 text-center text-sm font-medium transition-all duration-150 active:scale-[0.98] disabled:pointer-events-none ${buttonStyle}`}
                 >
                   <span className="line-clamp-2">{choice}</span>
                 </button>
