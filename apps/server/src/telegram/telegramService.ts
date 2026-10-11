@@ -24,6 +24,7 @@ export interface SendTelegramMessageOptions {
   webAppUrl?: string;
   inlineKeyboard?: InlineKeyboardButton[][];
   parseMode?: 'HTML' | 'MarkdownV2';
+  disableNotification?: boolean;
   botToken?: string;
   apiBaseUrl?: string;
 }
@@ -44,13 +45,13 @@ export interface TelegramServiceOverrides {
   botUsername?: string;
 }
 
-export async function sendTelegramMessage(
+export async function sendTelegramMessageWithId(
   options: SendTelegramMessageOptions,
-): Promise<boolean> {
+): Promise<{ ok: boolean; messageId?: number }> {
   const token = options.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
     process.stderr.write('Warning: TELEGRAM_BOT_TOKEN is missing when sending message\n');
-    return false;
+    return { ok: false };
   }
 
   const apiBaseUrl =
@@ -61,6 +62,10 @@ export async function sendTelegramMessage(
     chat_id: options.chatId,
     text: options.text,
   };
+
+  if (options.disableNotification !== undefined) {
+    payload.disable_notification = options.disableNotification;
+  }
 
   if (options.parseMode) {
     payload.parse_mode = options.parseMode;
@@ -106,15 +111,54 @@ export async function sendTelegramMessage(
       process.stderr.write(
         `Warning: Failed to send Telegram message to ${options.chatId}: ${res.status} ${errorText}\n`,
       );
-      return false;
+      return { ok: false };
     }
 
-    return true;
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      result?: { message_id?: number };
+    };
+    return {
+      ok: Boolean(data?.ok ?? true),
+      messageId: data?.result?.message_id,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     process.stderr.write(
       `Warning: Telegram message network error to ${options.chatId}: ${message}\n`,
     );
+    return { ok: false };
+  }
+}
+
+export async function sendTelegramMessage(
+  options: SendTelegramMessageOptions,
+): Promise<boolean> {
+  const result = await sendTelegramMessageWithId(options);
+  return result.ok;
+}
+
+export async function deleteTelegramMessage(options: {
+  chatId: number | string;
+  messageId: number;
+  botToken?: string;
+  apiBaseUrl?: string;
+}): Promise<boolean> {
+  const token = options.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return false;
+  const base = options.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
+
+  try {
+    const res = await fetch(`${base}/bot${token}/deleteMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: options.chatId,
+        message_id: options.messageId,
+      }),
+    });
+    return res.ok;
+  } catch {
     return false;
   }
 }

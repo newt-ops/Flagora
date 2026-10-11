@@ -3,7 +3,9 @@ import type { Redis as RedisClient } from 'ioredis';
 import { getDisplayName, type PlayerProfile, type BattleSession } from '@flagora/shared';
 import {
   sendTelegramMessage,
+  sendTelegramMessageWithId,
   editTelegramMessage,
+  deleteTelegramMessage,
   answerCallbackQuery,
   answerPreCheckoutQuery,
   type InlineKeyboardButton,
@@ -39,21 +41,19 @@ export function formatGroupLobbyMessage(
   const cleanUsername = (botUsername || process.env.TELEGRAM_BOT_USERNAME || 'flagora_bot').replace(/^@/, '');
   const miniAppUrl = `https://t.me/${cleanUsername}?startapp=battle_${battle.battleId}`;
 
-  let text = `⚔️ <b>FLAGORA GROUP BATTLE</b> 🚩\n\n`;
-  text += `👑 <b>Host:</b> ${hostName}\n`;
-  text += `🎯 <b>Capacity:</b> ${participants.length}/${maxPlayers} Players ${isFull ? '<i>(FULL)</i>' : ''}\n`;
-  text += `⏳ <b>Status:</b> Waiting for players (10m TTL)\n\n`;
-  text += `👥 <b>Roster (${participants.length}):</b>\n`;
-  participants.forEach((p, index) => {
-    const isCrown = p.userId === battle.hostUserId ? ' 👑' : '';
-    text += `${index + 1}. <b>${p.displayName}</b>${isCrown}\n`;
-  });
-  text += `\n<i>${isFull ? 'Lobby is full! Host can launch anytime.' : 'Tap below to enter the lobby in Flagora!'}</i>`;
+  const rosterList = participants
+    .map((p) => (p.userId === battle.hostUserId ? `${p.displayName} 👑` : p.displayName))
+    .join(', ');
+
+  let text = `⚔️ <b>FLAGORA BATTLE LOBBY</b> 🚩\n\n`;
+  text += `👑 <b>Host:</b> ${hostName} • 👥 <b>Players:</b> ${participants.length}/${maxPlayers} ${isFull ? '<i>(FULL)</i>' : ''}\n`;
+  text += `🎯 <b>Roster:</b> ${rosterList}\n\n`;
+  text += `<i>${isFull ? 'Lobby is full! Host can launch anytime.' : 'Tap below to enter the lobby in Flagora:'}</i>`;
 
   const inlineKeyboard: InlineKeyboardButton[][] = [
     [
       {
-        text: `🎮 Enter Lobby in Flagora (${participants.length}/${maxPlayers}) 🚩`,
+        text: `🎮 Enter Lobby (${participants.length}/${maxPlayers}) 🚩`,
         url: miniAppUrl,
       },
     ],
@@ -269,6 +269,7 @@ export async function handleTelegramUpdate(
           const lobby = await createGroupLobby(
             {
               chatId: Number(chatId),
+              messageId: Number(messageId),
               hostUserId,
               hostDisplayName: hostName,
               hostPhotoUrl: null,
@@ -416,12 +417,9 @@ export async function handleTelegramUpdate(
             await replyQuery('⚠️ Only the host can cancel this battle lobby!', true);
           } else {
             await cancelGroupLobby(battleId, battle.hostUserId ?? userId, db, options?.io);
-            await editTelegramMessage({
+            await deleteTelegramMessage({
               chatId,
               messageId,
-              text: '❌ <b>Battle lobby canceled.</b>\nType /battle to start a new one.',
-              parseMode: 'HTML',
-              inlineKeyboard: [],
               botToken,
               apiBaseUrl,
             });
@@ -590,6 +588,7 @@ export async function handleTelegramUpdate(
             [{ text: '⚔️ Start Group Battle 🚩', callback_data: 'gb_preset:5' }],
             [{ text: '🎮 Open Flagora', url: `https://t.me/${cleanUsername}` }],
           ],
+          disableNotification: true,
           botToken,
           apiBaseUrl,
         });
@@ -607,6 +606,7 @@ export async function handleTelegramUpdate(
               [{ text: '⚔️ Start Group Battle 🚩', callback_data: 'gb_preset:5' }],
               [{ text: '🎮 Open Flagora', url: `https://t.me/${cleanUsername}` }],
             ],
+            disableNotification: true,
             botToken,
             apiBaseUrl,
           });
@@ -656,6 +656,7 @@ export async function handleTelegramUpdate(
               [{ text: '⚔️ Start Battle 🚩', callback_data: 'gb_preset:5' }],
               [{ text: '🎮 Open Flagora', url: `https://t.me/${cleanUsername}` }],
             ],
+            disableNotification: true,
             botToken,
             apiBaseUrl,
           });
@@ -687,6 +688,7 @@ export async function handleTelegramUpdate(
               [{ text: '⚔️ Start Group Battle', callback_data: 'gb_preset:5' }],
               [{ text: '🎮 Open Flagora Solo', url: `https://t.me/${cleanUsername}` }],
             ],
+            disableNotification: true,
             botToken,
             apiBaseUrl,
           });
@@ -762,6 +764,7 @@ export async function handleTelegramUpdate(
           text: lbText,
           parseMode: 'HTML',
           inlineKeyboard: keyboard,
+          disableNotification: isGroup,
           botToken,
           apiBaseUrl,
         });
@@ -823,18 +826,24 @@ export async function handleTelegramUpdate(
             db,
           );
           const { text: lobbyText, inlineKeyboard } = formatGroupLobbyMessage(lobby, cleanUsername);
-          await sendTelegramMessage({
+          const sent = await sendTelegramMessageWithId({
             chatId,
             text: lobbyText,
             parseMode: 'HTML',
             inlineKeyboard,
+            disableNotification: true,
             botToken,
             apiBaseUrl,
           });
+          if (sent.ok && sent.messageId) {
+            await db.collection<BattleSession>('battles').updateOne(
+              { battleId: lobby.battleId },
+              { $set: { messageId: sent.messageId } },
+            );
+          }
           return { handled: true, action: 'command_battle_group_created' };
         }
 
-        // Send preset limit selector
         const presetText = `⚔️ <b>Flagora Group Battle</b> 🚩\n\nChoose player capacity for this battle:`;
         const presetKeyboard: InlineKeyboardButton[][] = [
           [
@@ -852,6 +861,7 @@ export async function handleTelegramUpdate(
           text: presetText,
           parseMode: 'HTML',
           inlineKeyboard: presetKeyboard,
+          disableNotification: true,
           botToken,
           apiBaseUrl,
         });

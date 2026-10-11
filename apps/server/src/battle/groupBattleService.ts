@@ -27,14 +27,19 @@ import {
 import { selectRunFlags, generateChoices } from '../game/flagSelection.js';
 import type { GameRun, RunFlagItem } from '../game/runTypes.js';
 import type { TypedSocketServer } from '../multiplayer/socketTypes.js';
-import { sendTelegramMessage } from '../telegram/telegramService.js';
+import {
+  sendTelegramMessage,
+  editTelegramMessage,
+  deleteTelegramMessage,
+  type InlineKeyboardButton,
+} from '../telegram/telegramService.js';
 
 export const GROUP_BATTLE_CONFIG = {
   minPlayers: 2,
   maxPlayersLimit: 20,
   defaultMaxPlayers: 5,
-  lobbyTtlMs: 10 * 60 * 1000, // 10 minutes
-  battleDurationMs: 60 * 1000, // 60 seconds
+  lobbyTtlMs: 10 * 60 * 1000,
+  battleDurationMs: 60 * 1000,
   rewardPins: {
     firstPlace: 150,
     secondPlace: 75,
@@ -44,7 +49,8 @@ export const GROUP_BATTLE_CONFIG = {
 };
 
 export interface CreateGroupLobbyParams {
-  chatId?: number;
+  chatId?: number | null;
+  messageId?: number | null;
   hostUserId: number;
   hostDisplayName: string;
   hostPhotoUrl?: string | null;
@@ -55,7 +61,7 @@ export async function createGroupLobby(
   params: CreateGroupLobbyParams,
   db: Db,
 ): Promise<BattleSession> {
-  const { chatId, hostUserId, hostDisplayName, hostPhotoUrl, maxPlayers } = params;
+  const { chatId, messageId, hostUserId, hostDisplayName, hostPhotoUrl, maxPlayers } = params;
 
   const clampedMax = Math.min(
     GROUP_BATTLE_CONFIG.maxPlayersLimit,
@@ -64,7 +70,6 @@ export async function createGroupLobby(
 
   const now = new Date();
 
-  // If chatId is provided and there is already an active unexpired lobby in this group, return it
   if (chatId) {
     const existing = await db.collection<BattleSession>('battles').findOne({
       chatId,
@@ -73,6 +78,13 @@ export async function createGroupLobby(
     });
 
     if (existing) {
+      if (messageId && existing.messageId !== messageId) {
+        await db.collection<BattleSession>('battles').updateOne(
+          { battleId: existing.battleId },
+          { $set: { messageId } },
+        );
+        existing.messageId = messageId;
+      }
       return existing;
     }
   }
@@ -93,7 +105,8 @@ export async function createGroupLobby(
 
   const battleDoc: BattleSession = {
     battleId,
-    chatId,
+    chatId: chatId ?? null,
+    messageId: messageId ?? null,
     isGroupBattle: true,
     maxPlayers: clampedMax,
     durationSeconds: GROUP_BATTLE_CONFIG.battleDurationMs / 1000,
@@ -299,6 +312,13 @@ export async function cancelGroupLobby(
     });
   }
 
+  if (updated.chatId && updated.messageId) {
+    void deleteTelegramMessage({
+      chatId: updated.chatId,
+      messageId: updated.messageId,
+    });
+  }
+
   return updated;
 }
 
@@ -396,7 +416,6 @@ async function executeStartGroupBattle(
     },
   );
 
-  // 3. Emit battleStart event to Socket.IO room
   if (io) {
     const payload: BattleStartPayload = {
       battleId,
@@ -407,6 +426,25 @@ async function executeStartGroupBattle(
       opponentRunId: updatedParticipants[1]?.runId ?? '',
     };
     io.to(`battle:${battleId}`).emit('battleStart', payload);
+  }
+
+  if (startedBattle.chatId && startedBattle.messageId) {
+    const rawUsername =
+      process.env.TELEGRAM_BOT_USERNAME || process.env.BOT_USERNAME || 'flagora_bot';
+    const cleanUsername = rawUsername.replace(/^@/, '');
+    const inProgressText =
+      `⚔️ <b>FLAGORA BATTLE IN PROGRESS!</b> 🚩\n\n` +
+      `👥 <b>Players:</b> ${updatedParticipants.length} racing\n` +
+      `⏱️ <b>Time Limit:</b> 60 seconds\n\n` +
+      `<i>Tap below to enter the live arena:</i>`;
+    const miniAppUrl = `https://t.me/${cleanUsername}?startapp=battle_${battleId}`;
+    void editTelegramMessage({
+      chatId: startedBattle.chatId,
+      messageId: startedBattle.messageId,
+      text: inProgressText,
+      parseMode: 'HTML',
+      inlineKeyboard: [[{ text: '🎮 Enter Live Arena 🚩', url: miniAppUrl }]],
+    });
   }
 
   const autoFinalizeTimer = setTimeout(async () => {
@@ -732,20 +770,50 @@ export async function finalizeGroupBattle(
     io.to(`battle:${battleId}`).emit('groupBattleFinished', payload);
   }
 
-  // Post victory podium notification to the Telegram group chat
   if (claimResult.chatId) {
-    let podiumText = `🏆 <b>FLAGORA BATTLE FINISHED!</b> 🚩\n\n`;
-    podium.forEach((p) => {
+    let podiumText = `🏆 <b>FLAGORA BATTLE RESULTS</b> 🚩\n\n`;
+    podium.slice(0, 5).forEach((p) => {
       const medal = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : `#${p.rank}`;
       podiumText += `${medal} <b>${p.displayName}</b> — ${p.score} pts (+${p.pinsEarned} 🪙)\n`;
     });
-    podiumText += `\n<i>Well played everyone! Type /battle to play again.</i>`;
+    podiumText += `\n<i>Tap below to start the next battle:</i>`;
 
-    void sendTelegramMessage({
-      chatId: claimResult.chatId,
-      text: podiumText,
-      parseMode: 'HTML',
-    });
+    const rawUsername =
+      process.env.TELEGRAM_BOT_USERNAME || process.env.BOT_USERNAME || 'flagora_bot';
+    const cleanUsername = rawUsername.replace(/^@/, '');
+    const keyboard: InlineKeyboardButton[][] = [
+      [
+        {
+          text: '⚔️ New Battle 🚩',
+          callback_data: 'gb_preset:5',
+        },
+        {
+          text: '🎮 Open Mini App',
+          url: `https://t.me/${cleanUsername}`,
+        },
+      ],
+    ];
+
+    let edited = false;
+    if (claimResult.messageId) {
+      edited = await editTelegramMessage({
+        chatId: claimResult.chatId,
+        messageId: claimResult.messageId,
+        text: podiumText,
+        parseMode: 'HTML',
+        inlineKeyboard: keyboard,
+      });
+    }
+
+    if (!edited) {
+      void sendTelegramMessage({
+        chatId: claimResult.chatId,
+        text: podiumText,
+        parseMode: 'HTML',
+        inlineKeyboard: keyboard,
+        disableNotification: true,
+      });
+    }
   }
 
   return finalizedBattle ?? claimResult;

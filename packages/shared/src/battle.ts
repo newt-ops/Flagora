@@ -22,6 +22,7 @@ export interface BattleParticipant {
 export interface BattleSession {
   battleId: string;
   chatId?: number | null;
+  messageId?: number | null;
   isGroupBattle?: boolean;
   maxPlayers?: number;
   durationSeconds?: number;
