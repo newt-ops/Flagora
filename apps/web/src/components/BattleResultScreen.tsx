@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trophy, Swords, ArrowLeft, Sparkles, Share2, Crown, Medal, Award, Coins } from './icons.js';
+import { Trophy, Swords, ArrowLeft, Share2, Crown, Medal, Award, Coins, Loader2 } from './icons.js';
 import type { BattleFinishedPayload, BattleInfoResponse, GroupPodiumItem } from '@flagora/shared';
 import {
   getBattleViewerPerspective,
@@ -9,8 +9,7 @@ import {
   format1v1VictoryShareText,
   getBattleDeepLink,
 } from './battleHelpers.js';
-import { getRatingDeltaDisplay, checkTierPromotion } from './rankHelpers.js';
-import { TierBadge } from './TierBadge.js';
+import { getRatingDeltaDisplay } from './rankHelpers.js';
 import { ConfettiCanvas } from './ConfettiCanvas.js';
 import { AnimatedCounter } from './AnimatedCounter.js';
 
@@ -358,11 +357,6 @@ export function BattleResultScreen({
     ? getRatingDeltaDisplay(opponentResult.ratingDelta)
     : null;
 
-  const promotionMoment = checkTierPromotion(
-    viewerResult?.newRating,
-    viewerResult?.ratingDelta,
-  );
-
   const challengerInitial = getInitials(challengerName);
   const opponentInitial = getInitials(opponentName);
 
@@ -389,20 +383,11 @@ export function BattleResultScreen({
   };
 
   const viewerWon = (isChallengerViewer && challengerWon) || (isOpponentViewer && opponentWon);
-  const show1v1Confetti = viewerWon || promotionMoment.isPromoted;
+  const show1v1Confetti = viewerWon;
 
   return (
     <div className="flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
       {show1v1Confetti && <ConfettiCanvas active={true} />}
-      {promotionMoment.isPromoted && promotionMoment.newTier && (
-        <div
-          data-testid="battle-promotion-banner"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-tg-button/15 p-3.5 text-sm font-bold text-tg-button animate-scale-pop animate-pulse-glow"
-        >
-          <Sparkles className="h-4 w-4 text-tg-button" />
-          <span>Promoted to {promotionMoment.newTier}!</span>
-        </div>
-      )}
 
       <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-6 text-center shadow-sm animate-scale-pop">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button ring-1 ring-tg-button/20 shadow-sm animate-float">
@@ -426,9 +411,6 @@ export function BattleResultScreen({
             <span className={`font-bold ${viewerDelta.colorClass}`}>
               ({viewerDelta.text})
             </span>
-            {viewerResult.tier && (
-              <TierBadge tier={viewerResult.tier} size="xs" />
-            )}
           </div>
         )}
 
@@ -483,9 +465,6 @@ export function BattleResultScreen({
                   {challengerDelta.text}
                 </span>
                 <span className="text-[10px] text-tg-hint">RR</span>
-                {challengerResult?.tier && (
-                  <TierBadge tier={challengerResult.tier} size="xs" showLabel={false} />
-                )}
               </div>
             )}
 
@@ -547,9 +526,6 @@ export function BattleResultScreen({
                   {opponentDelta.text}
                 </span>
                 <span className="text-[10px] text-tg-hint">RR</span>
-                {opponentResult?.tier && (
-                  <TierBadge tier={opponentResult.tier} size="xs" showLabel={false} />
-                )}
               </div>
             )}
 
@@ -578,7 +554,11 @@ export function BattleResultScreen({
             disabled={isStartingBattleAgain}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg font-bold text-tg-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
-            <Swords className={`h-4 w-4 ${isStartingBattleAgain ? 'animate-spin' : ''}`} />
+            {isStartingBattleAgain ? (
+              <Loader2 className="h-4 w-4 animate-spin text-tg-text shrink-0" />
+            ) : (
+              <Swords className="h-4 w-4 shrink-0" />
+            )}
             <span>{isStartingBattleAgain ? 'Creating Battle...' : 'Battle Again'}</span>
           </button>
 

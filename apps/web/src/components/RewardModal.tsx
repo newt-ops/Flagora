@@ -98,7 +98,7 @@ export function RewardModal({
           )}
 
           {amount !== undefined && (
-            <div className="relative z-10 mt-4 px-5 py-2.5 rounded-2xl bg-tg-secondary-bg/90 border border-tg-separator/40 flex items-center gap-2.5 shadow-sm">
+            <div className="relative z-10 mt-4 px-5 py-2.5 rounded-2xl bg-tg-secondary-bg/90 flex items-center gap-2.5 shadow-sm">
               {rewardType === 'pins' && <Coins className="w-5 h-5 text-amber-500 fill-amber-500/20" />}
               {rewardType === 'xp' && <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500/20" />}
               {rewardType === 'trophy' && <Trophy className="w-5 h-5 text-amber-500" />}
@@ -117,7 +117,7 @@ export function RewardModal({
           )}
 
           {badgeName && (
-            <div className="relative z-10 mt-3 px-4 py-1.5 rounded-xl bg-tg-button/10 border border-tg-button/30 text-tg-button font-bold text-xs tracking-wide">
+            <div className="relative z-10 mt-3 px-4 py-1.5 rounded-xl bg-tg-button/15 text-tg-button font-bold text-xs tracking-wide">
               {badgeName}
             </div>
           )}

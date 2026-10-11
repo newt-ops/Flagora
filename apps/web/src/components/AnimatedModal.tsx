@@ -60,10 +60,10 @@ export function AnimatedModal({
       <div
         ref={cardRef}
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full ${maxWidthClass} rounded-3xl bg-tg-section shadow-2xl p-5 sm:p-6 max-h-[90vh] overflow-y-auto animate-modal-card border border-tg-separator/30`}
+        className={`relative w-full ${maxWidthClass} rounded-3xl bg-tg-section shadow-2xl p-5 sm:p-6 max-h-[90vh] overflow-y-auto animate-modal-card`}
       >
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between pb-3 border-b border-tg-separator/30 mb-4">
+          <div className="flex items-center justify-between pb-2 mb-4">
             <div className="min-w-0 pr-2">
               {title && (
                 <h2 className="text-base sm:text-lg font-bold text-tg-text truncate">
@@ -91,7 +91,7 @@ export function AnimatedModal({
 
         {children && <div className="space-y-4">{children}</div>}
 
-        {footer && <div className="mt-5 pt-3 border-t border-tg-separator/30">{footer}</div>}
+        {footer && <div className="mt-5 pt-2">{footer}</div>}
       </div>
     </div>
   );

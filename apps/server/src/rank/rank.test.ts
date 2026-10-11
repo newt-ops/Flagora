@@ -9,7 +9,6 @@ import {
   type PlayerProfile,
   type SeasonResult,
   type BattleSession,
-  getRankedTier,
   getUtcSeasonString,
   getRankedLeaderboardKey,
 } from '@flagora/shared';
@@ -132,34 +131,6 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
     };
   }
 
-  describe('Tier derivation at threshold boundaries', () => {
-    it('correctly maps every tier boundary according to rules', () => {
-      assert.equal(getRankedTier(0), 'Bronze');
-      assert.equal(getRankedTier(150), 'Bronze');
-      assert.equal(getRankedTier(299), 'Bronze');
-
-      assert.equal(getRankedTier(300), 'Silver');
-      assert.equal(getRankedTier(450), 'Silver');
-      assert.equal(getRankedTier(599), 'Silver');
-
-      assert.equal(getRankedTier(600), 'Gold');
-      assert.equal(getRankedTier(800), 'Gold');
-      assert.equal(getRankedTier(999), 'Gold');
-
-      assert.equal(getRankedTier(1000), 'Platinum');
-      assert.equal(getRankedTier(1250), 'Platinum');
-      assert.equal(getRankedTier(1499), 'Platinum');
-
-      assert.equal(getRankedTier(1500), 'Diamond');
-      assert.equal(getRankedTier(1750), 'Diamond');
-      assert.equal(getRankedTier(1999), 'Diamond');
-
-      assert.equal(getRankedTier(2000), 'Legend');
-      assert.equal(getRankedTier(2800), 'Legend');
-      assert.equal(getRankedTier(-50), 'Bronze');
-    });
-  });
-
   describe('Rating deltas and floor-at-0 rules', () => {
     it('calculates correct asymmetric deltas for win (+20), loss (-15), and tie (+2)', () => {
       assert.equal(calculateRatingDelta('win'), 20);
@@ -175,7 +146,6 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       assert.equal(update.oldRating, 10);
       assert.equal(update.newRating, 0);
       assert.equal(update.ratingDelta, -10);
-      assert.equal(update.tier, 'Bronze');
 
       const saved = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: 101 });
       assert.equal(saved?.battleRating, 0);
@@ -189,10 +159,9 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       assert.equal(update.oldRating, 0);
       assert.equal(update.newRating, 0);
       assert.equal(update.ratingDelta, 0);
-      assert.equal(update.tier, 'Bronze');
     });
 
-    it('applies win (+20) and promotes tier when threshold reached', async () => {
+    it('applies win (+20) correctly', async () => {
       const profile = makeProfile(103, { battleRating: 290, currentSeason: '2026-09' });
       await db.collection('profiles').insertOne(profile);
 
@@ -200,7 +169,6 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       assert.equal(update.oldRating, 290);
       assert.equal(update.newRating, 310);
       assert.equal(update.ratingDelta, 20);
-      assert.equal(update.tier, 'Silver');
 
       const saved = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: 103 });
       assert.equal(saved?.battleRating, 310);
@@ -237,7 +205,6 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       assert.equal(update.newRating, 20);
       assert.equal(update.ratingDelta, 20);
       assert.equal(update.season, '2026-09');
-      assert.equal(update.tier, 'Bronze');
 
       const archived = await db.collection<SeasonResult>('season_results').findOne({
         telegramUserId: 201,
@@ -245,7 +212,6 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       });
       assert.ok(archived);
       assert.equal(archived.finalRating, 450);
-      assert.equal(archived.finalTier, 'Silver');
       assert.equal(archived.finalRank, 2);
 
       const saved = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: 201 });
@@ -269,7 +235,6 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
 
       assert.equal(status.season, '2026-10');
       assert.equal(status.battleRating, 0);
-      assert.equal(status.tier, 'Bronze');
       assert.equal(status.rank, null);
 
       const archived = await db.collection<SeasonResult>('season_results').findOne({
@@ -278,7 +243,6 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       });
       assert.ok(archived);
       assert.equal(archived.finalRating, 620);
-      assert.equal(archived.finalTier, 'Gold');
     });
   });
 
@@ -440,7 +404,7 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       assert.equal(res.status, 401);
     });
 
-    it('GET /api/rank/status returns correct rating, tier, and rank for authenticated user', async () => {
+    it('GET /api/rank/status returns correct rating and rank for authenticated user', async () => {
       const profile = makeProfile(501, { battleRating: 650, currentSeason: getUtcSeasonString() });
       await db.collection('profiles').insertOne(profile);
       await redis.zadd(getRankedLeaderboardKey(getUtcSeasonString()), 650, '501');
@@ -454,7 +418,6 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       const body = await res.json();
       assert.equal(body.season, getUtcSeasonString());
       assert.equal(body.battleRating, 650);
-      assert.equal(body.tier, 'Gold');
       assert.equal(body.rank, 1);
     });
 

@@ -101,12 +101,11 @@ describe('ProfileCard UI Rendering (Apple Human Interface)', () => {
     assert.equal(html.includes('Get Verified Badge'), false);
   });
 
-  it('renders ranked tier and battle rating correctly', () => {
+  it('renders battle rating and rank standing correctly', () => {
     const html = renderToStaticMarkup(
       React.createElement(ProfileCard, {
         profile: dummyProfile,
         rankStatus: {
-          tier: 'Platinum',
           battleRating: 1240,
           rank: 18,
           season: '2026-10',
@@ -114,7 +113,7 @@ describe('ProfileCard UI Rendering (Apple Human Interface)', () => {
       }),
     );
 
-    assert.ok(html.includes('Platinum Tier'));
+    assert.ok(html.includes('Battle Rating'));
     assert.ok(html.includes('#18'));
     assert.ok(html.includes('1,240 Rating'));
     assert.ok(html.includes('October 2026'));

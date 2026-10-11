@@ -203,7 +203,6 @@ export async function checkAndFinalizeBattle(
         totalFlags: challengerRun.flags.length,
         ratingDelta: challengerRankUpdate.ratingDelta,
         newRating: challengerRankUpdate.newRating,
-        tier: challengerRankUpdate.tier,
       };
 
       const opponentResult: BattleParticipantResult = {
@@ -215,7 +214,6 @@ export async function checkAndFinalizeBattle(
         totalFlags: opponentRun.flags.length,
         ratingDelta: opponentRankUpdate.ratingDelta,
         newRating: opponentRankUpdate.newRating,
-        tier: opponentRankUpdate.tier,
       };
 
       if (io) {

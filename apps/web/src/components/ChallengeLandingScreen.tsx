@@ -1,4 +1,4 @@
-import { Swords, Play, Clock, Share2, ArrowLeft, AlertCircle } from './icons.js';
+import { Swords, Play, Clock, Share2, ArrowLeft, AlertCircle, Loader2 } from './icons.js';
 import type { ChallengeInfoResponse } from '@flagora/shared';
 import { isChallengeAcceptable, getInitials } from './challengeViewHelpers.js';
 
@@ -130,7 +130,11 @@ export function ChallengeLandingScreen({
             disabled={isAccepting}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
-            <Play className={`h-4 w-4 fill-current ${isAccepting ? 'animate-spin' : ''}`} />
+            {isAccepting ? (
+              <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+            ) : (
+              <Play className="h-4 w-4 fill-current shrink-0" />
+            )}
             <span>{isAccepting ? 'Starting Match...' : 'Accept Challenge'}</span>
           </button>
         )}

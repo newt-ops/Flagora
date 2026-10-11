@@ -10,6 +10,7 @@ import {
   Coins as Pins,
   Flame,
   Share2,
+  Loader2,
 } from './icons.js';
 import type { FinishRunResponse } from '@flagora/shared';
 import { getStreakBadgeText } from './streakDisplayHelpers.js';
@@ -201,7 +202,11 @@ export function ResultsScreen({
             disabled={isStartingAgain}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
-            <RotateCcw className={`h-4 w-4 ${isStartingAgain ? 'animate-spin' : ''}`} />
+            {isStartingAgain ? (
+              <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+            ) : (
+              <RotateCcw className="h-4 w-4 shrink-0" />
+            )}
             <span>{isStartingAgain ? 'Loading Next Run...' : 'Play Again'}</span>
           </button>
         )}

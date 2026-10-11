@@ -122,3 +122,88 @@ export function getContinentStyle(
     isClickable: geoContinent !== null,
   };
 }
+
+export interface ContinentCameraConfig {
+  center: [number, number];
+  scale: number;
+}
+
+export function getContinentCamera(continent: Continent): ContinentCameraConfig {
+  switch (continent) {
+    case 'africa':
+      return { center: [20, 2], scale: 310 };
+    case 'europe':
+      return { center: [15, 52], scale: 460 };
+    case 'asia':
+      return { center: [88, 32], scale: 240 };
+    case 'americas':
+      return { center: [-85, 12], scale: 195 };
+    case 'oceania':
+      return { center: [142, -22], scale: 340 };
+    case 'world':
+    default:
+      return { center: [0, 15], scale: 140 };
+  }
+}
+
+export interface ContinentFantasyLore {
+  realmName: string;
+  subtitle: string;
+  countryCount: number;
+  loreText: string;
+  tag: string;
+}
+
+export function getContinentFantasyLore(continent: Continent): ContinentFantasyLore {
+  switch (continent) {
+    case 'africa':
+      return {
+        realmName: 'The Sun Realm',
+        subtitle: 'Cradle of Civilizations',
+        countryCount: 54,
+        loreText: 'Golden sands of the Sahara to the snow-capped summits of Kilimanjaro.',
+        tag: '54 Sovereign Nations',
+      };
+    case 'europe':
+      return {
+        realmName: 'The Old Kingdoms',
+        subtitle: 'Castles, Peaks & Fjords',
+        countryCount: 44,
+        loreText: 'Ancient realms, grand alpine valleys, and legendary seafaring shores.',
+        tag: '44 Sovereign Nations',
+      };
+    case 'asia':
+      return {
+        realmName: 'The Dragon Steppes',
+        subtitle: 'Silk Roads & Eastern Horizons',
+        countryCount: 48,
+        loreText: 'From Himalayan heights and steppe deserts to tropical archipelagos.',
+        tag: '48 Sovereign Nations',
+      };
+    case 'americas':
+      return {
+        realmName: 'The Grand Frontier',
+        subtitle: 'Arctic Tundra to Andean Cordillera',
+        countryCount: 35,
+        loreText: 'Boundless double continents spanned by wild rainforests and towering cordilleras.',
+        tag: '35 Sovereign Nations',
+      };
+    case 'oceania':
+      return {
+        realmName: 'Pacific Archipelagos',
+        subtitle: 'Coral Seas & Southern Aurora',
+        countryCount: 14,
+        loreText: 'Polynesian star-paths, coral atolls, and the great red heart of Australia.',
+        tag: '14 Sovereign Nations',
+      };
+    case 'world':
+    default:
+      return {
+        realmName: 'Terra Globalis',
+        subtitle: 'The Whole Known World',
+        countryCount: 195,
+        loreText: 'Every nation, territory, and sovereign realm across the seven seas.',
+        tag: 'Global Expedition',
+      };
+  }
+}

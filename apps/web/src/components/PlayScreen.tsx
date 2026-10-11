@@ -11,6 +11,7 @@ import {
   Globe,
   Sliders,
   Users,
+  Loader2,
 } from './icons.js';
 import type {
   PlayerProfile,
@@ -22,8 +23,7 @@ import { getDisplayName } from '@flagora/shared';
 import { getDailyResultSummary } from './dailyChallengeHelpers.js';
 import { CustomGameModal, type CustomGameConfig } from './CustomGameModal.js';
 import { StreakSaveBanner } from './StreakSaveBanner.js';
-import { formatSeasonName, getTierIcon } from './rankHelpers.js';
-import { TierBadge } from './TierBadge.js';
+import { formatSeasonName } from './rankHelpers.js';
 import { VerifiedBadge } from './VerifiedBadge.js';
 
 interface PlayScreenProps {
@@ -79,10 +79,8 @@ export function PlayScreen({
   const initial = profile.firstName ? profile.firstName.charAt(0).toUpperCase() : 'P';
   const dailySummary = getDailyResultSummary(dailyStatus?.result ?? null);
 
-  const currentTier = rankStatus?.tier ?? 'Bronze';
   const currentRating = rankStatus?.battleRating ?? 0;
   const seasonName = formatSeasonName(rankStatus?.season);
-  const TierIcon = getTierIcon(currentTier);
 
   return (
     <div className="flex w-full max-w-md mx-auto flex-col gap-4 text-tg-text pb-20">
@@ -122,7 +120,8 @@ export function PlayScreen({
             </div>
             <div className="flex items-center gap-2 text-xs text-tg-hint flex-wrap">
               <span>Level {profile.level}</span>
-              <TierBadge tier={currentTier} size="xs" />
+              <span>•</span>
+              <span className="font-semibold text-tg-button">{currentRating.toLocaleString()} Rating</span>
               {profile.username && (
                 <span className="truncate">• @{profile.username.replace(/^@/, '')}</span>
               )}
@@ -159,14 +158,11 @@ export function PlayScreen({
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tg-button/10 text-tg-button"
           >
-            <TierIcon className="h-4 w-4 fill-current" />
+            <Trophy className="h-4 w-4" />
           </div>
           <div className="flex items-center gap-2 text-left min-w-0 flex-wrap">
             <span className="text-xs font-extrabold text-tg-text">
-              {currentTier} Tier
-            </span>
-            <span className="text-xs font-bold text-tg-text">
-              {currentRating.toLocaleString()} <span className="text-[10px] font-medium text-tg-hint">Rating</span>
+              {currentRating.toLocaleString()} <span className="font-medium text-tg-hint">Battle Rating</span>
             </span>
           </div>
         </div>
@@ -248,7 +244,11 @@ export function PlayScreen({
               disabled={isStartingDaily}
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
             >
-              <Play className={`h-4 w-4 fill-current ${isStartingDaily ? 'animate-spin' : ''}`} />
+              {isStartingDaily ? (
+                <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+              ) : (
+                <Play className="h-4 w-4 fill-current shrink-0" />
+              )}
               <span>{isStartingDaily ? 'Starting Challenge...' : 'Play Daily Challenge'}</span>
             </button>
           </div>
@@ -278,7 +278,11 @@ export function PlayScreen({
             disabled={isStarting}
             className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
-            <Play className={`h-3.5 w-3.5 fill-current ${isStarting ? 'animate-spin' : ''}`} />
+            {isStarting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+            ) : (
+              <Play className="h-3.5 w-3.5 fill-current shrink-0" />
+            )}
             <span>{isStarting ? 'Starting...' : 'Play Solo'}</span>
           </button>
         </div>
@@ -323,7 +327,11 @@ export function PlayScreen({
             disabled={isStartingBattle}
             className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
-            <Zap className={`h-3.5 w-3.5 ${isStartingBattle ? 'animate-spin' : ''}`} />
+            {isStartingBattle ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+            ) : (
+              <Zap className="h-3.5 w-3.5 shrink-0" />
+            )}
             <span>{isStartingBattle ? 'Creating Battle...' : 'Battle Live'}</span>
           </button>
         </div>
@@ -346,7 +354,11 @@ export function PlayScreen({
             disabled={isStartingChallenge}
             className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
-            <Swords className={`h-3.5 w-3.5 ${isStartingChallenge ? 'animate-spin' : ''}`} />
+            {isStartingChallenge ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+            ) : (
+              <Swords className="h-3.5 w-3.5 shrink-0" />
+            )}
             <span>{isStartingChallenge ? 'Creating Challenge...' : 'Start Duel'}</span>
           </button>
         </div>
@@ -370,7 +382,11 @@ export function PlayScreen({
               disabled={isStartingGroupBattle}
               className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
             >
-              <Users className={`h-3.5 w-3.5 ${isStartingGroupBattle ? 'animate-spin' : ''}`} />
+              {isStartingGroupBattle ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+              ) : (
+                <Users className="h-3.5 w-3.5 shrink-0" />
+              )}
               <span>{isStartingGroupBattle ? 'Creating Group Lobby...' : 'Host Group Battle'}</span>
             </button>
           </div>

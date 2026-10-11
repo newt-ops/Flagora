@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkTierPromotion, getRatingDeltaDisplay } from './rankHelpers.js';
+import { getRatingDeltaDisplay } from './rankHelpers.js';
 import type { BattleParticipantResult } from '@flagora/shared';
 
 describe('battleResultScreen ranked logic', () => {
@@ -18,7 +18,7 @@ describe('battleResultScreen ranked logic', () => {
     assert.equal(tieDelta.isPositive, true);
   });
 
-  it('detects tier promotion when battle rating crosses Silver to Gold', () => {
+  it('preserves BattleParticipantResult structure with rating delta and new rating', () => {
     const participant: BattleParticipantResult = {
       userId: 101,
       displayName: 'Player',
@@ -27,31 +27,11 @@ describe('battleResultScreen ranked logic', () => {
       totalFlags: 10,
       ratingDelta: 20,
       newRating: 610,
-      tier: 'Gold',
     };
 
-    const promo = checkTierPromotion(participant.newRating, participant.ratingDelta);
-    assert.equal(promo.isPromoted, true);
-    assert.equal(promo.newTier, 'Gold');
-    assert.equal(promo.previousTier, 'Silver');
-  });
-
-  it('detects tier promotion when battle rating crosses Diamond to Legend', () => {
-    const promo = checkTierPromotion(2010, 20);
-    assert.equal(promo.isPromoted, true);
-    assert.equal(promo.newTier, 'Legend');
-    assert.equal(promo.previousTier, 'Diamond');
-  });
-
-  it('does not trigger promotion when rating increases within same tier', () => {
-    const promo = checkTierPromotion(400, 20);
-    assert.equal(promo.isPromoted, false);
-    assert.equal(promo.newTier, undefined);
-  });
-
-  it('does not trigger promotion on rating loss', () => {
-    const promo = checkTierPromotion(590, -15);
-    assert.equal(promo.isPromoted, false);
+    assert.equal(participant.userId, 101);
+    assert.equal(participant.ratingDelta, 20);
+    assert.equal(participant.newRating, 610);
   });
 
   describe('Group Battle Podium Logic', () => {
@@ -82,4 +62,3 @@ describe('battleResultScreen ranked logic', () => {
     });
   });
 });
-

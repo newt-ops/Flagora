@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trophy, ArrowLeft, Play, Sparkles, Zap } from './icons.js';
+import { Trophy, ArrowLeft, Play, Sparkles, Zap, Loader2 } from './icons.js';
 import { useLeaderboard } from '../hooks/useLeaderboard.js';
 import {
   shouldShowPinnedMyRank,
@@ -10,8 +10,7 @@ import {
   getLeaderboardTitle,
   getLeaderboardSubtitle,
 } from './dailyChallengeHelpers.js';
-import { getRankedTier, type LeaderboardEntry } from '@flagora/shared';
-import { TierBadge } from './TierBadge.js';
+import type { LeaderboardEntry } from '@flagora/shared';
 import { VerifiedBadge } from './VerifiedBadge.js';
 
 interface LeaderboardScreenProps {
@@ -162,7 +161,6 @@ export function LeaderboardScreen({
               topEntries.map((entry: LeaderboardEntry) => {
                 const isMe = entry.telegramUserId === currentUserId;
                 const initial = entry.displayName.replace(/^@/, '').charAt(0).toUpperCase() || 'P';
-                const tier = mode === 'ranked' ? getRankedTier(entry.bestScore) : null;
 
                 return (
                   <div
@@ -206,7 +204,6 @@ export function LeaderboardScreen({
                           {entry.isVerified && (
                             <VerifiedBadge className="h-4 w-4 shrink-0 text-[#2AABEE]" />
                           )}
-                          {tier && <TierBadge tier={tier} size="xs" />}
                           {isMe && (
                             <span className="shrink-0 rounded-full bg-tg-button/15 px-2 py-0.2 text-[10px] font-bold text-tg-button">
                               You
@@ -239,9 +236,6 @@ export function LeaderboardScreen({
                 <div className="text-left">
                   <div className="flex items-center gap-1.5">
                     <p className="text-sm font-bold text-tg-text">Your Standing</p>
-                    {mode === 'ranked' && (
-                      <TierBadge tier={getRankedTier(myRank.bestScore)} size="xs" />
-                    )}
                     <span className="rounded-full bg-tg-button/15 px-2 py-0.2 text-[10px] font-bold text-tg-button">
                       You
                     </span>
@@ -279,7 +273,7 @@ export function LeaderboardScreen({
                     ? 'You have already completed today’s challenge.'
                     : 'Complete today’s daily challenge to record your score on the daily leaderboard!'
                   : mode === 'ranked'
-                  ? 'Play live 1v1 battles to earn rating points and claim your tier on the seasonal ladder!'
+                  ? 'Play live 1v1 battles to earn rating points and climb the seasonal ladder!'
                   : 'Play a run to record your score and claim your position on the leaderboard!'}
               </p>
               {mode === 'daily' && !dailyAttempted && onPlayDaily && (
@@ -289,7 +283,11 @@ export function LeaderboardScreen({
                   disabled={isStarting}
                   className="mt-1 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
                 >
-                  <Play className={`h-4 w-4 fill-current ${isStarting ? 'animate-spin' : ''}`} />
+                  {isStarting ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+                  ) : (
+                    <Play className="h-4 w-4 fill-current shrink-0" />
+                  )}
                   <span>{isStarting ? 'Starting Challenge...' : 'Play Daily Challenge'}</span>
                 </button>
               )}
@@ -300,7 +298,11 @@ export function LeaderboardScreen({
                   disabled={isStarting}
                   className="mt-1 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
                 >
-                  <Play className={`h-4 w-4 fill-current ${isStarting ? 'animate-spin' : ''}`} />
+                  {isStarting ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+                  ) : (
+                    <Play className="h-4 w-4 fill-current shrink-0" />
+                  )}
                   <span>{isStarting ? 'Starting Run...' : 'Play to Rank'}</span>
                 </button>
               )}
@@ -314,7 +316,11 @@ export function LeaderboardScreen({
                   disabled={isStarting}
                   className="mt-1 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
                 >
-                  <Zap className={`h-4 w-4 ${isStarting ? 'animate-spin' : ''}`} />
+                  {isStarting ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+                  ) : (
+                    <Zap className="h-4 w-4 shrink-0" />
+                  )}
                   <span>{isStarting ? 'Entering Arena...' : 'Battle to Rank'}</span>
                 </button>
               )}

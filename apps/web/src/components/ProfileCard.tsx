@@ -15,6 +15,7 @@ import {
   Crown,
   Pins,
   Gamepad2,
+  Loader2,
 } from './icons.js';
 import {
   type PlayerProfile,
@@ -27,7 +28,7 @@ import {
 import { getProfileStreakDisplay } from './streakDisplayHelpers.js';
 import { getDailyResultSummary } from './dailyChallengeHelpers.js';
 import { StreakSaveBanner } from './StreakSaveBanner.js';
-import { formatSeasonName, getTierIcon } from './rankHelpers.js';
+import { formatSeasonName } from './rankHelpers.js';
 import { ProUpgradeModal } from './ProUpgradeModal.js';
 import { VerifiedBadge } from './VerifiedBadge.js';
 import { triggerHaptic } from '../telegram/haptics.js';
@@ -86,11 +87,9 @@ export function ProfileCard({
   const initial = profile.firstName ? profile.firstName.charAt(0).toUpperCase() : 'P';
   const streakInfo = getProfileStreakDisplay(profile.currentStreak, profile.longestStreak);
   const dailySummary = getDailyResultSummary(dailyStatus?.result ?? null);
-  const currentTier = rankStatus?.tier ?? 'Bronze';
   const currentRating = rankStatus?.battleRating ?? 0;
   const currentRank = rankStatus?.rank ?? null;
   const seasonName = formatSeasonName(rankStatus?.season);
-  const TierIcon = getTierIcon(currentTier);
 
   const currentLevel = profile.level;
   const xpInCurrentLevel = profile.xp % 500;
@@ -230,11 +229,11 @@ export function ProfileCard({
       >
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tg-secondary-bg text-tg-button">
-            <TierIcon className="h-5 w-5" />
+            <Trophy className="h-5 w-5" />
           </div>
           <div className="text-left min-w-0">
             <p className="text-sm font-semibold text-tg-text truncate">
-              {currentTier} Tier
+              Battle Rating
             </p>
             <p
               data-testid="profile-season-identifier"
@@ -427,7 +426,11 @@ export function ProfileCard({
                     disabled={isStartingDaily}
                     className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-semibold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
                   >
-                    <Play className={`h-3.5 w-3.5 fill-current ${isStartingDaily ? 'animate-spin' : ''}`} />
+                    {isStartingDaily ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+                    ) : (
+                      <Play className="h-3.5 w-3.5 fill-current shrink-0" />
+                    )}
                     <span>{isStartingDaily ? 'Starting Challenge...' : 'Play Daily Challenge'}</span>
                   </button>
                 )}
@@ -442,7 +445,11 @@ export function ProfileCard({
               disabled={isStarting}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-semibold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
             >
-              <Play className={`h-4 w-4 fill-current ${isStarting ? 'animate-spin' : ''}`} />
+              {isStarting ? (
+                <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+              ) : (
+                <Play className="h-4 w-4 fill-current shrink-0" />
+              )}
               <span>{isStarting ? 'Starting Run...' : 'Play Practice'}</span>
             </button>
           )}
@@ -454,7 +461,11 @@ export function ProfileCard({
               disabled={isStartingChallenge}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-semibold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
             >
-              <Swords className={`h-4 w-4 ${isStartingChallenge ? 'animate-spin' : ''}`} />
+              {isStartingChallenge ? (
+                <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+              ) : (
+                <Swords className="h-4 w-4 shrink-0" />
+              )}
               <span>{isStartingChallenge ? 'Creating Challenge...' : 'Challenge a Friend'}</span>
             </button>
           )}
@@ -466,7 +477,11 @@ export function ProfileCard({
               disabled={isStartingBattle}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-semibold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50"
             >
-              <Zap className={`h-4 w-4 ${isStartingBattle ? 'animate-spin' : ''}`} />
+              {isStartingBattle ? (
+                <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+              ) : (
+                <Zap className="h-4 w-4 shrink-0" />
+              )}
               <span>{isStartingBattle ? 'Creating Battle...' : 'Battle a Friend'}</span>
             </button>
           )}

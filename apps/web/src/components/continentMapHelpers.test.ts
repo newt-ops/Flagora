@@ -4,6 +4,8 @@ import {
   getContinentFromGeoId,
   isAntarctica,
   getContinentStyle,
+  getContinentCamera,
+  getContinentFantasyLore,
 } from './continentMapHelpers.js';
 
 describe('continentMapHelpers', () => {
@@ -109,6 +111,51 @@ describe('continentMapHelpers', () => {
       const style = getContinentStyle(null, false, 'asia');
       assert.equal(style.isClickable, false);
       assert.ok(style.className.includes('cursor-default'));
+    });
+  });
+
+  describe('getContinentCamera', () => {
+    it('returns broad global projection for world', () => {
+      const cam = getContinentCamera('world');
+      assert.deepEqual(cam.center, [0, 15]);
+      assert.equal(cam.scale, 140);
+    });
+
+    it('returns focused zoom and coordinates for each continent', () => {
+      assert.deepEqual(getContinentCamera('africa'), { center: [20, 2], scale: 310 });
+      assert.deepEqual(getContinentCamera('europe'), { center: [15, 52], scale: 460 });
+      assert.deepEqual(getContinentCamera('asia'), { center: [88, 32], scale: 240 });
+      assert.deepEqual(getContinentCamera('americas'), { center: [-85, 12], scale: 195 });
+      assert.deepEqual(getContinentCamera('oceania'), { center: [142, -22], scale: 340 });
+    });
+  });
+
+  describe('getContinentFantasyLore', () => {
+    it('returns rich fantasy realm lore and sovereign nations count', () => {
+      const worldLore = getContinentFantasyLore('world');
+      assert.equal(worldLore.realmName, 'Terra Globalis');
+      assert.equal(worldLore.countryCount, 195);
+      assert.equal(worldLore.tag, 'Global Expedition');
+
+      const africaLore = getContinentFantasyLore('africa');
+      assert.equal(africaLore.realmName, 'The Sun Realm');
+      assert.equal(africaLore.countryCount, 54);
+
+      const europeLore = getContinentFantasyLore('europe');
+      assert.equal(europeLore.realmName, 'The Old Kingdoms');
+      assert.equal(europeLore.countryCount, 44);
+
+      const asiaLore = getContinentFantasyLore('asia');
+      assert.equal(asiaLore.realmName, 'The Dragon Steppes');
+      assert.equal(asiaLore.countryCount, 48);
+
+      const americasLore = getContinentFantasyLore('americas');
+      assert.equal(americasLore.realmName, 'The Grand Frontier');
+      assert.equal(americasLore.countryCount, 35);
+
+      const oceaniaLore = getContinentFantasyLore('oceania');
+      assert.equal(oceaniaLore.realmName, 'Pacific Archipelagos');
+      assert.equal(oceaniaLore.countryCount, 14);
     });
   });
 });

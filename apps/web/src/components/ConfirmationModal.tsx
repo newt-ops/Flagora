@@ -89,7 +89,7 @@ export function ConfirmationModal({
         </p>
 
         {details && (
-          <div className="w-full mt-4 p-3 rounded-2xl bg-tg-secondary-bg/80 border border-tg-separator/30 text-xs text-tg-text font-medium">
+          <div className="w-full mt-4 p-3 rounded-2xl bg-tg-secondary-bg/80 text-xs text-tg-text font-medium">
             {details}
           </div>
         )}

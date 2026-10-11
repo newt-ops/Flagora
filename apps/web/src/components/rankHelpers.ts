@@ -1,6 +1,3 @@
-import { Shield, Medal, Crown, Gem, Sparkles, Flame, type HugeIcon } from './icons.js';
-import { type RankedTier, RANKED_TIERS, getRankedTier } from '@flagora/shared';
-
 const MONTH_NAMES = [
   'January',
   'February',
@@ -30,79 +27,6 @@ export function formatSeasonName(seasonStr?: string | null): string {
 
   const now = new Date();
   return `${MONTH_NAMES[now.getUTCMonth()]} ${now.getUTCFullYear()}`;
-}
-
-export interface TierStyleConfig {
-  text: string;
-  bg: string;
-  border: string;
-  badge: string;
-}
-
-export function getTierBadgeColors(tier: RankedTier): TierStyleConfig {
-  switch (tier) {
-    case 'Legend':
-      return {
-        text: 'text-tg-button-text',
-        bg: 'bg-tg-button',
-        border: 'border-tg-button',
-        badge: 'bg-tg-button text-tg-button-text font-bold',
-      };
-    case 'Diamond':
-      return {
-        text: 'text-tg-button',
-        bg: 'bg-tg-button/20',
-        border: 'border-tg-button/40',
-        badge: 'bg-tg-button/20 text-tg-button font-bold',
-      };
-    case 'Platinum':
-      return {
-        text: 'text-tg-button',
-        bg: 'bg-tg-button/15',
-        border: 'border-tg-button/30',
-        badge: 'bg-tg-button/15 text-tg-button font-semibold',
-      };
-    case 'Gold':
-      return {
-        text: 'text-tg-button',
-        bg: 'bg-tg-button/10',
-        border: 'border-tg-button/20',
-        badge: 'bg-tg-button/10 text-tg-button font-semibold',
-      };
-    case 'Silver':
-      return {
-        text: 'text-tg-text',
-        bg: 'bg-tg-secondary-bg',
-        border: 'border-tg-separator/40',
-        badge: 'bg-tg-secondary-bg text-tg-text font-medium',
-      };
-    case 'Bronze':
-    default:
-      return {
-        text: 'text-tg-hint',
-        bg: 'bg-tg-secondary-bg',
-        border: 'border-tg-separator/30',
-        badge: 'bg-tg-secondary-bg text-tg-hint font-normal',
-      };
-  }
-}
-
-export function getTierIcon(tier: RankedTier): HugeIcon {
-  switch (tier) {
-    case 'Legend':
-      return Flame;
-    case 'Diamond':
-      return Sparkles;
-    case 'Platinum':
-      return Gem;
-    case 'Gold':
-      return Crown;
-    case 'Silver':
-      return Medal;
-    case 'Bronze':
-    default:
-      return Shield;
-  }
 }
 
 export interface RatingDeltaDisplay {
@@ -145,38 +69,5 @@ export function getRatingDeltaDisplay(delta?: number | null): RatingDeltaDisplay
     colorClass: 'text-tg-hint',
     isPositive: false,
     isNegative: false,
-  };
-}
-
-export interface TierPromotionResult {
-  isPromoted: boolean;
-  newTier?: RankedTier;
-  previousTier?: RankedTier;
-}
-
-export function checkTierPromotion(
-  newRating?: number | null,
-  ratingDelta?: number | null,
-): TierPromotionResult {
-  if (
-    newRating === undefined ||
-    newRating === null ||
-    ratingDelta === undefined ||
-    ratingDelta === null ||
-    ratingDelta <= 0
-  ) {
-    return { isPromoted: false };
-  }
-
-  const previousRating = newRating - ratingDelta;
-  const previousTier = getRankedTier(previousRating);
-  const newTier = getRankedTier(newRating);
-
-  const isPromoted = RANKED_TIERS.indexOf(newTier) > RANKED_TIERS.indexOf(previousTier);
-
-  return {
-    isPromoted,
-    newTier: isPromoted ? newTier : undefined,
-    previousTier: isPromoted ? previousTier : undefined,
   };
 }

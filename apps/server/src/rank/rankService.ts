@@ -2,11 +2,9 @@ import type { Db } from 'mongodb';
 import type { Redis as RedisClient } from 'ioredis';
 import {
   type PlayerProfile,
-  type RankedTier,
   type SeasonResult,
   type RankStatusResponse,
   type RankedLeaderboardResponse,
-  getRankedTier,
   RATING_DELTAS,
   getUtcSeasonString,
   getRankedLeaderboardKey,
@@ -55,7 +53,6 @@ export async function ensureCurrentSeason(
 
   if (lastSeason) {
     const finalRating = profile.battleRating ?? 0;
-    const finalTier = getRankedTier(finalRating);
     let finalRank: number | null = null;
 
     if (effectiveRedis) {
@@ -90,7 +87,6 @@ export async function ensureCurrentSeason(
       telegramUserId: profile.telegramUserId,
       season: lastSeason,
       finalRating,
-      finalTier,
       finalRank,
       archivedAt: now,
     };
@@ -148,7 +144,6 @@ export async function processBattleRatingUpdate(
   oldRating: number;
   newRating: number;
   ratingDelta: number;
-  tier: RankedTier;
   season: string;
   archivedPreviousSeason?: SeasonResult | null;
 }> {
@@ -164,7 +159,6 @@ export async function processBattleRatingUpdate(
       oldRating: 0,
       newRating,
       ratingDelta: newRating,
-      tier: getRankedTier(newRating),
       season: defaultSeason,
     };
   }
@@ -174,7 +168,6 @@ export async function processBattleRatingUpdate(
   const oldRating = profile.battleRating ?? 0;
   const delta = calculateRatingDelta(outcome);
   const newRating = Math.max(0, oldRating + delta);
-  const tier = getRankedTier(newRating);
   const season = profile.currentSeason || getUtcSeasonString(now);
 
   await db.collection<PlayerProfile>('profiles').updateOne(
@@ -205,7 +198,6 @@ export async function processBattleRatingUpdate(
     oldRating,
     newRating,
     ratingDelta: newRating - oldRating,
-    tier,
     season,
   };
 }
@@ -225,7 +217,6 @@ export async function getRankStatus(
     return {
       season: currentSeason,
       battleRating: 0,
-      tier: 'Bronze',
       rank: null,
     };
   }
@@ -234,7 +225,6 @@ export async function getRankStatus(
 
   const season = profile.currentSeason || currentSeason;
   const rating = profile.battleRating ?? 0;
-  const tier = getRankedTier(rating);
 
   const rankInfo = await getPlayerLeaderboardRank(
     telegramUserId,
@@ -246,7 +236,6 @@ export async function getRankStatus(
   return {
     season,
     battleRating: rating,
-    tier,
     rank: rankInfo.ranked ? rankInfo.rank : null,
   };
 }

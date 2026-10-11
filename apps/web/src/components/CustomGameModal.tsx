@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Globe, Timer, Flag } from './icons.js';
+import { Play, Globe, Timer, Flag, Loader2 } from './icons.js';
 import type { Continent } from '@flagora/shared';
 import { CONTINENT_LABELS } from '@flagora/shared';
 import { ContinentMap } from './ContinentMap.js';
@@ -45,8 +45,12 @@ export function CustomGameModal({
           disabled={loading}
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-tg-button text-tg-button-text font-bold text-sm shadow-md hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50"
         >
-          <Play className="w-4 h-4 fill-current" />
-          {loading ? 'Starting Game...' : `Start ${flagCount} Flags (${durationSeconds}s)`}
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-tg-button-text shrink-0" />
+          ) : (
+            <Play className="w-4 h-4 fill-current shrink-0" />
+          )}
+          <span>{loading ? 'Starting Game...' : `Start ${flagCount} Flags (${durationSeconds}s)`}</span>
         </button>
       }
     >
