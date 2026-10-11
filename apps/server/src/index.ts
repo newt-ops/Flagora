@@ -642,6 +642,36 @@ async function bootstrap() {
     }
   });
 
+  app.post('/api/battles/group', sessionMiddleware, rateLimit({ endpoint: 'battle_create_group', limit: 30, windowSeconds: 60 }), async (req: AuthenticatedSessionRequest, res) => {
+    try {
+      const telegramUserId = req.sessionUser?.telegramUserId;
+      if (!telegramUserId) {
+        res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+        return;
+      }
+
+      const maxPlayers = typeof req.body?.maxPlayers === 'number' ? req.body.maxPlayers : 5;
+      const userProfile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId });
+      const hostName = userProfile ? getDisplayName(userProfile) : 'Host';
+      const hostPhotoUrl = userProfile?.photoUrl ?? null;
+
+      const battle = await createGroupLobby(
+        {
+          chatId: 0,
+          hostUserId: telegramUserId,
+          hostDisplayName: hostName,
+          hostPhotoUrl,
+          maxPlayers,
+        },
+        db,
+      );
+      res.status(200).json(battle);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create group battle';
+      res.status(500).json({ error: 'Internal server error', message });
+    }
+  });
+
   app.get('/api/battles/:id', sessionMiddleware, rateLimit({ endpoint: 'battle_get', limit: 60, windowSeconds: 60 }), async (req: AuthenticatedSessionRequest, res) => {
     try {
       const telegramUserId = req.sessionUser?.telegramUserId;
@@ -718,6 +748,7 @@ async function bootstrap() {
           photoUrl,
         },
         db,
+        io,
       );
       res.status(200).json(result);
     } catch (error) {
@@ -755,7 +786,7 @@ async function bootstrap() {
       }
 
       const id = String(req.params.id);
-      const result = await leaveGroupLobby(id, telegramUserId, db);
+      const result = await leaveGroupLobby(id, telegramUserId, db, io);
       res.status(200).json(result);
     } catch (error) {
       if (error instanceof BattleNotFoundError) {
@@ -813,7 +844,7 @@ async function bootstrap() {
       }
 
       const id = String(req.params.id);
-      const result = await cancelGroupLobby(id, telegramUserId, db);
+      const result = await cancelGroupLobby(id, telegramUserId, db, io);
       res.status(200).json(result);
     } catch (error) {
       if (error instanceof BattleNotFoundError) {

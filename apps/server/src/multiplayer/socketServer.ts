@@ -16,6 +16,8 @@ import {
   startBattleSession,
   submitBattleAnswer,
 } from '../battle/battleService.js';
+import { joinGroupLobby } from '../battle/groupBattleService.js';
+import type { PlayerProfile } from '@flagora/shared';
 import { notifyOpponentReady } from '../telegram/telegramService.js';
 import {
   BattleNotFoundError,
@@ -126,10 +128,39 @@ export function initSocketServer(
         Boolean(battle.participants?.some((p) => p.userId === userId));
 
       if (!isParticipant) {
-        const message = 'Forbidden: You are not a participant in this battle';
-        socket.emit('battleError', { message, battleId });
-        callback?.({ success: false, battleId, error: message });
-        return;
+        if (
+          battle.isGroupBattle &&
+          battle.status === 'waiting' &&
+          new Date(battle.expiresAt).getTime() > Date.now() &&
+          (battle.participants?.length ?? 0) < (battle.maxPlayers ?? 5)
+        ) {
+          try {
+            const userProfile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: userId });
+            const displayName = userProfile?.firstName || userProfile?.username || `Player ${userId}`;
+            const photoUrl = userProfile?.photoUrl ?? null;
+            await joinGroupLobby(
+              {
+                battleId,
+                userId,
+                telegramUserId: userId,
+                displayName,
+                photoUrl,
+              },
+              db,
+              io,
+            );
+          } catch {
+            const message = 'Forbidden: You are not a participant in this battle';
+            socket.emit('battleError', { message, battleId });
+            callback?.({ success: false, battleId, error: message });
+            return;
+          }
+        } else {
+          const message = 'Forbidden: You are not a participant in this battle';
+          socket.emit('battleError', { message, battleId });
+          callback?.({ success: false, battleId, error: message });
+          return;
+        }
       }
 
       const roomName = `battle:${battleId}`;

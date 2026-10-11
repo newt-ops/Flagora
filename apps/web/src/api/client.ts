@@ -569,6 +569,35 @@ export async function joinGroupBattle(
   return response.json();
 }
 
+export async function createGroupBattle(
+  sessionToken: string,
+  maxPlayers = 5,
+): Promise<BattleSession> {
+  const response = await fetch(`${API_URL}/api/battles/group`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${sessionToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ maxPlayers }),
+  });
+
+  if (!response.ok) {
+    let message = `Failed to create group battle: status ${response.status}`;
+    try {
+      const data = await response.json();
+      if (data?.message) {
+        message = data.message;
+      }
+    } catch {
+      void 0;
+    }
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 export async function cancelGroupBattle(
   sessionToken: string,
   battleId: string,

@@ -22,6 +22,7 @@ import {
   acceptChallenge,
   rematchChallenge,
   createBattle,
+  createGroupBattle,
   getBattleInfo,
   joinBattle,
   joinGroupBattle,
@@ -89,6 +90,7 @@ export function App() {
   const [activeBattleStart, setActiveBattleStart] = useState<BattleStartPayload | null>(null);
   const [activeBattleFinished, setActiveBattleFinished] = useState<BattleFinishedPayload | null>(null);
   const [isStartingBattle, setIsStartingBattle] = useState(false);
+  const [isStartingGroupBattle, setIsStartingGroupBattle] = useState(false);
   const [isLoadingBattleInfo, setIsLoadingBattleInfo] = useState(false);
 
   const {
@@ -199,22 +201,38 @@ export function App() {
               ? Boolean(info.participants?.some((p) => p.userId === profile?.telegramUserId))
               : Boolean(info.isChallenger || info.opponentUserId === profile?.telegramUserId);
 
-            if (info.isJoinable && !isParticipant) {
-              try {
-                if (isGroup) {
-                  await joinGroupBattle(sessionToken, info.battleId);
-                } else {
-                  await joinBattle(sessionToken, info.battleId);
+            if (info.status === 'in_progress' && isParticipant && info.flags && info.flags.length > 0) {
+              setActiveBattleStart({
+                battleId: info.battleId,
+                startedAt: typeof info.startedAt === 'string'
+                  ? info.startedAt
+                  : info.startedAt
+                  ? new Date(info.startedAt).toISOString()
+                  : new Date().toISOString(),
+                runDurationMs: (info.durationSeconds ?? 60) * 1000,
+                flags: info.flags,
+                challengerRunId: info.myRunId || '',
+                opponentRunId: '',
+              });
+              setScreen('battle_live');
+            } else {
+              if (info.isJoinable && !isParticipant) {
+                try {
+                  if (isGroup) {
+                    await joinGroupBattle(sessionToken, info.battleId);
+                  } else {
+                    await joinBattle(sessionToken, info.battleId);
+                  }
+                  const refreshed = await getBattleInfo(sessionToken, info.battleId);
+                  if (isMounted) {
+                    setActiveBattleInfo(refreshed);
+                  }
+                } catch (joinErr) {
+                  console.error('Failed to auto-join battle:', joinErr);
                 }
-                const refreshed = await getBattleInfo(sessionToken, info.battleId);
-                if (isMounted) {
-                  setActiveBattleInfo(refreshed);
-                }
-              } catch (joinErr) {
-                console.error('Failed to auto-join battle:', joinErr);
               }
+              setScreen('battle_lobby');
             }
-            setScreen('battle_lobby');
           }
         })
         .catch((err) => {
@@ -432,6 +450,26 @@ export function App() {
     }
   };
 
+  const handleStartGroupBattle = async (maxPlayers = 5) => {
+    if (!sessionToken) {
+      return;
+    }
+    setStartError(null);
+    setIsStartingGroupBattle(true);
+    try {
+      const response = await createGroupBattle(sessionToken, maxPlayers);
+      setActiveBattleId(response.battleId);
+      const info = await getBattleInfo(sessionToken, response.battleId);
+      setActiveBattleInfo(info);
+      setScreen('battle_lobby');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create group battle';
+      setStartError(message);
+    } finally {
+      setIsStartingGroupBattle(false);
+    }
+  };
+
   const handleBattleAgain = async () => {
     if (!sessionToken) {
       return;
@@ -535,6 +573,7 @@ export function App() {
               onStartDaily={handleStartDaily}
               onChallengeFriend={handleStartChallenge}
               onBattleFriend={handleStartBattle}
+              onStartGroupBattle={() => void handleStartGroupBattle(5)}
               onViewDailyLeaderboard={handleOpenDailyLeaderboard}
               onNavigateToProfile={() => setActiveTab('profile')}
               isPro={isPro}
@@ -547,6 +586,7 @@ export function App() {
               isStartingDaily={isStartingDaily}
               isStartingChallenge={isStartingChallenge}
               isStartingBattle={isStartingBattle}
+              isStartingGroupBattle={isStartingGroupBattle}
             />
           )}
 

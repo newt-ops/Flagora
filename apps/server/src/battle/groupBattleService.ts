@@ -44,7 +44,7 @@ export const GROUP_BATTLE_CONFIG = {
 };
 
 export interface CreateGroupLobbyParams {
-  chatId: number;
+  chatId?: number;
   hostUserId: number;
   hostDisplayName: string;
   hostPhotoUrl?: string | null;
@@ -64,15 +64,17 @@ export async function createGroupLobby(
 
   const now = new Date();
 
-  // If there is already an active unexpired lobby in this group, return it
-  const existing = await db.collection<BattleSession>('battles').findOne({
-    chatId,
-    status: 'waiting',
-    expiresAt: { $gt: now },
-  });
+  // If chatId is provided and there is already an active unexpired lobby in this group, return it
+  if (chatId) {
+    const existing = await db.collection<BattleSession>('battles').findOne({
+      chatId,
+      status: 'waiting',
+      expiresAt: { $gt: now },
+    });
 
-  if (existing) {
-    return existing;
+    if (existing) {
+      return existing;
+    }
   }
 
   const battleId = crypto.randomUUID();
@@ -119,6 +121,7 @@ export interface JoinGroupLobbyParams {
 export async function joinGroupLobby(
   params: JoinGroupLobbyParams,
   db: Db,
+  io?: TypedSocketServer,
 ): Promise<BattleSession> {
   const { battleId, userId, telegramUserId, displayName, photoUrl } = params;
   const now = new Date();
@@ -151,6 +154,12 @@ export async function joinGroupLobby(
   );
 
   if (result) {
+    if (io) {
+      io.to(`battle:${battleId}`).emit('groupParticipantsUpdated', {
+        battleId,
+        participants: result.participants ?? [],
+      });
+    }
     return result;
   }
 
@@ -179,6 +188,7 @@ export async function leaveGroupLobby(
   battleId: string,
   userId: number,
   db: Db,
+  io?: TypedSocketServer,
 ): Promise<BattleSession | null> {
   const battle = await db.collection<BattleSession>('battles').findOne({ battleId });
   if (!battle) {
@@ -201,6 +211,12 @@ export async function leaveGroupLobby(
         { $set: { status: 'expired', updatedAt: now } },
         { returnDocument: 'after' },
       );
+      if (io) {
+        io.to(`battle:${battleId}`).emit('battleError', {
+          message: 'Host left and battle lobby was closed',
+          battleId,
+        });
+      }
       return updated;
     }
 
@@ -218,6 +234,12 @@ export async function leaveGroupLobby(
       },
       { returnDocument: 'after' },
     );
+    if (updated && io) {
+      io.to(`battle:${battleId}`).emit('groupParticipantsUpdated', {
+        battleId,
+        participants: updated.participants ?? [],
+      });
+    }
     return updated;
   }
 
@@ -231,6 +253,13 @@ export async function leaveGroupLobby(
     { returnDocument: 'after' },
   );
 
+  if (updated && io) {
+    io.to(`battle:${battleId}`).emit('groupParticipantsUpdated', {
+      battleId,
+      participants: updated.participants ?? [],
+    });
+  }
+
   return updated;
 }
 
@@ -238,6 +267,7 @@ export async function cancelGroupLobby(
   battleId: string,
   requestingUserId: number,
   db: Db,
+  io?: TypedSocketServer,
 ): Promise<BattleSession> {
   const battle = await db.collection<BattleSession>('battles').findOne({ battleId });
   if (!battle) {
@@ -260,6 +290,14 @@ export async function cancelGroupLobby(
   if (!updated) {
     throw new BattleNotFoundError();
   }
+
+  if (io) {
+    io.to(`battle:${battleId}`).emit('battleError', {
+      message: 'Battle lobby was canceled by the host',
+      battleId,
+    });
+  }
+
   return updated;
 }
 
@@ -358,7 +396,13 @@ export async function startGroupBattle(
 
   await db.collection<BattleSession>('battles').updateOne(
     { battleId },
-    { $set: { participants: updatedParticipants, updatedAt: new Date() } },
+    {
+      $set: {
+        flags: battleStartFlags,
+        participants: updatedParticipants,
+        updatedAt: new Date(),
+      },
+    },
   );
 
   // 3. Emit battleStart event to Socket.IO room
@@ -372,6 +416,24 @@ export async function startGroupBattle(
       opponentRunId: updatedParticipants[1]?.runId ?? '',
     };
     io.to(`battle:${battleId}`).emit('battleStart', payload);
+  }
+
+  // 4. Send Telegram Group Ping / Notification to alert participants
+  if (startedBattle.chatId) {
+    const mentions = updatedParticipants
+      .map((p) => (p.displayName ? `@${p.displayName}` : 'Player'))
+      .join(' ');
+    const rawBotUsername =
+      process.env.TELEGRAM_BOT_USERNAME || process.env.BOT_USERNAME || 'flagora_bot';
+    const cleanUsername = rawBotUsername.replace(/^@/, '');
+    const joinUrl = `https://t.me/${cleanUsername}?startapp=battle_${battleId}`;
+
+    void sendTelegramMessage({
+      chatId: startedBattle.chatId,
+      text: `🔔 <b>BATTLE STARTED!</b> ⚔️\n\n${mentions}\n\n⏱️ 60-second speed run is LIVE! Jump in now!`,
+      parseMode: 'HTML',
+      inlineKeyboard: [[{ text: '⚡ JUMP INTO LIVE BATTLE 🚩', url: joinUrl }]],
+    });
   }
 
   const finalDoc = await db.collection<BattleSession>('battles').findOne({ battleId });
@@ -412,7 +474,17 @@ export async function finalizeGroupBattle(
 
   if (!claimResult) {
     // Already claimed or finalized by another concurrent worker: return latest document
-    return db.collection<BattleSession>('battles').findOne({ battleId });
+    let existing = await db.collection<BattleSession>('battles').findOne({ battleId });
+    if (existing && !existing.podium) {
+      for (let i = 0; i < 10; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        existing = await db.collection<BattleSession>('battles').findOne({ battleId });
+        if (existing?.podium) {
+          break;
+        }
+      }
+    }
+    return existing;
   }
 
   const runsCollection = db.collection<GameRun>('runs');
@@ -572,6 +644,17 @@ export async function getGroupBattleInfo(
     !isParticipant &&
     (battle.participants?.length ?? 0) < (battle.maxPlayers ?? GROUP_BATTLE_CONFIG.defaultMaxPlayers);
 
+  const myParticipant = battle.participants?.find((p) => p.userId === requestingUserId);
+  const remainingSeconds =
+    battle.status === 'in_progress' && battle.startedAt
+      ? Math.max(
+          0,
+          Math.ceil(
+            (GROUP_BATTLE_CONFIG.battleDurationMs - (Date.now() - new Date(battle.startedAt).getTime())) / 1000,
+          ),
+        )
+      : GROUP_BATTLE_CONFIG.battleDurationMs / 1000;
+
   return {
     battleId: battle.battleId,
     challengerUserId: battle.challengerUserId,
@@ -594,5 +677,9 @@ export async function getGroupBattleInfo(
     completedAt: battle.completedAt,
     totalFlags: 10,
     durationSeconds: GROUP_BATTLE_CONFIG.battleDurationMs / 1000,
+    startedAt: battle.startedAt ?? null,
+    flags: battle.flags ?? [],
+    myRunId: myParticipant?.runId ?? null,
+    remainingSeconds,
   };
 }

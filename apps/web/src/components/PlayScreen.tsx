@@ -10,6 +10,7 @@ import {
   Coins as Pins,
   Globe,
   Sliders,
+  Users,
 } from './icons.js';
 import type {
   PlayerProfile,
@@ -35,6 +36,7 @@ interface PlayScreenProps {
   onStartDaily: () => void;
   onChallengeFriend: () => void;
   onBattleFriend: () => void;
+  onStartGroupBattle?: () => void;
   onStartCustomGame?: (config: CustomGameConfig) => void;
   onViewDailyLeaderboard: () => void;
   onNavigateToProfile: () => void;
@@ -45,6 +47,7 @@ interface PlayScreenProps {
   isStartingDaily?: boolean;
   isStartingChallenge?: boolean;
   isStartingBattle?: boolean;
+  isStartingGroupBattle?: boolean;
 }
 
 export function PlayScreen({
@@ -67,6 +70,8 @@ export function PlayScreen({
   isStartingDaily = false,
   isStartingChallenge = false,
   isStartingBattle = false,
+  onStartGroupBattle,
+  isStartingGroupBattle = false,
 }: PlayScreenProps) {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const displayName = getDisplayName(profile);
@@ -345,6 +350,31 @@ export function PlayScreen({
             <span>{isStartingChallenge ? 'Creating Challenge...' : 'Start Duel'}</span>
           </button>
         </div>
+
+        {onStartGroupBattle && (
+          <div className="rounded-2xl bg-tg-section p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-tg-button/10 text-tg-button">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div className="text-left min-w-0">
+                  <h3 className="text-sm font-bold text-tg-text truncate">Group Battle (2–15 Players)</h3>
+                  <p className="text-xs text-tg-hint truncate">Host a multiplayer room for friends or groups</p>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onStartGroupBattle}
+              disabled={isStartingGroupBattle}
+              className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
+            >
+              <Users className={`h-3.5 w-3.5 ${isStartingGroupBattle ? 'animate-spin' : ''}`} />
+              <span>{isStartingGroupBattle ? 'Creating Group Lobby...' : 'Host Group Battle'}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <CustomGameModal

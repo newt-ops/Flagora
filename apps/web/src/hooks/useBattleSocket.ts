@@ -74,7 +74,7 @@ export function useBattleSocket({
   const [finishedPayload, setFinishedPayload] = useState<BattleFinishedPayload | null>(null);
   const [groupRankings, setGroupRankings] = useState<GroupRankingItem[]>([]);
   const [groupPodium, setGroupPodium] = useState<GroupPodiumItem[] | null>(null);
-  const [groupParticipants] = useState<BattleParticipant[]>([]);
+  const [groupParticipants, setGroupParticipants] = useState<BattleParticipant[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const socketRef = useRef<TypedClientSocket | null>(null);
@@ -169,6 +169,12 @@ export function useBattleSocket({
       setGroupPodium(payload.podium);
       if (onGroupBattleFinishedRef.current) {
         onGroupBattleFinishedRef.current(payload);
+      }
+    });
+
+    socket.on('groupParticipantsUpdated', (payload: { battleId: string; participants: BattleParticipant[] }) => {
+      if (payload.battleId === battleId) {
+        setGroupParticipants(payload.participants);
       }
     });
 

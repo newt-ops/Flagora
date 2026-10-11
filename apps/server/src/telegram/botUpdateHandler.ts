@@ -24,7 +24,10 @@ import {
 } from '../battle/battleTypes.js';
 import type { TypedSocketServer } from '../multiplayer/socketTypes.js';
 
-export function formatGroupLobbyMessage(battle: BattleSession): {
+export function formatGroupLobbyMessage(
+  battle: BattleSession,
+  botUsername?: string,
+): {
   text: string;
   inlineKeyboard: InlineKeyboardButton[][];
 } {
@@ -33,6 +36,8 @@ export function formatGroupLobbyMessage(battle: BattleSession): {
   const isFull = participants.length >= maxPlayers;
   const host = participants.find((p) => p.userId === battle.hostUserId) || participants[0];
   const hostName = host?.displayName ?? 'Host';
+  const cleanUsername = (botUsername || process.env.TELEGRAM_BOT_USERNAME || 'flagora_bot').replace(/^@/, '');
+  const miniAppUrl = `https://t.me/${cleanUsername}?startapp=battle_${battle.battleId}`;
 
   let text = `⚔️ <b>FLAGORA GROUP BATTLE</b> 🚩\n\n`;
   text += `👑 <b>Host:</b> ${hostName}\n`;
@@ -43,12 +48,18 @@ export function formatGroupLobbyMessage(battle: BattleSession): {
     const isCrown = p.userId === battle.hostUserId ? ' 👑' : '';
     text += `${index + 1}. <b>${p.displayName}</b>${isCrown}\n`;
   });
-  text += `\n<i>${isFull ? 'Lobby is full! Host can launch anytime.' : 'Tap Join to enter the battle lobby!'}</i>`;
+  text += `\n<i>${isFull ? 'Lobby is full! Host can launch anytime.' : 'Tap below to enter the lobby in Flagora!'}</i>`;
 
   const inlineKeyboard: InlineKeyboardButton[][] = [
     [
       {
-        text: `🚩 Join (${participants.length}/${maxPlayers})`,
+        text: `🎮 Enter Lobby in Flagora (${participants.length}/${maxPlayers}) 🚩`,
+        url: miniAppUrl,
+      },
+    ],
+    [
+      {
+        text: `🚩 Join in Chat`,
         callback_data: `gb_join:${battle.battleId}`,
       },
       { text: '🚪 Leave', callback_data: `gb_leave:${battle.battleId}` },
@@ -276,7 +287,7 @@ export async function handleTelegramUpdate(
             },
             db,
           );
-          const { text, inlineKeyboard } = formatGroupLobbyMessage(lobby);
+          const { text, inlineKeyboard } = formatGroupLobbyMessage(lobby, cleanUsername);
           await editTelegramMessage({
             chatId,
             messageId,
@@ -304,8 +315,9 @@ export async function handleTelegramUpdate(
                 photoUrl: null,
               },
               db,
+              options?.io,
             );
-            const { text, inlineKeyboard } = formatGroupLobbyMessage(updated);
+            const { text, inlineKeyboard } = formatGroupLobbyMessage(updated, cleanUsername);
             await editTelegramMessage({
               chatId,
               messageId,
@@ -334,9 +346,9 @@ export async function handleTelegramUpdate(
 
         if (userId) {
           try {
-            const updated = await leaveGroupLobby(battleId, userId, db);
+            const updated = await leaveGroupLobby(battleId, userId, db, options?.io);
             if (updated && updated.status !== 'expired') {
-              const { text, inlineKeyboard } = formatGroupLobbyMessage(updated);
+              const { text, inlineKeyboard } = formatGroupLobbyMessage(updated, cleanUsername);
               await editTelegramMessage({
                 chatId,
                 messageId,
@@ -414,7 +426,7 @@ export async function handleTelegramUpdate(
           } else if (battle.hostUserId !== userId && (battle.participants?.length ?? 0) > 1) {
             await replyQuery('⚠️ Only the host can cancel this battle lobby!', true);
           } else {
-            await cancelGroupLobby(battleId, battle.hostUserId ?? userId, db);
+            await cancelGroupLobby(battleId, battle.hostUserId ?? userId, db, options?.io);
             await editTelegramMessage({
               chatId,
               messageId,

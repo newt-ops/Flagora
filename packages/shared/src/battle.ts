@@ -34,6 +34,7 @@ export interface BattleSession {
   challengerRunId?: string | null;
   opponentRunId?: string | null;
   startedAt?: Date | string | null;
+  flags?: BattleStartFlag[];
   winner?: BattleWinner | null;
   challengerScore?: number | null;
   opponentScore?: number | null;
@@ -97,6 +98,10 @@ export interface BattleInfoResponse {
   isHost?: boolean;
   participants?: BattleParticipant[];
   podium?: Array<BattleParticipantResult & { rank: number; pinsEarned: number }>;
+  startedAt?: Date | string | null;
+  flags?: BattleStartFlag[];
+  myRunId?: string | null;
+  remainingSeconds?: number;
 }
 
 export interface JoinBattleResponse {
@@ -301,4 +306,5 @@ export interface BattleServerToClientEvents {
   battleFinished: (payload: BattleFinishedPayload) => void;
   groupPlayerProgress?: (payload: GroupProgressPayload) => void;
   groupBattleFinished?: (payload: GroupBattleFinishedPayload) => void;
+  groupParticipantsUpdated?: (payload: { battleId: string; participants: BattleParticipant[] }) => void;
 }
