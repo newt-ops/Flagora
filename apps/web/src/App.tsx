@@ -138,17 +138,19 @@ export function App() {
     if (!sessionToken || !activeBattleId) return;
     try {
       const info = await getBattleInfo(sessionToken, activeBattleId);
-      if (info.status === 'completed' && info.challengerResult && info.opponentResult) {
+      if (info.status === 'completed') {
         setActiveBattleInfo(info);
-        setActiveBattleFinished({
-          battleId: info.battleId,
-          winner: info.winner || 'tie',
-          challengerScore: info.challengerScore ?? 0,
-          opponentScore: info.opponentScore ?? 0,
-          completedAt: String(info.completedAt || new Date().toISOString()),
-          challengerResult: info.challengerResult,
-          opponentResult: info.opponentResult,
-        });
+        if (info.challengerResult && info.opponentResult) {
+          setActiveBattleFinished({
+            battleId: info.battleId,
+            winner: info.winner || 'tie',
+            challengerScore: info.challengerScore ?? 0,
+            opponentScore: info.opponentScore ?? 0,
+            completedAt: String(info.completedAt || new Date().toISOString()),
+            challengerResult: info.challengerResult,
+            opponentResult: info.opponentResult,
+          });
+        }
         setScreen('battle_result');
         void queryClient.invalidateQueries({ queryKey: ['profile'] });
         void queryClient.invalidateQueries({ queryKey: ['rank', 'status'] });

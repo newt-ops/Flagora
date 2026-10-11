@@ -6,6 +6,7 @@ import {
   getBattlePerspectiveHeading,
   getInitials,
   formatGroupVictoryShareText,
+  getBattleDeepLink,
 } from './battleHelpers.js';
 import { getRatingDeltaDisplay, checkTierPromotion } from './rankHelpers.js';
 import { TierBadge } from './TierBadge.js';
@@ -43,11 +44,16 @@ export function BattleResultScreen({
 
   const handleShareGroupResults = () => {
     const text = formatGroupVictoryShareText(podium);
-    const deepLink = `https://t.me/FlagoraBot?startapp=battle_${battleId}`;
+    const deepLink = getBattleDeepLink(battleId);
     const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent(text)}`;
-    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.openTelegramLink) {
-      (window as any).Telegram.WebApp.openTelegramLink(tgUrl);
-    } else {
+    const telegramWebApp = (
+      typeof window !== 'undefined'
+        ? (window as unknown as { Telegram?: { WebApp?: { openTelegramLink: (url: string) => void } } }).Telegram?.WebApp
+        : undefined
+    );
+    if (typeof telegramWebApp?.openTelegramLink === 'function') {
+      telegramWebApp.openTelegramLink(tgUrl);
+    } else if (typeof window !== 'undefined' && typeof window.open === 'function') {
       window.open(tgUrl, '_blank');
     }
     setCopiedShare(true);
@@ -64,7 +70,7 @@ export function BattleResultScreen({
     return (
       <div className="flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
         <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-6 text-center shadow-sm">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/10 text-amber-400">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button">
             <Trophy className="h-8 w-8" />
           </div>
 
@@ -75,7 +81,6 @@ export function BattleResultScreen({
             {podium.length} players competed in the arena
           </p>
 
-          {/* User's placement banner */}
           {myResult && (
             <div className="mt-3.5 flex items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2 text-xs font-semibold">
               <span className="text-tg-hint">Your Result:</span>
@@ -85,17 +90,15 @@ export function BattleResultScreen({
               <span className="text-tg-hint">•</span>
               <span className="font-bold text-tg-text">{myResult.score} pts</span>
               <span className="text-tg-hint">•</span>
-              <span className="font-bold text-amber-400">+{myResult.pinsEarned} 🪙</span>
+              <span className="font-bold text-tg-button">+{myResult.pinsEarned} 🪙</span>
             </div>
           )}
 
-          {/* Olympic 3-Tier Podium */}
           <div className="mt-6 flex w-full items-end justify-center gap-2 pt-8">
-            {/* 2nd Place Pillar */}
             {secondPlace && (
               <div className="flex flex-1 flex-col items-center">
                 <div className="relative mb-2 flex flex-col items-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-300/20 text-slate-200">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tg-button/20 text-tg-button">
                     {secondPlace.photoUrl ? (
                       <img
                         src={secondPlace.photoUrl}
@@ -112,21 +115,20 @@ export function BattleResultScreen({
                   {secondPlace.displayName}
                 </p>
                 <span className="text-[10px] text-tg-hint">{secondPlace.score} pts</span>
-                <span className="mt-0.5 text-[9px] font-bold text-amber-400">+{secondPlace.pinsEarned} 🪙</span>
-                <div className="mt-2 flex h-24 w-full flex-col items-center justify-center rounded-t-xl bg-slate-300/15 border-t border-slate-300/30">
-                  <span className="text-xl font-black text-slate-300">2</span>
+                <span className="mt-0.5 text-[9px] font-bold text-tg-button">+{secondPlace.pinsEarned} 🪙</span>
+                <div className="mt-2 flex h-24 w-full flex-col items-center justify-center rounded-t-xl bg-tg-button/15 border-t border-tg-button/30">
+                  <span className="text-xl font-black text-tg-button">2</span>
                 </div>
               </div>
             )}
 
-            {/* 1st Place Pillar (Gold - Tallest) */}
             {firstPlace && (
               <div className="flex flex-1 flex-col items-center">
                 <div className="relative mb-2 flex flex-col items-center">
-                  <span className="mb-0.5 text-amber-400">
+                  <span className="mb-0.5 text-tg-button">
                     <Crown className="h-4 w-4" />
                   </span>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-400/20 text-amber-300">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-tg-button-text">
                     {firstPlace.photoUrl ? (
                       <img
                         src={firstPlace.photoUrl}
@@ -143,18 +145,17 @@ export function BattleResultScreen({
                   {firstPlace.displayName}
                 </p>
                 <span className="text-[11px] font-bold text-tg-button">{firstPlace.score} pts</span>
-                <span className="mt-0.5 text-[10px] font-bold text-amber-400">+{firstPlace.pinsEarned} 🪙</span>
-                <div className="mt-2 flex h-32 w-full flex-col items-center justify-center rounded-t-xl bg-amber-400/20 border-t border-amber-400/40">
-                  <span className="text-2xl font-black text-amber-400">1</span>
+                <span className="mt-0.5 text-[10px] font-bold text-tg-button">+{firstPlace.pinsEarned} 🪙</span>
+                <div className="mt-2 flex h-32 w-full flex-col items-center justify-center rounded-t-xl bg-tg-button/25 border-t border-tg-button/50">
+                  <span className="text-2xl font-black text-tg-button">1</span>
                 </div>
               </div>
             )}
 
-            {/* 3rd Place Pillar */}
             {thirdPlace && (
               <div className="flex flex-1 flex-col items-center">
                 <div className="relative mb-2 flex flex-col items-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-700/20 text-amber-500">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-tg-button/10 text-tg-button">
                     {thirdPlace.photoUrl ? (
                       <img
                         src={thirdPlace.photoUrl}
@@ -171,15 +172,14 @@ export function BattleResultScreen({
                   {thirdPlace.displayName}
                 </p>
                 <span className="text-[10px] text-tg-hint">{thirdPlace.score} pts</span>
-                <span className="mt-0.5 text-[9px] font-bold text-amber-400">+{thirdPlace.pinsEarned} 🪙</span>
-                <div className="mt-2 flex h-16 w-full flex-col items-center justify-center rounded-t-xl bg-amber-700/15 border-t border-amber-700/30">
-                  <span className="text-lg font-black text-amber-600">3</span>
+                <span className="mt-0.5 text-[9px] font-bold text-tg-button">+{thirdPlace.pinsEarned} 🪙</span>
+                <div className="mt-2 flex h-16 w-full flex-col items-center justify-center rounded-t-xl bg-tg-button/10 border-t border-tg-button/20">
+                  <span className="text-lg font-black text-tg-button">3</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* 4th+ Place Standings Table */}
           {runnersUp.length > 0 && (
             <div className="mt-4 flex w-full flex-col gap-1.5 rounded-xl bg-tg-secondary-bg p-3">
               <span className="text-left text-[10px] font-bold uppercase tracking-wider text-tg-hint">
@@ -200,7 +200,7 @@ export function BattleResultScreen({
                     </div>
                     <div className="flex items-center gap-3">
                       <span>{r.score} pts</span>
-                      <span className="text-amber-400 font-bold">+{r.pinsEarned} 🪙</span>
+                      <span className="text-tg-button font-bold">+{r.pinsEarned} 🪙</span>
                     </div>
                   </div>
                 );
@@ -208,7 +208,6 @@ export function BattleResultScreen({
             </div>
           )}
 
-          {/* Action buttons */}
           <div className="mt-6 flex w-full flex-col gap-2.5">
             <button
               type="button"
@@ -233,7 +232,6 @@ export function BattleResultScreen({
     );
   }
 
-  // Fallback to 1v1 Battle Result Screen
   const winner = finishedPayload?.winner || battleInfo?.winner || null;
   const challengerUserId =
     finishedPayload?.challengerResult.userId || battleInfo?.challengerUserId || 0;

@@ -115,7 +115,6 @@ export function BattleLobbyScreen({
 
   return (
     <div className="relative flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
-      {/* Synchronized 3-second Countdown Overlay */}
       {countdown !== null && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-tg-bg/90 backdrop-blur-md overflow-hidden">
           <p className="relative z-10 text-xs font-bold uppercase tracking-widest text-tg-button">
@@ -128,11 +127,16 @@ export function BattleLobbyScreen({
         </div>
       )}
 
-      {/* Top Navigation & Title Bar */}
       <div className="flex w-full items-center justify-between">
         <button
           type="button"
-          onClick={onBack}
+          onClick={async () => {
+            if (isGroup && onLeaveGroupLobby && !isHost) {
+              await onLeaveGroupLobby();
+            } else {
+              onBack();
+            }
+          }}
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-tg-section text-tg-hint transition-colors hover:text-tg-text active:opacity-75"
           aria-label="Back"
         >
@@ -155,7 +159,6 @@ export function BattleLobbyScreen({
         </div>
       )}
 
-      {/* Match Parameters Info Bar */}
       <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2.5 text-xs text-tg-hint">
         <span className="font-semibold text-tg-text">{totalFlags} Flags</span>
         <span>•</span>
@@ -166,9 +169,7 @@ export function BattleLobbyScreen({
         </span>
       </div>
 
-      {/* Roster & Participant Cards */}
       {isGroup ? (
-        /* ================= GROUP MULTIPLAYER LOBBY ================= */
         <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-4 text-center shadow-sm">
           <div className="mb-3 flex w-full items-center justify-between px-1">
             <span className="text-xs font-bold uppercase tracking-wider text-tg-hint">
@@ -201,7 +202,7 @@ export function BattleLobbyScreen({
                       </div>
                     )}
                     {isPlayerHost && (
-                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-amber-950">
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-tg-button text-tg-button-text ring-2 ring-tg-section">
                         <Crown className="h-3 w-3" />
                       </span>
                     )}
@@ -216,7 +217,6 @@ export function BattleLobbyScreen({
               );
             })}
 
-            {/* Empty Slots Placeholder */}
             {Array.from({ length: Math.max(0, maxPlayers - participants.length) }).map((_, i) => (
               <div
                 key={`empty-${i}`}
@@ -231,7 +231,6 @@ export function BattleLobbyScreen({
             ))}
           </div>
 
-          {/* Group Action Buttons */}
           <div className="mt-5 flex w-full flex-col gap-2.5">
             {isHost ? (
               <>
@@ -282,7 +281,6 @@ export function BattleLobbyScreen({
               </div>
             )}
 
-            {/* Invite Links */}
             <div className="mt-1 grid w-full grid-cols-2 gap-2">
               <button
                 type="button"
@@ -313,7 +311,6 @@ export function BattleLobbyScreen({
           </div>
         </div>
       ) : (
-        /* ================= 1v1 HEAD-TO-HEAD LOBBY ================= */
         <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-5 text-center shadow-sm">
           <div className="grid w-full grid-cols-2 gap-3">
             <div className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4">

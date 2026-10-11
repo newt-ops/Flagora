@@ -57,17 +57,6 @@ export function formatGroupLobbyMessage(
         url: miniAppUrl,
       },
     ],
-    [
-      {
-        text: `🚩 Join in Chat`,
-        callback_data: `gb_join:${battle.battleId}`,
-      },
-      { text: '🚪 Leave', callback_data: `gb_leave:${battle.battleId}` },
-    ],
-    [
-      { text: '🚀 Launch Battle ⚔️', callback_data: `gb_start:${battle.battleId}` },
-      { text: '❌ Cancel', callback_data: `gb_cancel:${battle.battleId}` },
-    ],
   ];
 
   return { text, inlineKeyboard };
@@ -833,7 +822,7 @@ export async function handleTelegramUpdate(
             },
             db,
           );
-          const { text: lobbyText, inlineKeyboard } = formatGroupLobbyMessage(lobby);
+          const { text: lobbyText, inlineKeyboard } = formatGroupLobbyMessage(lobby, cleanUsername);
           await sendTelegramMessage({
             chatId,
             text: lobbyText,

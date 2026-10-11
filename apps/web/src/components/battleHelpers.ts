@@ -1,4 +1,5 @@
 import { getBattleDeepLink, type BattleInfoResponse, type BattleWinner } from '@flagora/shared';
+export { getBattleDeepLink };
 
 export type BattleViewerPerspective = 'won' | 'lost' | 'tie' | 'spectator';
 
@@ -219,24 +220,24 @@ export function getRankBadge(rank: number): RankBadgeInfo {
       return {
         medal: '🥇',
         label: '1st Place',
-        bgClass: 'bg-amber-400/20',
-        textClass: 'text-amber-300',
+        bgClass: 'bg-tg-button',
+        textClass: 'text-tg-button-text font-extrabold',
         stepHeightClass: 'h-36',
       };
     case 2:
       return {
         medal: '🥈',
         label: '2nd Place',
-        bgClass: 'bg-slate-300/20',
-        textClass: 'text-slate-200',
+        bgClass: 'bg-tg-button/20',
+        textClass: 'text-tg-button font-bold',
         stepHeightClass: 'h-28',
       };
     case 3:
       return {
         medal: '🥉',
         label: '3rd Place',
-        bgClass: 'bg-amber-700/20',
-        textClass: 'text-amber-500',
+        bgClass: 'bg-tg-button/10',
+        textClass: 'text-tg-button font-bold',
         stepHeightClass: 'h-20',
       };
     default:

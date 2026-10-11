@@ -74,6 +74,15 @@ export function LiveBattleScreen({
     };
   }, [battleStart.runDurationMs, battleStart.startedAt]);
 
+  useEffect(() => {
+    if ((timeExpired || currentFlagIndex >= battleStart.flags.length) && onCheckFinished) {
+      const timer = setTimeout(() => {
+        onCheckFinished();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [timeExpired, currentFlagIndex, battleStart.flags.length, onCheckFinished]);
+
   const handleSelectChoice = async (choiceText: string) => {
     if (isSubmitting || selectedChoice !== null || timeExpired) {
       return;
@@ -127,7 +136,6 @@ export function LiveBattleScreen({
   );
   const comboMultiplier = calculateComboMultiplier(comboCount);
 
-  // Group rankings calculations
   const myRankItem = currentUserId
     ? groupRankings.find((r) => r.userId === currentUserId)
     : null;
@@ -144,10 +152,8 @@ export function LiveBattleScreen({
         </div>
       )}
 
-      {/* Score Header */}
       <div className="flex w-full flex-col gap-2 rounded-2xl bg-tg-section p-3.5 shadow-sm">
         {isGroupBattle ? (
-          /* Group Battle Scoreboard */
           <div className="flex flex-col gap-2 border-b border-tg-separator/30 pb-2.5">
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
@@ -171,10 +177,9 @@ export function LiveBattleScreen({
                 </div>
               </div>
 
-              {/* Group Mini Leaderboard */}
               <div className="flex flex-col items-end">
                 <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-tg-hint">
-                  <Trophy className="h-3 w-3 text-amber-400" />
+                  <Trophy className="h-3 w-3 text-tg-button" />
                   Live Leaders
                 </span>
                 <div className="mt-1 flex items-center gap-2">
@@ -199,7 +204,6 @@ export function LiveBattleScreen({
             </div>
           </div>
         ) : (
-          /* 1v1 Battle Scoreboard */
           <div className="grid grid-cols-2 gap-2 border-b border-tg-separator/30 pb-2.5">
             <div className="flex flex-col">
               <div className="flex items-center gap-1 text-[11px] font-semibold text-tg-hint">
@@ -246,7 +250,6 @@ export function LiveBattleScreen({
           </div>
         )}
 
-        {/* Battle Timer Bar */}
         <div>
           <div className="flex items-center justify-between text-[11px] font-medium text-tg-hint">
             <span className="flex items-center gap-1">

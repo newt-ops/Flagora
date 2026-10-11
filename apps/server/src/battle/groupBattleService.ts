@@ -96,6 +96,7 @@ export async function createGroupLobby(
     chatId,
     isGroupBattle: true,
     maxPlayers: clampedMax,
+    durationSeconds: GROUP_BATTLE_CONFIG.battleDurationMs / 1000,
     hostUserId,
     challengerUserId: hostUserId,
     opponentUserId: null,
@@ -301,28 +302,13 @@ export async function cancelGroupLobby(
   return updated;
 }
 
-export async function startGroupBattle(
+async function executeStartGroupBattle(
   battleId: string,
   requestingUserId: number,
   db: Db,
   redis?: RedisClient,
   io?: TypedSocketServer,
 ): Promise<BattleSession> {
-  const battle = await db.collection<BattleSession>('battles').findOne({ battleId });
-  if (!battle) {
-    throw new BattleNotFoundError();
-  }
-  if (battle.hostUserId !== requestingUserId) {
-    throw new BattleHostRequiredError();
-  }
-  if (battle.status !== 'waiting') {
-    throw new BattleAlreadyStartedError();
-  }
-  const participants = battle.participants ?? [];
-  if (participants.length < GROUP_BATTLE_CONFIG.minPlayers) {
-    throw new InsufficientPlayersError();
-  }
-
   const now = new Date();
 
   // Atomic state transition to 'in_progress'
@@ -338,6 +324,9 @@ export async function startGroupBattle(
         status: 'in_progress',
         startedAt: now,
         updatedAt: now,
+      },
+      $unset: {
+        startingAt: '',
       },
     },
     { returnDocument: 'after' },
@@ -368,6 +357,8 @@ export async function startGroupBattle(
   // 2. Create individual GameRuns for all participants sharing the exact flag seed
   const runsCollection = db.collection<GameRun>('runs');
   const updatedParticipants: BattleParticipant[] = [];
+  const durationMs =
+    (startedBattle.durationSeconds ?? GROUP_BATTLE_CONFIG.battleDurationMs / 1000) * 1000;
 
   for (const participant of startedBattle.participants ?? []) {
     const runId = crypto.randomUUID();
@@ -377,7 +368,7 @@ export async function startGroupBattle(
       mode: 'practice',
       status: 'active',
       startedAt: now,
-      runDurationMs: GROUP_BATTLE_CONFIG.battleDurationMs,
+      runDurationMs: durationMs,
       flags: runFlags.map((f) => ({ ...f })),
       runningTotal: 0,
       comboCount: 0,
@@ -410,7 +401,7 @@ export async function startGroupBattle(
     const payload: BattleStartPayload = {
       battleId,
       startedAt: now.toISOString(),
-      runDurationMs: GROUP_BATTLE_CONFIG.battleDurationMs,
+      runDurationMs: durationMs,
       flags: battleStartFlags,
       challengerRunId: updatedParticipants[0]?.runId ?? '',
       opponentRunId: updatedParticipants[1]?.runId ?? '',
@@ -418,26 +409,129 @@ export async function startGroupBattle(
     io.to(`battle:${battleId}`).emit('battleStart', payload);
   }
 
-  // 4. Send Telegram Group Ping / Notification to alert participants
-  if (startedBattle.chatId) {
-    const mentions = updatedParticipants
-      .map((p) => (p.displayName ? `@${p.displayName}` : 'Player'))
+  const autoFinalizeTimer = setTimeout(async () => {
+    try {
+      await finalizeGroupBattle(battleId, db, redis, io, { force: true });
+    } catch (err) {
+      console.error('Failed to auto-finalize group battle after timer:', err);
+    }
+  }, durationMs + 1000);
+  autoFinalizeTimer.unref?.();
+
+  const finalDoc = await db.collection<BattleSession>('battles').findOne({ battleId });
+  return finalDoc ?? startedBattle;
+}
+
+export async function startGroupBattle(
+  battleId: string,
+  requestingUserId: number,
+  db: Db,
+  redis?: RedisClient,
+  io?: TypedSocketServer,
+  options?: { countdownSeconds?: number },
+): Promise<BattleSession> {
+  const battle = await db.collection<BattleSession>('battles').findOne({ battleId });
+  if (!battle) {
+    throw new BattleNotFoundError();
+  }
+  if (battle.hostUserId !== requestingUserId) {
+    throw new BattleHostRequiredError();
+  }
+  if (battle.status !== 'waiting') {
+    throw new BattleAlreadyStartedError();
+  }
+  const participants = battle.participants ?? [];
+  if (participants.length < GROUP_BATTLE_CONFIG.minPlayers) {
+    throw new InsufficientPlayersError();
+  }
+
+  const countdownSeconds =
+    options?.countdownSeconds !== undefined ? options.countdownSeconds : io ? 10 : 0;
+
+  if (countdownSeconds <= 0 || !io) {
+    return executeStartGroupBattle(battleId, requestingUserId, db, redis, io);
+  }
+
+  const now = new Date();
+  const claimStarting = await db.collection<BattleSession>('battles').findOneAndUpdate(
+    {
+      battleId,
+      status: 'waiting',
+      hostUserId: requestingUserId,
+      startingAt: { $exists: false },
+    },
+    {
+      $set: {
+        startingAt: new Date(now.getTime() + countdownSeconds * 1000),
+        updatedAt: now,
+      },
+    },
+    { returnDocument: 'after' },
+  );
+
+  if (!claimStarting) {
+    throw new BattleAlreadyStartedError('Battle is already starting or started');
+  }
+
+  // Telegram Group Ping with clickable player mentions
+  if (claimStarting.chatId) {
+    const profilesCollection = db.collection<PlayerProfile>('profiles');
+    const userIds = participants.map((p) => p.userId);
+    const profiles = await profilesCollection.find({ telegramUserId: { $in: userIds } }).toArray();
+    const profileMap = new Map(profiles.map((p) => [p.telegramUserId, p]));
+
+    const mentions = participants
+      .map((p) => {
+        const prof = profileMap.get(p.userId);
+        if (prof?.username) {
+          return `@${prof.username.replace(/^@/, '')}`;
+        }
+        const safeName = (p.displayName || 'Player')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        return `<a href="tg://user?id=${p.userId}">${safeName}</a>`;
+      })
       .join(' ');
+
     const rawBotUsername =
       process.env.TELEGRAM_BOT_USERNAME || process.env.BOT_USERNAME || 'flagora_bot';
     const cleanUsername = rawBotUsername.replace(/^@/, '');
     const joinUrl = `https://t.me/${cleanUsername}?startapp=battle_${battleId}`;
 
     void sendTelegramMessage({
-      chatId: startedBattle.chatId,
-      text: `🔔 <b>BATTLE STARTED!</b> ⚔️\n\n${mentions}\n\n⏱️ 60-second speed run is LIVE! Jump in now!`,
+      chatId: claimStarting.chatId,
+      text: `⚔️ <b>BATTLE STARTING IN ${countdownSeconds} SECONDS!</b> 🚩\n\n${mentions}\n\nGet ready and jump in now!`,
       parseMode: 'HTML',
-      inlineKeyboard: [[{ text: '⚡ JUMP INTO LIVE BATTLE 🚩', url: joinUrl }]],
+      inlineKeyboard: [[{ text: '🎮 Enter Lobby in Flagora 🚩', url: joinUrl }]],
     });
   }
 
-  const finalDoc = await db.collection<BattleSession>('battles').findOne({ battleId });
-  return finalDoc ?? startedBattle;
+  // Socket countdown ticks
+  const roomName = `battle:${battleId}`;
+  io.to(roomName).emit('battleCountdown', { battleId, countdownSeconds });
+
+  let remaining = countdownSeconds - 1;
+  const intervalId = setInterval(() => {
+    if (remaining > 0) {
+      io.to(roomName).emit('battleCountdown', { battleId, countdownSeconds: remaining });
+      remaining--;
+    } else {
+      clearInterval(intervalId);
+    }
+  }, 1000);
+  intervalId.unref?.();
+
+  setTimeout(async () => {
+    clearInterval(intervalId);
+    try {
+      await executeStartGroupBattle(battleId, requestingUserId, db, redis, io);
+    } catch (err) {
+      console.error('Failed to start group battle after countdown:', err);
+    }
+  }, countdownSeconds * 1000);
+
+  return claimStarting;
 }
 
 export async function finalizeGroupBattle(
@@ -445,6 +539,7 @@ export async function finalizeGroupBattle(
   db: Db,
   redis?: RedisClient,
   io?: TypedSocketServer,
+  options?: { force?: boolean },
 ): Promise<BattleSession | null> {
   const battle = await db.collection<BattleSession>('battles').findOne({ battleId });
   if (!battle || battle.status !== 'in_progress') {
@@ -452,6 +547,31 @@ export async function finalizeGroupBattle(
   }
 
   const now = new Date();
+  const startedAtMs = battle.startedAt ? new Date(battle.startedAt).getTime() : 0;
+  const durationMs =
+    (battle.durationSeconds ?? GROUP_BATTLE_CONFIG.battleDurationMs / 1000) * 1000;
+  const isTimeExpired = startedAtMs > 0 && now.getTime() >= startedAtMs + durationMs;
+
+  const participants = battle.participants ?? [];
+  const runsCollection = db.collection<GameRun>('runs');
+  let allParticipantsFinished = participants.length > 0;
+
+  for (const p of participants) {
+    if (!p.runId) {
+      allParticipantsFinished = false;
+      break;
+    }
+    const r = await runsCollection.findOne({ runId: p.runId });
+    if (!r || (r.status !== 'finished' && r.status !== 'expired')) {
+      allParticipantsFinished = false;
+      break;
+    }
+  }
+
+  if (!options?.force && !isTimeExpired && !allParticipantsFinished) {
+    // Battle is actively ongoing; do not finalize prematurely
+    return battle;
+  }
 
   // Atomic idempotency guard: only ONE execution sets rewardsDistributed: true
   const claimResult = await db.collection<BattleSession>('battles').findOneAndUpdate(
@@ -487,9 +607,8 @@ export async function finalizeGroupBattle(
     return existing;
   }
 
-  const runsCollection = db.collection<GameRun>('runs');
   const profilesCollection = db.collection<PlayerProfile>('profiles');
-  const participants = claimResult.participants ?? [];
+  const finalParticipants = claimResult.participants ?? participants;
 
   // Collect results for each participant
   interface ParticipantScoreData {
@@ -502,7 +621,7 @@ export async function finalizeGroupBattle(
 
   const scoredList: ParticipantScoreData[] = [];
 
-  for (const participant of participants) {
+  for (const participant of finalParticipants) {
     let score = 0;
     let correctCount = 0;
     let totalFlags = 10;
@@ -511,6 +630,12 @@ export async function finalizeGroupBattle(
     if (participant.runId) {
       const run = await runsCollection.findOne({ runId: participant.runId });
       if (run) {
+        if (run.status === 'active') {
+          await runsCollection.updateOne(
+            { runId: participant.runId },
+            { $set: { status: 'expired', finishedAt: now, updatedAt: now } },
+          );
+        }
         score = run.finalScore?.totalScore ?? run.runningTotal ?? 0;
         correctCount = run.flags.filter((f) => f.correct).length;
         totalFlags = run.flags.length;

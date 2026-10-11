@@ -24,6 +24,7 @@ export interface BattleSession {
   chatId?: number | null;
   isGroupBattle?: boolean;
   maxPlayers?: number;
+  durationSeconds?: number;
   hostUserId?: number;
   challengerUserId: number;
   challengerTelegramUserId?: number;

@@ -572,18 +572,30 @@ export async function submitBattleAnswer(
     throw new BattleNotFoundError();
   }
 
+  const isGroup = Boolean(battle.isGroupBattle);
   const isChallenger = battle.challengerUserId === userId;
   const isOpponent = battle.opponentUserId !== null && battle.opponentUserId === userId;
+  const participant = isGroup ? battle.participants?.find((p) => p.userId === userId) : null;
 
-  if (!isChallenger && !isOpponent) {
-    throw new UnauthorizedBattleAccessError();
+  if (isGroup) {
+    if (!participant) {
+      throw new UnauthorizedBattleAccessError();
+    }
+  } else {
+    if (!isChallenger && !isOpponent) {
+      throw new UnauthorizedBattleAccessError();
+    }
   }
 
   if (battle.status !== 'in_progress') {
     throw new BattleNotInProgressError();
   }
 
-  const runId = isChallenger ? battle.challengerRunId : battle.opponentRunId;
+  const runId = isGroup
+    ? participant?.runId
+    : isChallenger
+    ? battle.challengerRunId
+    : battle.opponentRunId;
   if (!runId) {
     throw new RunNotFoundError();
   }
@@ -600,7 +612,7 @@ export async function submitBattleAnswer(
 
   let scored;
   try {
-    scored = scoreAnswer(run, flagIndex, selectedIsoCode, nowMs);
+    scored = scoreAnswer(run, flagIndex, selectedIsoCode, nowMs, 2000);
   } catch (error) {
     if (error instanceof TimeExpiredError) {
       await runsCollection.updateOne(
@@ -614,7 +626,11 @@ export async function submitBattleAnswer(
         },
       );
       await finishRun(runId, userId, db, redis, io);
-      await checkAndFinalizeBattle(battleId, db, redis, io);
+      if (isGroup) {
+        await finalizeGroupBattle(battleId, db, redis, io);
+      } else {
+        await checkAndFinalizeBattle(battleId, db, redis, io);
+      }
     }
     throw error;
   }
@@ -644,9 +660,27 @@ export async function submitBattleAnswer(
     },
   );
 
+  if (isGroup) {
+    await db.collection<BattleSession>('battles').updateOne(
+      { battleId, 'participants.userId': userId },
+      {
+        $set: {
+          'participants.$.score': scored.newRunningTotal,
+          'participants.$.correctCount': updatedFlags.filter((f) => f.correct).length,
+          'participants.$.totalFlags': updatedFlags.length,
+          updatedAt: new Date(nowMs),
+        },
+      },
+    );
+  }
+
   if (updatedFlags.every((f) => f.answered)) {
     await finishRun(runId, userId, db, redis, io);
-    await checkAndFinalizeBattle(battleId, db, redis, io);
+    if (isGroup) {
+      await finalizeGroupBattle(battleId, db, redis, io);
+    } else {
+      await checkAndFinalizeBattle(battleId, db, redis, io);
+    }
   }
 
   const answerResult: AnswerResultPayload = {
