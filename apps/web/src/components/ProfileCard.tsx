@@ -31,6 +31,7 @@ import { formatSeasonName, getTierIcon } from './rankHelpers.js';
 import { ProUpgradeModal } from './ProUpgradeModal.js';
 import { VerifiedBadge } from './VerifiedBadge.js';
 import { triggerHaptic } from '../telegram/haptics.js';
+import { toast } from '../store/toastStore.js';
 
 export { getDisplayName };
 
@@ -114,6 +115,7 @@ export function ProfileCard({
       }
       triggerHaptic('success');
       setReferralCopied(true);
+      toast.success('Referral link copied to clipboard!');
       setTimeout(() => setReferralCopied(false), 2000);
     } catch {
       void 0;

@@ -3,6 +3,8 @@ import { Flame, ShieldCheck, Loader2 } from './icons.js';
 import { type StreakStatusResponse, STREAK_SAVE_PIN_COST } from '@flagora/shared';
 import { saveStreak } from '../api/client.js';
 import { getStreakSaveBannerCopy } from './rewardUiHelpers.js';
+import { ConfirmationModal } from './ConfirmationModal.js';
+import { RewardModal } from './RewardModal.js';
 
 export interface StreakSaveBannerProps {
   sessionToken?: string | null;
@@ -22,6 +24,8 @@ export function StreakSaveBanner({
   onUpgradePro,
 }: StreakSaveBannerProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isRewardOpen, setIsRewardOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ text: string; isSuccess: boolean } | null>(null);
 
   const canAfford = isPro || userPins >= STREAK_SAVE_PIN_COST;
@@ -37,6 +41,8 @@ export function StreakSaveBanner({
     try {
       const res = await saveStreak(sessionToken);
       if (res.saved) {
+        setIsConfirmOpen(false);
+        setIsRewardOpen(true);
         setFeedback({ text: 'Streak saved! Play a game today to extend it', isSuccess: true });
         onSuccess?.();
       }
@@ -55,69 +61,104 @@ export function StreakSaveBanner({
   const { title, subtitle, buttonText } = getStreakSaveBannerCopy(streakStatus.currentStreak, isPro);
 
   return (
-    <div
-      data-testid="streak-save-banner"
-      className="flex w-full flex-col rounded-2xl bg-tg-section p-4 text-left shadow-sm"
-    >
-      <div className="flex items-start justify-between flex-wrap sm:flex-nowrap gap-3">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-tg-button/10 text-tg-button">
-            <Flame className="h-4 w-4 fill-current text-tg-button" />
+    <>
+      <ConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleSaveStreak}
+        title="Protect Your Daily Streak?"
+        description={
+          isPro
+            ? 'Use your Flagora Pro shield to preserve your streak for today.'
+            : 'Spend 50 Pins to shield your active streak from resetting today.'
+        }
+        confirmText={isPro ? 'Save Streak (Free)' : 'Spend 50 Pins'}
+        cancelText="Cancel"
+        variant="primary"
+        iconType="warning"
+        isLoading={isSaving}
+        details={
+          <div className="flex items-center justify-between">
+            <span className="text-tg-hint">Current Streak</span>
+            <span className="font-bold text-tg-text">{streakStatus.currentStreak} Days</span>
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-tg-text truncate">{title}</span>
-              <ShieldCheck className="h-4 w-4 text-tg-button shrink-0" />
+        }
+      />
+
+      <RewardModal
+        isOpen={isRewardOpen}
+        onClose={() => setIsRewardOpen(false)}
+        title="Streak Protected!"
+        subtitle="Your streak is safe for today. Play a game before midnight UTC to extend it!"
+        rewardType="badge"
+        badgeName={`${streakStatus.currentStreak} Day Streak Shielded`}
+        buttonText="Continue"
+      />
+
+      <div
+        data-testid="streak-save-banner"
+        className="flex w-full flex-col rounded-2xl bg-tg-section p-4 text-left shadow-sm"
+      >
+        <div className="flex items-start justify-between flex-wrap sm:flex-nowrap gap-3">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-tg-button/10 text-tg-button">
+              <Flame className="h-4 w-4 fill-current text-tg-button" />
             </div>
-            <p className="mt-0.5 text-xs text-tg-hint">{subtitle}</p>
-            {!isPro && !canAfford && (
-              <div className="mt-1 flex flex-col gap-1">
-                <p className="text-[11px] font-semibold text-tg-destructive">
-                  You need {STREAK_SAVE_PIN_COST} pins (current: {userPins})
-                </p>
-                {onUpgradePro && (
-                  <button
-                    type="button"
-                    onClick={onUpgradePro}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-tg-button hover:underline"
-                  >
-                    <span>Upgrade to Pro with Stars for free saves</span>
-                  </button>
-                )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-bold text-tg-text truncate">{title}</span>
+                <ShieldCheck className="h-4 w-4 text-tg-button shrink-0" />
               </div>
-            )}
+              <p className="mt-0.5 text-xs text-tg-hint">{subtitle}</p>
+              {!isPro && !canAfford && (
+                <div className="mt-1 flex flex-col gap-1">
+                  <p className="text-[11px] font-semibold text-tg-destructive">
+                    You need {STREAK_SAVE_PIN_COST} pins (current: {userPins})
+                  </p>
+                  {onUpgradePro && (
+                    <button
+                      type="button"
+                      onClick={onUpgradePro}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-tg-button hover:underline"
+                    >
+                      <span>Upgrade to Pro with Stars for free saves</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setIsConfirmOpen(true)}
+            disabled={isSaving || !sessionToken || !canAfford}
+            className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-tg-button px-3.5 text-xs font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text" />
+                <span>Saving...</span>
+              </>
+            ) : (
+              <span>{buttonText}</span>
+            )}
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSaveStreak}
-          disabled={isSaving || !sessionToken || !canAfford}
-          className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-tg-button px-3.5 text-xs font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text" />
-              <span>Saving...</span>
-            </>
-          ) : (
-            <span>{buttonText}</span>
-          )}
-        </button>
+        {feedback && (
+          <div
+            data-testid="streak-save-feedback"
+            className={`mt-2.5 rounded-xl px-2.5 py-1.5 text-xs font-medium ${
+              feedback.isSuccess
+                ? 'bg-tg-button/10 text-tg-button'
+                : 'bg-tg-destructive/10 text-tg-destructive'
+            }`}
+          >
+            {feedback.text}
+          </div>
+        )}
       </div>
-
-      {feedback && (
-        <div
-          data-testid="streak-save-feedback"
-          className={`mt-2.5 rounded-xl px-2.5 py-1.5 text-xs font-medium ${
-            feedback.isSuccess
-              ? 'bg-tg-button/10 text-tg-button'
-              : 'bg-tg-destructive/10 text-tg-destructive'
-          }`}
-        >
-          {feedback.text}
-        </div>
-      )}
-    </div>
+    </>
   );
 }

@@ -14,6 +14,8 @@ import {
 } from './icons.js';
 import type { BattleInfoResponse, OpponentJoinedPayload, BattleParticipant } from '@flagora/shared';
 import { shareBattle, copyBattleLink, getInitials } from './battleHelpers.js';
+import { ConfirmationModal } from './ConfirmationModal.js';
+import { toast } from '../store/toastStore.js';
 
 interface BattleLobbyScreenProps {
   battleId: string;
@@ -56,6 +58,7 @@ export function BattleLobbyScreen({
 }: BattleLobbyScreenProps) {
   const [copied, setCopied] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
 
   const handleShare = () => {
     shareBattle(battleId);
@@ -65,6 +68,7 @@ export function BattleLobbyScreen({
     const success = await copyBattleLink(battleId);
     if (success) {
       setCopied(true);
+      toast.success('Battle invite link copied to clipboard!');
       setTimeout(() => {
         setCopied(false);
       }, 2000);
@@ -272,7 +276,7 @@ export function BattleLobbyScreen({
                 {onCancelGroupLobby && (
                   <button
                     type="button"
-                    onClick={onCancelGroupLobby}
+                    onClick={() => setIsCancelConfirmOpen(true)}
                     className="flex h-10 w-full items-center justify-center rounded-xl bg-tg-secondary-bg text-xs font-bold text-tg-destructive hover:opacity-80 transition-opacity"
                   >
                     Cancel Lobby
@@ -498,6 +502,20 @@ export function BattleLobbyScreen({
           </div>
         </div>
       )}
+      <ConfirmationModal
+        isOpen={isCancelConfirmOpen}
+        onClose={() => setIsCancelConfirmOpen(false)}
+        onConfirm={async () => {
+          setIsCancelConfirmOpen(false);
+          onCancelGroupLobby?.();
+        }}
+        title="Disband Group Lobby?"
+        description="This will cancel the match and remove all joined players from the arena."
+        confirmText="Disband Lobby"
+        cancelText="Keep Lobby"
+        variant="danger"
+        iconType="error"
+      />
     </div>
   );
 }

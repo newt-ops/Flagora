@@ -45,6 +45,7 @@ import { NonTelegramFallback } from './components/NonTelegramFallback.js';
 import { PlayScreen } from './components/PlayScreen.js';
 import { BottomNav, type NavTab } from './components/BottomNav.js';
 import { PlaySkeleton, CardSkeleton } from './components/Skeletons.js';
+import { ToastContainer } from './components/ToastNotification.js';
 import {
   initTelegramWebApp,
   syncTelegramBackButton,
@@ -533,6 +534,7 @@ export function App() {
     <main
       className="flex min-h-screen flex-col items-center justify-start bg-tg-secondary-bg text-tg-text pl-[max(0.875rem,calc(var(--app-safe-left,0px)+0.875rem))] pr-[max(0.875rem,calc(var(--app-safe-right,0px)+0.875rem))] sm:px-4 pt-[calc(var(--app-safe-top,0px)+1.25rem)] pb-[calc(var(--app-safe-bottom,0px)+5.5rem)]"
     >
+      <ToastContainer />
       {isLoading && <PlaySkeleton />}
 
       {isLoadingChallengeInfo && <CardSkeleton message="Loading challenge..." />}
@@ -713,6 +715,7 @@ export function App() {
           isReconnecting={isBattleSocketReconnecting}
           onSubmitAnswer={submitBattleAnswer}
           onCheckFinished={checkBattleFinishedFallback}
+          onForfeit={handleBackToProfile}
           isGroupBattle={Boolean(activeBattleInfo?.isGroupBattle)}
           groupRankings={battleGroupRankings}
           currentUserId={profile.telegramUserId}

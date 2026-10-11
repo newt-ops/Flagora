@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Crown,
-  X,
   Loader2,
   CheckCircle2,
   AlertCircle,
@@ -9,6 +8,7 @@ import {
 import { VerifiedBadge } from './VerifiedBadge.js';
 import { createProInvoiceLink } from '../api/client.js';
 import { openTelegramInvoice } from '../telegram/telegramWebApp.js';
+import { AnimatedModal } from './AnimatedModal.js';
 
 interface ProUpgradeModalProps {
   isOpen: boolean;
@@ -28,8 +28,6 @@ export function ProUpgradeModal({
     type: 'success' | 'info' | 'error';
     text: string;
   } | null>(null);
-
-  if (!isOpen) return null;
 
   const handleSubscribe = async () => {
     if (!sessionToken) {
@@ -80,76 +78,14 @@ export function ProUpgradeModal({
   };
 
   return (
-    <div
-      data-testid="pro-upgrade-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in duration-200"
-    >
-      <div
-        data-testid="pro-upgrade-modal"
-        className="relative flex w-full max-w-sm flex-col rounded-3xl bg-tg-section p-6 shadow-2xl text-tg-text"
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1.5 text-tg-hint hover:text-tg-text hover:bg-tg-secondary-bg transition-colors"
-          aria-label="Close modal"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2AABEE]/15 text-[#2AABEE]">
-            <VerifiedBadge className="h-8 w-8 text-[#2AABEE]" />
-          </div>
-
-          <h2 className="mt-3 text-lg font-extrabold text-tg-text">Flagora Pro</h2>
-          <p className="mt-0.5 text-xs text-tg-hint">Official Telegram Verification</p>
-
-          <div className="mt-3 flex items-baseline gap-1 rounded-2xl bg-tg-secondary-bg px-4 py-2">
-            <span className="text-2xl font-black text-tg-text">1</span>
-            <span className="text-xs font-bold text-tg-hint">Star / month</span>
-          </div>
-        </div>
-
-        <div className="mt-5 flex flex-col gap-2.5">
-          <div className="flex items-start gap-3 rounded-2xl bg-tg-secondary-bg p-3.5 text-left">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2AABEE]/15 mt-0.5">
-              <VerifiedBadge className="h-5 w-5 text-[#2AABEE]" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <p className="text-sm font-bold text-tg-text flex items-center gap-1.5">
-                <span>Verified Checkmark</span>
-                <VerifiedBadge className="h-3.5 w-3.5 text-[#2AABEE]" />
-              </p>
-              <p className="text-xs text-tg-hint mt-0.5 leading-relaxed">
-                Stand out with an official blue checkmark badge next to your name across your Profile, Live 1v1 Battles, and Leaderboards.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {statusMessage && (
-          <div
-            className={`mt-4 flex items-center gap-2 rounded-2xl p-3 text-xs ${
-              statusMessage.type === 'success'
-                ? 'bg-tg-button/15 text-tg-button'
-                : statusMessage.type === 'error'
-                ? 'bg-tg-destructive/15 text-tg-destructive'
-                : 'bg-tg-secondary-bg text-tg-hint'
-            }`}
-          >
-            {statusMessage.type === 'success' ? (
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-tg-button" />
-            ) : statusMessage.type === 'error' ? (
-              <AlertCircle className="h-4 w-4 shrink-0 text-tg-destructive" />
-            ) : (
-              <AlertCircle className="h-4 w-4 shrink-0 text-tg-hint" />
-            )}
-            <span>{statusMessage.text}</span>
-          </div>
-        )}
-
-        <div className="mt-5 flex flex-col gap-2">
+    <AnimatedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      showCloseButton={true}
+      maxWidthClass="max-w-sm"
+      ariaLabel="Flagora Pro Upgrade"
+      footer={
+        <div className="flex flex-col gap-2">
           {statusMessage?.type === 'success' ? (
             <button
               type="button"
@@ -182,7 +118,59 @@ export function ProUpgradeModal({
             Cancel
           </button>
         </div>
+      }
+    >
+      <div className="flex flex-col items-center text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2AABEE]/15 text-[#2AABEE]">
+          <VerifiedBadge className="h-8 w-8 text-[#2AABEE]" />
+        </div>
+
+        <h2 className="mt-3 text-lg font-extrabold text-tg-text">Flagora Pro</h2>
+        <p className="mt-0.5 text-xs text-tg-hint">Official Telegram Verification</p>
+
+        <div className="mt-3 flex items-baseline gap-1 rounded-2xl bg-tg-secondary-bg px-4 py-2">
+          <span className="text-2xl font-black text-tg-text">1</span>
+          <span className="text-xs font-bold text-tg-hint">Star / month</span>
+        </div>
       </div>
-    </div>
+
+      <div className="mt-3 flex flex-col gap-2.5">
+        <div className="flex items-start gap-3 rounded-2xl bg-tg-secondary-bg p-3.5 text-left">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2AABEE]/15 mt-0.5">
+            <VerifiedBadge className="h-5 w-5 text-[#2AABEE]" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <p className="text-sm font-bold text-tg-text flex items-center gap-1.5">
+              <span>Verified Checkmark</span>
+              <VerifiedBadge className="h-3.5 w-3.5 text-[#2AABEE]" />
+            </p>
+            <p className="text-xs text-tg-hint mt-0.5 leading-relaxed">
+              Stand out with an official blue checkmark badge next to your name across your Profile, Live 1v1 Battles, and Leaderboards.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {statusMessage && (
+        <div
+          className={`mt-4 flex items-center gap-2 rounded-2xl p-3 text-xs ${
+            statusMessage.type === 'success'
+              ? 'bg-tg-button/15 text-tg-button'
+              : statusMessage.type === 'error'
+              ? 'bg-tg-destructive/15 text-tg-destructive'
+              : 'bg-tg-secondary-bg text-tg-hint'
+          }`}
+        >
+          {statusMessage.type === 'success' ? (
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-tg-button" />
+          ) : statusMessage.type === 'error' ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-tg-destructive" />
+          ) : (
+            <AlertCircle className="h-4 w-4 shrink-0 text-tg-hint" />
+          )}
+          <span>{statusMessage.text}</span>
+        </div>
+      )}
+    </AnimatedModal>
   );
 }

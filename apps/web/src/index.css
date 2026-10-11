@@ -325,3 +325,126 @@ body {
   animation: liveBreath 1.5s ease-in-out infinite;
 }
 
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalScaleUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes toastSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes checkDraw {
+  0% {
+    stroke-dashoffset: 48;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes crossDraw {
+  0% {
+    stroke-dashoffset: 32;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes coinFlip {
+  0% {
+    transform: rotateY(0deg) scale(0.92);
+  }
+  50% {
+    transform: rotateY(180deg) scale(1.08);
+  }
+  100% {
+    transform: rotateY(360deg) scale(1);
+  }
+}
+
+@keyframes flameFlicker {
+  0%, 100% {
+    transform: scale(1) rotate(-1deg);
+  }
+  50% {
+    transform: scale(1.08) rotate(2deg);
+  }
+}
+
+@keyframes raysRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-modal-fade {
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-modal-card {
+  animation: modalScaleUp 0.28s cubic-bezier(0.34, 1.35, 0.64, 1) both;
+}
+
+.animate-toast-in {
+  animation: toastSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-rays-rotate {
+  animation: raysRotate 20s linear infinite;
+}
+
+.animate-check-draw {
+  stroke-dasharray: 48;
+  animation: checkDraw 0.45s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.animate-cross-draw {
+  stroke-dasharray: 32;
+  animation: crossDraw 0.35s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.animate-coin-flip {
+  animation: coinFlip 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-flame-flicker {
+  animation: flameFlicker 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+

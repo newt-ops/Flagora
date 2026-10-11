@@ -22,6 +22,7 @@ import {
   type GroupRankingItem,
 } from '@flagora/shared';
 import { triggerHaptic } from '../telegram/haptics.js';
+import { ConfirmationModal } from './ConfirmationModal.js';
 
 interface LiveBattleScreenProps {
   battleStart: BattleStartPayload;
@@ -30,6 +31,7 @@ interface LiveBattleScreenProps {
   isReconnecting: boolean;
   onSubmitAnswer: (flagIndex: number, selectedIsoCode: string) => Promise<SubmitAnswerResponse>;
   onCheckFinished?: () => void;
+  onForfeit?: () => void;
   isGroupBattle?: boolean;
   groupRankings?: GroupRankingItem[];
   currentUserId?: number;
@@ -42,6 +44,7 @@ export function LiveBattleScreen({
   isReconnecting,
   onSubmitAnswer,
   onCheckFinished,
+  onForfeit,
   isGroupBattle = false,
   groupRankings = [],
   currentUserId,
@@ -58,6 +61,7 @@ export function LiveBattleScreen({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeftMs, setTimeLeftMs] = useState(battleStart.runDurationMs);
   const [timeExpired, setTimeExpired] = useState(false);
+  const [isForfeitConfirmOpen, setIsForfeitConfirmOpen] = useState(false);
 
   const startTimestampRef = useRef<number>(Date.now());
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -295,9 +299,20 @@ export function LiveBattleScreen({
               <Timer className="h-3 w-3" />
               <span>Battle Timer</span>
             </span>
-            <span className={timerSeconds <= 10 ? 'font-bold text-tg-destructive' : 'text-tg-text'}>
-              {timerSeconds}s
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={timerSeconds <= 10 ? 'font-bold text-tg-destructive' : 'text-tg-text'}>
+                {timerSeconds}s
+              </span>
+              {onForfeit && (
+                <button
+                  type="button"
+                  onClick={() => setIsForfeitConfirmOpen(true)}
+                  className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-tg-hint hover:text-tg-destructive hover:bg-tg-destructive/10 transition-colors"
+                >
+                  Forfeit
+                </button>
+              )}
+            </div>
           </div>
 
           <svg className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-tg-secondary-bg">
@@ -579,6 +594,26 @@ export function LiveBattleScreen({
           </div>
         )
       )}
+      <ConfirmationModal
+        isOpen={isForfeitConfirmOpen}
+        onClose={() => setIsForfeitConfirmOpen(false)}
+        onConfirm={async () => {
+          setIsForfeitConfirmOpen(false);
+          onForfeit?.();
+        }}
+        title="Forfeit Active Battle?"
+        description="Leaving early counts as an immediate defeat. Your opponent will be awarded the win."
+        details={
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-tg-hint">Rating Impact</span>
+            <span className="font-bold text-red-500">-15 Battle Rating</span>
+          </div>
+        }
+        confirmText="Forfeit Battle"
+        cancelText="Keep Playing"
+        variant="danger"
+        iconType="error"
+      />
     </div>
   );
 }
