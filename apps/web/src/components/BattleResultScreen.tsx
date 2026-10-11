@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Trophy, Swords, ArrowLeft, Sparkles, Share2, Crown } from './icons.js';
+import { Trophy, Swords, ArrowLeft, Sparkles, Share2, Crown, Medal, Award, Coins } from './icons.js';
 import type { BattleFinishedPayload, BattleInfoResponse, GroupPodiumItem } from '@flagora/shared';
 import {
   getBattleViewerPerspective,
   getBattlePerspectiveHeading,
   getInitials,
   formatGroupVictoryShareText,
+  format1v1VictoryShareText,
   getBattleDeepLink,
 } from './battleHelpers.js';
 import { getRatingDeltaDisplay, checkTierPromotion } from './rankHelpers.js';
@@ -70,7 +71,7 @@ export function BattleResultScreen({
     return (
       <div className="flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
         <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-6 text-center shadow-sm">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button ring-1 ring-tg-button/20 shadow-sm">
             <Trophy className="h-8 w-8" />
           </div>
 
@@ -82,15 +83,29 @@ export function BattleResultScreen({
           </p>
 
           {myResult && (
-            <div className="mt-3.5 flex items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2 text-xs font-semibold">
+            <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2 text-xs font-semibold">
               <span className="text-tg-hint">Your Result:</span>
-              <span className="font-bold text-tg-button">
-                {myResult.rank === 1 ? '🥇 1st Place' : myResult.rank === 2 ? '🥈 2nd Place' : myResult.rank === 3 ? '🥉 3rd Place' : `#${myResult.rank} Place`}
+              <span className="flex items-center gap-1 font-bold text-tg-button">
+                {myResult.rank === 1 && <Crown className="h-3.5 w-3.5 text-tg-button" />}
+                {myResult.rank === 2 && <Medal className="h-3.5 w-3.5 text-tg-button" />}
+                {myResult.rank === 3 && <Award className="h-3.5 w-3.5 text-tg-button" />}
+                <span>
+                  {myResult.rank === 1
+                    ? '1st Place'
+                    : myResult.rank === 2
+                    ? '2nd Place'
+                    : myResult.rank === 3
+                    ? '3rd Place'
+                    : `#${myResult.rank} Place`}
+                </span>
               </span>
               <span className="text-tg-hint">•</span>
               <span className="font-bold text-tg-text">{myResult.score} pts</span>
               <span className="text-tg-hint">•</span>
-              <span className="font-bold text-tg-button">+{myResult.pinsEarned} 🪙</span>
+              <span className="flex items-center gap-1 font-bold text-tg-button">
+                <span>+{myResult.pinsEarned}</span>
+                <Coins className="h-3.5 w-3.5 text-tg-button" />
+              </span>
             </div>
           )}
 
@@ -109,13 +124,18 @@ export function BattleResultScreen({
                       <span className="text-sm font-bold">{getInitials(secondPlace.displayName)}</span>
                     )}
                   </div>
-                  <span className="absolute -bottom-1 -right-1 text-sm">🥈</span>
+                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-tg-section text-tg-button shadow-sm ring-1 ring-tg-button/30">
+                    <Medal className="h-3 w-3" />
+                  </span>
                 </div>
                 <p className="max-w-[70px] truncate text-[11px] font-bold text-tg-text">
                   {secondPlace.displayName}
                 </p>
                 <span className="text-[10px] text-tg-hint">{secondPlace.score} pts</span>
-                <span className="mt-0.5 text-[9px] font-bold text-tg-button">+{secondPlace.pinsEarned} 🪙</span>
+                <span className="mt-0.5 flex items-center gap-0.5 text-[9px] font-bold text-tg-button">
+                  <span>+{secondPlace.pinsEarned}</span>
+                  <Coins className="h-2.5 w-2.5" />
+                </span>
                 <div className="mt-2 flex h-24 w-full flex-col items-center justify-center rounded-t-xl bg-tg-button/15 border-t border-tg-button/30">
                   <span className="text-xl font-black text-tg-button">2</span>
                 </div>
@@ -126,9 +146,9 @@ export function BattleResultScreen({
               <div className="flex flex-1 flex-col items-center">
                 <div className="relative mb-2 flex flex-col items-center">
                   <span className="mb-0.5 text-tg-button">
-                    <Crown className="h-4 w-4" />
+                    <Crown className="h-5 w-5" />
                   </span>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-tg-button-text">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-tg-button-text ring-2 ring-tg-button ring-offset-2 ring-offset-tg-section">
                     {firstPlace.photoUrl ? (
                       <img
                         src={firstPlace.photoUrl}
@@ -139,14 +159,19 @@ export function BattleResultScreen({
                       <span className="text-base font-bold">{getInitials(firstPlace.displayName)}</span>
                     )}
                   </div>
-                  <span className="absolute -bottom-1 -right-1 text-base">🥇</span>
+                  <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-tg-button text-tg-button-text shadow-sm ring-2 ring-tg-section">
+                    <Crown className="h-3.5 w-3.5" />
+                  </span>
                 </div>
                 <p className="max-w-[80px] truncate text-xs font-bold text-tg-text">
                   {firstPlace.displayName}
                 </p>
                 <span className="text-[11px] font-bold text-tg-button">{firstPlace.score} pts</span>
-                <span className="mt-0.5 text-[10px] font-bold text-tg-button">+{firstPlace.pinsEarned} 🪙</span>
-                <div className="mt-2 flex h-32 w-full flex-col items-center justify-center rounded-t-xl bg-tg-button/25 border-t border-tg-button/50">
+                <span className="mt-0.5 flex items-center gap-0.5 text-[10px] font-bold text-tg-button">
+                  <span>+{firstPlace.pinsEarned}</span>
+                  <Coins className="h-3 w-3" />
+                </span>
+                <div className="mt-2 flex h-32 w-full flex-col items-center justify-center rounded-t-xl bg-gradient-to-t from-tg-button/25 to-tg-button/15 border-t-2 border-tg-button shadow-sm">
                   <span className="text-2xl font-black text-tg-button">1</span>
                 </div>
               </div>
@@ -166,13 +191,18 @@ export function BattleResultScreen({
                       <span className="text-sm font-bold">{getInitials(thirdPlace.displayName)}</span>
                     )}
                   </div>
-                  <span className="absolute -bottom-1 -right-1 text-sm">🥉</span>
+                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-tg-section text-tg-button shadow-sm ring-1 ring-tg-button/20">
+                    <Award className="h-3 w-3" />
+                  </span>
                 </div>
                 <p className="max-w-[70px] truncate text-[11px] font-bold text-tg-text">
                   {thirdPlace.displayName}
                 </p>
                 <span className="text-[10px] text-tg-hint">{thirdPlace.score} pts</span>
-                <span className="mt-0.5 text-[9px] font-bold text-tg-button">+{thirdPlace.pinsEarned} 🪙</span>
+                <span className="mt-0.5 flex items-center gap-0.5 text-[9px] font-bold text-tg-button">
+                  <span>+{thirdPlace.pinsEarned}</span>
+                  <Coins className="h-2.5 w-2.5" />
+                </span>
                 <div className="mt-2 flex h-16 w-full flex-col items-center justify-center rounded-t-xl bg-tg-button/10 border-t border-tg-button/20">
                   <span className="text-lg font-black text-tg-button">3</span>
                 </div>
@@ -200,7 +230,10 @@ export function BattleResultScreen({
                     </div>
                     <div className="flex items-center gap-3">
                       <span>{r.score} pts</span>
-                      <span className="text-tg-button font-bold">+{r.pinsEarned} 🪙</span>
+                      <span className="flex items-center gap-0.5 font-bold text-tg-button">
+                        <span>+{r.pinsEarned}</span>
+                        <Coins className="h-2.5 w-2.5" />
+                      </span>
                     </div>
                   </div>
                 );
@@ -326,6 +359,28 @@ export function BattleResultScreen({
   const challengerInitial = getInitials(challengerName);
   const opponentInitial = getInitials(opponentName);
 
+  const handleShare1v1Results = () => {
+    const deepLink = getBattleDeepLink(battleId);
+    const text = challengerWon
+      ? format1v1VictoryShareText(challengerName, opponentName, challengerScore, opponentScore, false)
+      : opponentWon
+      ? format1v1VictoryShareText(opponentName, challengerName, opponentScore, challengerScore, false)
+      : format1v1VictoryShareText(challengerName, opponentName, challengerScore, opponentScore, true);
+    const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent(text)}`;
+    const telegramWebApp = (
+      typeof window !== 'undefined'
+        ? (window as unknown as { Telegram?: { WebApp?: { openTelegramLink: (url: string) => void } } }).Telegram?.WebApp
+        : undefined
+    );
+    if (typeof telegramWebApp?.openTelegramLink === 'function') {
+      telegramWebApp.openTelegramLink(tgUrl);
+    } else if (typeof window !== 'undefined' && typeof window.open === 'function') {
+      window.open(tgUrl, '_blank');
+    }
+    setCopiedShare(true);
+    setTimeout(() => setCopiedShare(false), 2000);
+  };
+
   return (
     <div className="flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
       {promotionMoment.isPromoted && promotionMoment.newTier && (
@@ -339,7 +394,7 @@ export function BattleResultScreen({
       )}
 
       <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-6 text-center shadow-sm">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button ring-1 ring-tg-button/20 shadow-sm">
           <Trophy className="h-8 w-8" />
         </div>
 
@@ -369,7 +424,7 @@ export function BattleResultScreen({
         <div className="mt-6 grid w-full grid-cols-2 gap-3">
           <div
             className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              challengerWon ? 'bg-tg-button/10 shadow-sm' : ''
+              challengerWon ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm' : ''
             }`}
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
@@ -387,8 +442,8 @@ export function BattleResultScreen({
                 </div>
               )}
               {challengerWon && (
-                <span className="absolute -bottom-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-tg-button text-tg-button-text">
-                  <Trophy className="h-3 w-3" />
+                <span className="absolute -bottom-1 -right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tg-button text-tg-button-text shadow-sm ring-2 ring-tg-section">
+                  <Crown className="h-3.5 w-3.5" />
                 </span>
               )}
             </div>
@@ -424,15 +479,16 @@ export function BattleResultScreen({
             )}
 
             {challengerWon && (
-              <span className="mt-2 rounded-full bg-tg-button/15 px-2 py-0.5 text-[10px] font-bold text-tg-button">
-                Winner
+              <span className="mt-2 flex items-center gap-1 rounded-full bg-tg-button/15 px-2.5 py-0.5 text-[10px] font-bold text-tg-button">
+                <Crown className="h-2.5 w-2.5" />
+                <span>Winner</span>
               </span>
             )}
           </div>
 
           <div
             className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              opponentWon ? 'bg-tg-button/10 shadow-sm' : ''
+              opponentWon ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm' : ''
             }`}
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
@@ -450,8 +506,8 @@ export function BattleResultScreen({
                 </div>
               )}
               {opponentWon && (
-                <span className="absolute -bottom-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-tg-button text-tg-button-text">
-                  <Trophy className="h-3 w-3" />
+                <span className="absolute -bottom-1 -right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-tg-button text-tg-button-text shadow-sm ring-2 ring-tg-section">
+                  <Crown className="h-3.5 w-3.5" />
                 </span>
               )}
             </div>
@@ -487,8 +543,9 @@ export function BattleResultScreen({
             )}
 
             {opponentWon && (
-              <span className="mt-2 rounded-full bg-tg-button/15 px-2 py-0.5 text-[10px] font-bold text-tg-button">
-                Winner
+              <span className="mt-2 flex items-center gap-1 rounded-full bg-tg-button/15 px-2.5 py-0.5 text-[10px] font-bold text-tg-button">
+                <Crown className="h-2.5 w-2.5" />
+                <span>Winner</span>
               </span>
             )}
           </div>
@@ -497,9 +554,18 @@ export function BattleResultScreen({
         <div className="mt-6 flex w-full flex-col gap-2.5">
           <button
             type="button"
+            onClick={handleShare1v1Results}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75"
+          >
+            <Share2 className="h-4 w-4" />
+            <span>{copiedShare ? 'Opening Share...' : 'Share Victory'}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={onBattleAgain}
             disabled={isStartingBattleAgain}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg font-bold text-tg-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
             <Swords className={`h-4 w-4 ${isStartingBattleAgain ? 'animate-spin' : ''}`} />
             <span>{isStartingBattleAgain ? 'Creating Battle...' : 'Battle Again'}</span>

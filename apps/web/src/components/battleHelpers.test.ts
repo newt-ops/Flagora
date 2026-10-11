@@ -284,6 +284,15 @@ describe('battleHelpers', () => {
       assert.ok(text.includes('🥉 Charlie — 700 pts'));
     });
 
+    it('formats 1v1 victory and tie share text correctly', async () => {
+      const { format1v1VictoryShareText } = await import('./battleHelpers.js');
+      const winText = format1v1VictoryShareText('Alice', 'Bob', 1200, 950, false);
+      assert.ok(winText.includes('Alice defeated Bob in a 1v1 Flagora Battle (1200 vs 950 pts)'));
+
+      const tieText = format1v1VictoryShareText('Alice', 'Bob', 1000, 1000, true);
+      assert.ok(tieText.includes('Alice tied with Bob in a 1v1 Flagora Battle (1000 pts each)'));
+    });
+
     it('returns correct rank badges for podium and runners up', async () => {
       const { getRankBadge } = await import('./battleHelpers.js');
       const rank1 = getRankBadge(1);

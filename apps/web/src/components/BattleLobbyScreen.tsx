@@ -210,8 +210,18 @@ export function BattleLobbyScreen({
                   <p className="mt-1.5 max-w-[130px] truncate text-xs font-bold text-tg-text">
                     {p.displayName} {isMe ? '(You)' : ''}
                   </p>
-                  <span className="mt-1 rounded-full bg-tg-button/15 px-2 py-0.5 text-[10px] font-semibold text-tg-button">
-                    {isPlayerHost ? '👑 Host' : 'Ready 🟢'}
+                  <span className="mt-1 flex items-center gap-1 rounded-full bg-tg-button/15 px-2 py-0.5 text-[10px] font-semibold text-tg-button">
+                    {isPlayerHost ? (
+                      <>
+                        <Crown className="h-2.5 w-2.5" />
+                        <span>Host</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-2.5 w-2.5" />
+                        <span>Ready</span>
+                      </>
+                    )}
                   </span>
                 </div>
               );
@@ -250,7 +260,7 @@ export function BattleLobbyScreen({
                   <span>
                     {participants.length < 2
                       ? 'Waiting for 2nd player to join...'
-                      : `Launch Battle (${participants.length} Players) ⚔️`}
+                      : `Launch Battle (${participants.length} Players)`}
                   </span>
                 </button>
                 {onCancelGroupLobby && (

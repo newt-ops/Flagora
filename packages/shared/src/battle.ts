@@ -254,6 +254,7 @@ export interface GroupRankingItem {
   rank: number;
   correctCount?: number;
   photoUrl?: string | null;
+  completedAt?: string | null;
 }
 
 export interface GroupProgressPayload {

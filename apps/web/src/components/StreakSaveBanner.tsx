@@ -37,7 +37,7 @@ export function StreakSaveBanner({
     try {
       const res = await saveStreak(sessionToken);
       if (res.saved) {
-        setFeedback({ text: 'Streak saved! Play a game today to extend it 🚩', isSuccess: true });
+        setFeedback({ text: 'Streak saved! Play a game today to extend it', isSuccess: true });
         onSuccess?.();
       }
     } catch (err) {

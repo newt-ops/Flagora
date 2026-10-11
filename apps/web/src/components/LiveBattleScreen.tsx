@@ -1,5 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { Timer, Zap, Check, X, WifiOff, Loader2, Sparkles, Trophy } from './icons.js';
+import {
+  Timer,
+  Zap,
+  Check,
+  CheckCircle2,
+  X,
+  WifiOff,
+  Loader2,
+  Sparkles,
+  Trophy,
+  Crown,
+  Medal,
+  Award,
+} from './icons.js';
 import {
   calculateComboMultiplier,
   isTier4Flag,
@@ -140,6 +153,9 @@ export function LiveBattleScreen({
     ? groupRankings.find((r) => r.userId === currentUserId)
     : null;
   const myCurrentRank = myRankItem?.rank ?? 1;
+  const opponentHasFinished = Boolean(
+    opponentProgress && opponentProgress.flagIndex >= battleStart.flags.length - 1,
+  );
 
   return (
     <div className="relative flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
@@ -184,7 +200,6 @@ export function LiveBattleScreen({
                 </span>
                 <div className="mt-1 flex items-center gap-2">
                   {groupRankings.slice(0, 3).map((r, i) => {
-                    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
                     const isMe = r.userId === currentUserId;
                     return (
                       <div
@@ -193,9 +208,18 @@ export function LiveBattleScreen({
                           isMe ? 'bg-tg-button/15 font-bold text-tg-button' : 'bg-tg-secondary-bg text-tg-hint'
                         }`}
                       >
-                        <span>{medal}</span>
+                        {i === 0 ? (
+                          <Crown className="h-3 w-3 text-tg-button shrink-0" />
+                        ) : i === 1 ? (
+                          <Medal className="h-3 w-3 text-tg-button shrink-0" />
+                        ) : (
+                          <Award className="h-3 w-3 text-tg-button shrink-0" />
+                        )}
                         <span className="max-w-[50px] truncate">{r.displayName}</span>
                         <span className="font-bold text-tg-text">{r.score}</span>
+                        {r.completedAt && (
+                          <Check className="h-2.5 w-2.5 text-tg-button shrink-0" />
+                        )}
                       </div>
                     );
                   })}
@@ -229,6 +253,11 @@ export function LiveBattleScreen({
                 <span className="text-tg-text">
                   ({opponentProgress ? opponentProgress.flagIndex + 1 : 0}/{battleStart.flags.length})
                 </span>
+                {opponentHasFinished && (
+                  <span className="flex items-center gap-0.5 rounded-full bg-tg-button/15 px-1.5 py-0.5 text-[9px] font-bold text-tg-button">
+                    <Check className="h-2.5 w-2.5" /> Done
+                  </span>
+                )}
               </div>
               <div className="mt-1 flex items-center gap-1.5">
                 {opponentProgress && (
@@ -278,37 +307,197 @@ export function LiveBattleScreen({
 
       {timeExpired ? (
         <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl bg-tg-section p-6 text-center shadow-sm">
-          <Loader2 className="h-6 w-6 animate-spin text-tg-button" />
-          <p className="text-sm font-bold text-tg-text">Time is up!</p>
-          <p className="text-xs text-tg-hint">Tallying final battle results...</p>
+          <Loader2 className="h-7 w-7 animate-spin text-tg-button" />
+          <p className="text-base font-extrabold text-tg-text">Time is up!</p>
+          <p className="text-xs text-tg-hint">Tallying final battle results from the arena...</p>
           {onCheckFinished && (
             <button
               type="button"
               onClick={onCheckFinished}
-              className="mt-1 rounded-xl bg-tg-button px-4 py-2 text-xs font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75"
+              className="mt-2 flex items-center gap-1.5 rounded-xl bg-tg-button px-4 py-2 text-xs font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75"
             >
-              Check Final Results
+              <Trophy className="h-3.5 w-3.5" />
+              <span>Check Final Results</span>
             </button>
           )}
         </div>
       ) : currentFlagIndex >= battleStart.flags.length ? (
-        <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl bg-tg-section p-6 text-center shadow-sm">
-          <Check className="h-8 w-8 text-tg-button" />
-          <p className="text-sm font-bold text-tg-text">All flags completed!</p>
-          <p className="text-xs text-tg-hint">
-            {isGroupBattle
-              ? 'Waiting for all players to finish or timer to expire...'
-              : 'Waiting for opponent or battle tally...'}
-          </p>
-          {onCheckFinished && (
-            <button
-              type="button"
-              onClick={onCheckFinished}
-              className="mt-1 rounded-xl bg-tg-button px-4 py-2 text-xs font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75"
-            >
-              Check Final Results
-            </button>
-          )}
+        <div className="flex w-full flex-col items-center gap-4">
+          <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-5 text-center shadow-sm">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-tg-button/10 text-tg-button">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+
+            <h3 className="mt-3 text-lg font-black text-tg-text">
+              All Flags Completed!
+            </h3>
+            <p className="mt-1 text-xs text-tg-hint">
+              {isGroupBattle
+                ? 'Your answers are in. Watching arena opponents finish in real-time...'
+                : 'Your answers are locked in. Watching opponent live progress...'}
+            </p>
+
+            <div className="mt-4 grid w-full grid-cols-2 gap-2">
+              <div className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-tg-hint">
+                  Your Final Score
+                </span>
+                <span className="mt-0.5 text-xl font-black text-tg-button">
+                  {runningScore}
+                </span>
+              </div>
+              <div className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-tg-hint">
+                  {isGroupBattle ? 'Current Standing' : 'Match Status'}
+                </span>
+                <span className="mt-0.5 flex items-center gap-1 text-sm font-bold text-tg-text">
+                  {isGroupBattle ? (
+                    <>
+                      {myCurrentRank === 1 && <Crown className="h-3.5 w-3.5 text-tg-button" />}
+                      {myCurrentRank === 2 && <Medal className="h-3.5 w-3.5 text-tg-button" />}
+                      {myCurrentRank === 3 && <Award className="h-3.5 w-3.5 text-tg-button" />}
+                      <span>Rank #{myCurrentRank}</span>
+                    </>
+                  ) : (
+                    <span>Flags Complete</span>
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col gap-2 rounded-2xl bg-tg-section p-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-tg-separator/30 pb-2">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="h-4 w-4 text-tg-button" />
+                <span className="text-xs font-bold uppercase tracking-wider text-tg-text">
+                  {isGroupBattle ? 'Live Arena Leaderboard' : 'Head-to-Head Progress'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] font-medium text-tg-hint">
+                <Timer className="h-3.5 w-3.5" />
+                <span className={timerSeconds <= 10 ? 'font-bold text-tg-destructive' : 'text-tg-text'}>
+                  {timerSeconds}s left
+                </span>
+              </div>
+            </div>
+
+            {isGroupBattle ? (
+              <div className="flex flex-col gap-1.5 pt-1">
+                {groupRankings.map((r, idx) => {
+                  const isMe = r.userId === currentUserId;
+                  const isCompleted = Boolean(r.completedAt);
+                  return (
+                    <div
+                      key={r.userId}
+                      className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-colors ${
+                        isMe
+                          ? 'bg-tg-button/15 font-bold text-tg-button ring-1 ring-tg-button/30'
+                          : 'bg-tg-secondary-bg text-tg-text'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-tg-section text-[10px] font-black">
+                          {idx === 0 ? (
+                            <Crown className="h-3 w-3 text-tg-button" />
+                          ) : idx === 1 ? (
+                            <Medal className="h-3 w-3 text-tg-button" />
+                          ) : idx === 2 ? (
+                            <Award className="h-3 w-3 text-tg-button" />
+                          ) : (
+                            r.rank
+                          )}
+                        </span>
+                        <span className="max-w-[110px] truncate font-semibold">
+                          {r.displayName} {isMe ? '(You)' : ''}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isCompleted ? (
+                          <span className="flex items-center gap-0.5 rounded-full bg-tg-button/20 px-2 py-0.5 text-[9px] font-bold text-tg-button">
+                            <Check className="h-2.5 w-2.5" />
+                            Finished
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-0.5 rounded-full bg-tg-section px-2 py-0.5 text-[9px] font-medium text-tg-hint">
+                            <Loader2 className="h-2.5 w-2.5 animate-spin text-tg-button" />
+                            Playing
+                          </span>
+                        )}
+                        <span className="min-w-[45px] text-right text-xs font-black text-tg-text">
+                          {r.score} pts
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 pt-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col items-center rounded-xl bg-tg-button/15 p-3 text-center ring-1 ring-tg-button/30">
+                    <span className="text-[11px] font-bold text-tg-button">You</span>
+                    <span className="mt-1 text-lg font-black text-tg-text">{runningScore}</span>
+                    <span className="mt-0.5 flex items-center gap-0.5 text-[10px] font-bold text-tg-button">
+                      <Check className="h-3 w-3" /> Finished ({battleStart.flags.length}/{battleStart.flags.length})
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-3 text-center">
+                    <span className="max-w-[100px] truncate text-[11px] font-bold text-tg-text">
+                      {opponentDisplayName || 'Opponent'}
+                    </span>
+                    <span className="mt-1 text-lg font-black text-tg-text">
+                      {opponentProgress?.runningTotal ?? 0}
+                    </span>
+                    <span className="mt-0.5 flex items-center gap-0.5 text-[10px] font-medium text-tg-hint">
+                      {opponentHasFinished ? (
+                        <span className="flex items-center gap-0.5 text-tg-button font-bold">
+                          <Check className="h-3 w-3" /> Finished
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1">
+                          <Loader2 className="h-2.5 w-2.5 animate-spin text-tg-button" />
+                          Flag {(opponentProgress ? opponentProgress.flagIndex + 1 : 0)}/{battleStart.flags.length}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-tg-secondary-bg p-2 text-center text-xs font-semibold">
+                  {runningScore > (opponentProgress?.runningTotal ?? 0) ? (
+                    <span className="text-tg-button font-bold">
+                      You are in the lead by +{runningScore - (opponentProgress?.runningTotal ?? 0)} points!
+                    </span>
+                  ) : runningScore < (opponentProgress?.runningTotal ?? 0) ? (
+                    <span className="text-tg-hint">
+                      Opponent leads by +{(opponentProgress?.runningTotal ?? 0) - runningScore} points
+                    </span>
+                  ) : (
+                    <span className="text-tg-text">Scores are tied at {runningScore} points!</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-2 flex flex-col items-center gap-2 border-t border-tg-separator/30 pt-3">
+              <span className="flex items-center gap-1.5 text-[11px] text-tg-hint">
+                <Loader2 className="h-3 w-3 animate-spin text-tg-button" />
+                Results will display automatically once all finish
+              </span>
+              {onCheckFinished && (
+                <button
+                  type="button"
+                  onClick={onCheckFinished}
+                  className="rounded-xl bg-tg-button px-4 py-2 text-xs font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75"
+                >
+                  Check Final Results
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       ) : (
         currentFlag && (

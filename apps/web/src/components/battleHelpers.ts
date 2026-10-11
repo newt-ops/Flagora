@@ -265,3 +265,16 @@ export function formatGroupVictoryShareText(
   return text;
 }
 
+export function format1v1VictoryShareText(
+  winnerName: string,
+  loserName: string,
+  winnerScore: number,
+  loserScore: number,
+  isTie: boolean,
+): string {
+  if (isTie) {
+    return `🤝 ${winnerName} tied with ${loserName} in a 1v1 Flagora Battle (${winnerScore} pts each)! 🚩\n\nThink you can beat us? Challenge now! ⚔️`;
+  }
+  return `🏆 ${winnerName} defeated ${loserName} in a 1v1 Flagora Battle (${winnerScore} vs ${loserScore} pts)! 🚩\n\nThink you can beat me? Challenge me now! ⚔️`;
+}
+
