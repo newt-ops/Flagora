@@ -17,13 +17,26 @@ export async function initDatabase(uri: string): Promise<Db> {
     connectionUri = mongod.getUri();
   }
 
-  client = new MongoClient(connectionUri, {
-    maxPoolSize: 10,
-    minPoolSize: 1,
-    serverSelectionTimeoutMS: 5000,
-  });
-  await client.connect();
-  database = client.db();
+  try {
+    client = new MongoClient(connectionUri, {
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      serverSelectionTimeoutMS: 6000,
+    });
+    await client.connect();
+    database = client.db();
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production' && uri !== 'memory') {
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      const mongod = await MongoMemoryServer.create();
+      memoryServerInstance = mongod;
+      client = new MongoClient(mongod.getUri());
+      await client.connect();
+      database = client.db();
+    } else {
+      throw err;
+    }
+  }
 
   await ensureIndexes(database);
 
@@ -39,15 +52,23 @@ export async function ensureIndexes(db: Db): Promise<void> {
     }
   };
 
-  await safeIndex(() => db.collection('profiles').createIndex({ telegramUserId: 1 }, { unique: true }));
+  await safeIndex(() =>
+    db.collection('profiles').createIndex({ telegramUserId: 1 }, { unique: true }),
+  );
   await safeIndex(() => db.collection('profiles').createIndex({ bestScore: -1 }));
-  await safeIndex(() => db.collection('profiles').createIndex({ currentSeason: 1, battleRating: -1 }));
+  await safeIndex(() =>
+    db.collection('profiles').createIndex({ currentSeason: 1, battleRating: -1 }),
+  );
 
   await safeIndex(() => db.collection('runs').createIndex({ runId: 1 }, { unique: true }));
   await safeIndex(() => db.collection('runs').createIndex({ telegramUserId: 1, createdAt: -1 }));
-  await safeIndex(() => db.collection('runs').createIndex({ mode: 1, dailyDate: 1, 'finalScore.totalScore': -1 }));
+  await safeIndex(() =>
+    db.collection('runs').createIndex({ mode: 1, dailyDate: 1, 'finalScore.totalScore': -1 }),
+  );
 
-  await safeIndex(() => db.collection('challenges').createIndex({ challengeId: 1 }, { unique: true }));
+  await safeIndex(() =>
+    db.collection('challenges').createIndex({ challengeId: 1 }, { unique: true }),
+  );
   await safeIndex(() => db.collection('challenges').createIndex({ challengerUserId: 1 }));
   await safeIndex(() => db.collection('challenges').createIndex({ opponentUserId: 1 }));
 
@@ -101,8 +122,14 @@ export async function ensureIndexes(db: Db): Promise<void> {
     ),
   );
 
-  await safeIndex(() => db.collection('daily_challenge_definitions').createIndex({ date: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('daily_challenge_attempts').createIndex({ telegramUserId: 1, date: 1 }, { unique: true }));
+  await safeIndex(() =>
+    db.collection('daily_challenge_definitions').createIndex({ date: 1 }, { unique: true }),
+  );
+  await safeIndex(() =>
+    db
+      .collection('daily_challenge_attempts')
+      .createIndex({ telegramUserId: 1, date: 1 }, { unique: true }),
+  );
 
   await safeIndex(() => db.collection('flags').createIndex({ isoCode: 1 }, { unique: true }));
   await safeIndex(() => db.collection('flags').createIndex({ tier: 1 }));
@@ -110,11 +137,21 @@ export async function ensureIndexes(db: Db): Promise<void> {
   await safeIndex(() => db.collection('cosmetics').createIndex({ id: 1 }, { unique: true }));
   await safeIndex(() => db.collection('cosmetics').createIndex({ category: 1 }));
 
-  await safeIndex(() => db.collection('subscriptions').createIndex({ telegramUserId: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('season_results').createIndex({ telegramUserId: 1, season: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('processed_payments').createIndex({ chargeId: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('referrals').createIndex({ newPlayerTelegramUserId: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('referrals').createIndex({ inviterTelegramUserId: 1, status: 1 }));
+  await safeIndex(() =>
+    db.collection('subscriptions').createIndex({ telegramUserId: 1 }, { unique: true }),
+  );
+  await safeIndex(() =>
+    db.collection('season_results').createIndex({ telegramUserId: 1, season: 1 }, { unique: true }),
+  );
+  await safeIndex(() =>
+    db.collection('processed_payments').createIndex({ chargeId: 1 }, { unique: true }),
+  );
+  await safeIndex(() =>
+    db.collection('referrals').createIndex({ newPlayerTelegramUserId: 1 }, { unique: true }),
+  );
+  await safeIndex(() =>
+    db.collection('referrals').createIndex({ inviterTelegramUserId: 1, status: 1 }),
+  );
 }
 
 export function getDatabase(): Db {

@@ -1,9 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  getStreakBadgeText,
-  getProfileStreakDisplay,
-} from './streakDisplayHelpers.js';
+import { getStreakBadgeText, getProfileStreakDisplay } from './streakDisplayHelpers.js';
 
 describe('streak display helpers', () => {
   describe('getStreakBadgeText for ResultsScreen', () => {

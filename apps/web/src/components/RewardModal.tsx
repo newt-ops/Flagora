@@ -87,9 +87,7 @@ export function RewardModal({
 
           <AnimatedIcon type={resolvedIconType} size="xl" className="relative z-10 mb-3" />
 
-          <h3 className="relative z-10 text-xl font-black text-tg-text tracking-tight">
-            {title}
-          </h3>
+          <h3 className="relative z-10 text-xl font-black text-tg-text tracking-tight">{title}</h3>
 
           {subtitle && (
             <p className="relative z-10 text-xs sm:text-sm text-tg-hint mt-1 max-w-xs leading-relaxed">
@@ -99,8 +97,12 @@ export function RewardModal({
 
           {amount !== undefined && (
             <div className="relative z-10 mt-4 px-5 py-2.5 rounded-2xl bg-tg-secondary-bg/90 flex items-center gap-2.5 shadow-sm">
-              {rewardType === 'pins' && <Coins className="w-5 h-5 text-amber-500 fill-amber-500/20" />}
-              {rewardType === 'xp' && <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500/20" />}
+              {rewardType === 'pins' && (
+                <Coins className="w-5 h-5 text-amber-500 fill-amber-500/20" />
+              )}
+              {rewardType === 'xp' && (
+                <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500/20" />
+              )}
               {rewardType === 'trophy' && <Trophy className="w-5 h-5 text-amber-500" />}
               {rewardType === 'badge' && <Award className="w-5 h-5 text-tg-button" />}
               <div className="flex items-baseline gap-1.5">

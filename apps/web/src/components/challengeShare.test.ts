@@ -5,29 +5,17 @@ import {
   getTelegramShareUrl,
   shareChallenge,
 } from './challengeShareHelpers.js';
-import {
-  shouldShowPlayAgain,
-  shouldShowDailyLeaderboardButton,
-} from './dailyChallengeHelpers.js';
+import { shouldShowPlayAgain, shouldShowDailyLeaderboardButton } from './dailyChallengeHelpers.js';
 
 describe('challenge share helpers', () => {
   describe('formatChallengeShareText', () => {
     it('formats score with thousand separators', () => {
-      assert.equal(
-        formatChallengeShareText(1024),
-        'Beat my score: 1,024 points in Flagora!',
-      );
-      assert.equal(
-        formatChallengeShareText(12500),
-        'Beat my score: 12,500 points in Flagora!',
-      );
+      assert.equal(formatChallengeShareText(1024), 'Beat my score: 1,024 points in Flagora!');
+      assert.equal(formatChallengeShareText(12500), 'Beat my score: 12,500 points in Flagora!');
     });
 
     it('handles zero score', () => {
-      assert.equal(
-        formatChallengeShareText(0),
-        'Beat my score: 0 points in Flagora!',
-      );
+      assert.equal(formatChallengeShareText(0), 'Beat my score: 0 points in Flagora!');
     });
   });
 

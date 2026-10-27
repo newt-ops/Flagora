@@ -97,9 +97,7 @@ function processNextInMemory(): void {
   }
 }
 
-export async function initNotificationQueue(
-  options?: NotificationQueueOptions,
-): Promise<void> {
+export async function initNotificationQueue(options?: NotificationQueueOptions): Promise<void> {
   await closeNotificationQueue();
 
   const redisUrl = options?.redisUrl ?? process.env.REDIS_URL ?? 'memory';

@@ -39,7 +39,7 @@ export function BattleResultScreen({
   const isGroup = Boolean(
     groupPodium ||
     battleInfo?.isGroupBattle ||
-    (battleInfo?.podium && battleInfo.podium.length > 0)
+    (battleInfo?.podium && battleInfo.podium.length > 0),
   );
 
   const podium = groupPodium || battleInfo?.podium || [];
@@ -48,11 +48,14 @@ export function BattleResultScreen({
     const text = formatGroupVictoryShareText(podium);
     const deepLink = getBattleDeepLink(battleId);
     const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent(text)}`;
-    const telegramWebApp = (
+    const telegramWebApp =
       typeof window !== 'undefined'
-        ? (window as unknown as { Telegram?: { WebApp?: { openTelegramLink: (url: string) => void } } }).Telegram?.WebApp
-        : undefined
-    );
+        ? (
+            window as unknown as {
+              Telegram?: { WebApp?: { openTelegramLink: (url: string) => void } };
+            }
+          ).Telegram?.WebApp
+        : undefined;
     if (typeof telegramWebApp?.openTelegramLink === 'function') {
       telegramWebApp.openTelegramLink(tgUrl);
     } else if (typeof window !== 'undefined' && typeof window.open === 'function') {
@@ -81,25 +84,25 @@ export function BattleResultScreen({
           <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-tg-text">
             Group Battle Finished!
           </h2>
-          <p className="mt-1 text-xs text-tg-hint">
-            {podium.length} players competed in the arena
-          </p>
+          <p className="mt-1 text-xs text-tg-hint">{podium.length} players competed in the arena</p>
 
           {myResult && (
             <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2 text-xs font-semibold animate-scale-pop">
               <span className="text-tg-hint">Your Result:</span>
               <span className="flex items-center gap-1 font-bold text-tg-button">
-                {myResult.rank === 1 && <Crown className="h-3.5 w-3.5 text-tg-button animate-float" />}
+                {myResult.rank === 1 && (
+                  <Crown className="h-3.5 w-3.5 text-tg-button animate-float" />
+                )}
                 {myResult.rank === 2 && <Medal className="h-3.5 w-3.5 text-tg-button" />}
                 {myResult.rank === 3 && <Award className="h-3.5 w-3.5 text-tg-button" />}
                 <span>
                   {myResult.rank === 1
                     ? '1st Place'
                     : myResult.rank === 2
-                    ? '2nd Place'
-                    : myResult.rank === 3
-                    ? '3rd Place'
-                    : `#${myResult.rank} Place`}
+                      ? '2nd Place'
+                      : myResult.rank === 3
+                        ? '3rd Place'
+                        : `#${myResult.rank} Place`}
                 </span>
               </span>
               <span className="text-tg-hint">•</span>
@@ -127,7 +130,9 @@ export function BattleResultScreen({
                         className="h-10 w-10 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-sm font-bold">{getInitials(secondPlace.displayName)}</span>
+                      <span className="text-sm font-bold">
+                        {getInitials(secondPlace.displayName)}
+                      </span>
                     )}
                   </div>
                   <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-tg-section text-tg-button shadow-sm ring-1 ring-tg-button/30">
@@ -162,7 +167,9 @@ export function BattleResultScreen({
                         className="h-12 w-12 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-base font-bold">{getInitials(firstPlace.displayName)}</span>
+                      <span className="text-base font-bold">
+                        {getInitials(firstPlace.displayName)}
+                      </span>
                     )}
                   </div>
                   <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-tg-button text-tg-button-text shadow-sm ring-2 ring-tg-section">
@@ -194,7 +201,9 @@ export function BattleResultScreen({
                         className="h-10 w-10 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-sm font-bold">{getInitials(thirdPlace.displayName)}</span>
+                      <span className="text-sm font-bold">
+                        {getInitials(thirdPlace.displayName)}
+                      </span>
                     )}
                   </div>
                   <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-tg-section text-tg-button shadow-sm ring-1 ring-tg-button/20">
@@ -274,8 +283,7 @@ export function BattleResultScreen({
   const winner = finishedPayload?.winner || battleInfo?.winner || null;
   const challengerUserId =
     finishedPayload?.challengerResult.userId || battleInfo?.challengerUserId || 0;
-  const opponentUserId =
-    finishedPayload?.opponentResult.userId || battleInfo?.opponentUserId || 0;
+  const opponentUserId = finishedPayload?.opponentResult.userId || battleInfo?.opponentUserId || 0;
 
   const perspective = getBattleViewerPerspective(
     {
@@ -291,9 +299,7 @@ export function BattleResultScreen({
     battleInfo?.challengerDisplayName ||
     'Challenger';
   const opponentName =
-    finishedPayload?.opponentResult.displayName ||
-    battleInfo?.opponentDisplayName ||
-    'Opponent';
+    finishedPayload?.opponentResult.displayName || battleInfo?.opponentDisplayName || 'Opponent';
 
   const heading = getBattlePerspectiveHeading(
     perspective,
@@ -311,51 +317,45 @@ export function BattleResultScreen({
   const opponentPhoto =
     finishedPayload?.opponentResult.photoUrl || battleInfo?.opponentPhotoUrl || null;
 
-  const challengerScore =
-    finishedPayload?.challengerScore ?? battleInfo?.challengerScore ?? 0;
-  const opponentScore =
-    finishedPayload?.opponentScore ?? battleInfo?.opponentScore ?? 0;
+  const challengerScore = finishedPayload?.challengerScore ?? battleInfo?.challengerScore ?? 0;
+  const opponentScore = finishedPayload?.opponentScore ?? battleInfo?.opponentScore ?? 0;
 
   const challengerCorrect =
     finishedPayload?.challengerResult.correctCount ??
     battleInfo?.challengerResult?.correctCount ??
     0;
   const challengerTotal =
-    finishedPayload?.challengerResult.totalFlags ??
-    battleInfo?.challengerResult?.totalFlags ??
-    10;
+    finishedPayload?.challengerResult.totalFlags ?? battleInfo?.challengerResult?.totalFlags ?? 10;
 
   const opponentCorrect =
-    finishedPayload?.opponentResult.correctCount ??
-    battleInfo?.opponentResult?.correctCount ??
-    0;
+    finishedPayload?.opponentResult.correctCount ?? battleInfo?.opponentResult?.correctCount ?? 0;
   const opponentTotal =
-    finishedPayload?.opponentResult.totalFlags ??
-    battleInfo?.opponentResult?.totalFlags ??
-    10;
+    finishedPayload?.opponentResult.totalFlags ?? battleInfo?.opponentResult?.totalFlags ?? 10;
 
   const challengerResult =
     finishedPayload?.challengerResult || battleInfo?.challengerResult || null;
-  const opponentResult =
-    finishedPayload?.opponentResult || battleInfo?.opponentResult || null;
+  const opponentResult = finishedPayload?.opponentResult || battleInfo?.opponentResult || null;
 
   const viewerResult = isChallengerViewer
     ? challengerResult
     : isOpponentViewer
-    ? opponentResult
-    : null;
+      ? opponentResult
+      : null;
 
-  const viewerDelta = viewerResult?.ratingDelta !== undefined
-    ? getRatingDeltaDisplay(viewerResult.ratingDelta)
-    : null;
+  const viewerDelta =
+    viewerResult?.ratingDelta !== undefined
+      ? getRatingDeltaDisplay(viewerResult.ratingDelta)
+      : null;
 
-  const challengerDelta = challengerResult?.ratingDelta !== undefined
-    ? getRatingDeltaDisplay(challengerResult.ratingDelta)
-    : null;
+  const challengerDelta =
+    challengerResult?.ratingDelta !== undefined
+      ? getRatingDeltaDisplay(challengerResult.ratingDelta)
+      : null;
 
-  const opponentDelta = opponentResult?.ratingDelta !== undefined
-    ? getRatingDeltaDisplay(opponentResult.ratingDelta)
-    : null;
+  const opponentDelta =
+    opponentResult?.ratingDelta !== undefined
+      ? getRatingDeltaDisplay(opponentResult.ratingDelta)
+      : null;
 
   const challengerInitial = getInitials(challengerName);
   const opponentInitial = getInitials(opponentName);
@@ -363,16 +363,37 @@ export function BattleResultScreen({
   const handleShare1v1Results = () => {
     const deepLink = getBattleDeepLink(battleId);
     const text = challengerWon
-      ? format1v1VictoryShareText(challengerName, opponentName, challengerScore, opponentScore, false)
+      ? format1v1VictoryShareText(
+          challengerName,
+          opponentName,
+          challengerScore,
+          opponentScore,
+          false,
+        )
       : opponentWon
-      ? format1v1VictoryShareText(opponentName, challengerName, opponentScore, challengerScore, false)
-      : format1v1VictoryShareText(challengerName, opponentName, challengerScore, opponentScore, true);
+        ? format1v1VictoryShareText(
+            opponentName,
+            challengerName,
+            opponentScore,
+            challengerScore,
+            false,
+          )
+        : format1v1VictoryShareText(
+            challengerName,
+            opponentName,
+            challengerScore,
+            opponentScore,
+            true,
+          );
     const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent(text)}`;
-    const telegramWebApp = (
+    const telegramWebApp =
       typeof window !== 'undefined'
-        ? (window as unknown as { Telegram?: { WebApp?: { openTelegramLink: (url: string) => void } } }).Telegram?.WebApp
-        : undefined
-    );
+        ? (
+            window as unknown as {
+              Telegram?: { WebApp?: { openTelegramLink: (url: string) => void } };
+            }
+          ).Telegram?.WebApp
+        : undefined;
     if (typeof telegramWebApp?.openTelegramLink === 'function') {
       telegramWebApp.openTelegramLink(tgUrl);
     } else if (typeof window !== 'undefined' && typeof window.open === 'function') {
@@ -408,16 +429,16 @@ export function BattleResultScreen({
             <span className="font-bold text-tg-text">
               {viewerResult.newRating !== undefined ? viewerResult.newRating.toLocaleString() : '—'}
             </span>
-            <span className={`font-bold ${viewerDelta.colorClass}`}>
-              ({viewerDelta.text})
-            </span>
+            <span className={`font-bold ${viewerDelta.colorClass}`}>({viewerDelta.text})</span>
           </div>
         )}
 
         <div className="mt-6 grid w-full grid-cols-2 gap-3">
           <div
             className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              challengerWon ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm animate-pulse-glow' : 'opacity-90'
+              challengerWon
+                ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm animate-pulse-glow'
+                : 'opacity-90'
             }`}
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
@@ -428,9 +449,7 @@ export function BattleResultScreen({
                   className="h-14 w-14 rounded-full object-cover bg-tg-section"
                 />
               ) : (
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text"
-                >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text">
                   {challengerInitial}
                 </div>
               )}
@@ -444,9 +463,7 @@ export function BattleResultScreen({
             <p className="mt-2.5 max-w-[120px] truncate text-xs font-bold text-tg-text">
               {challengerName}
             </p>
-            <p className="text-[11px] text-tg-hint">
-              {isChallengerViewer ? 'You' : 'Host'}
-            </p>
+            <p className="text-[11px] text-tg-hint">{isChallengerViewer ? 'You' : 'Host'}</p>
 
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-2xl font-extrabold text-tg-text">
@@ -478,7 +495,9 @@ export function BattleResultScreen({
 
           <div
             className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              opponentWon ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm animate-pulse-glow' : 'opacity-90'
+              opponentWon
+                ? 'bg-tg-button/10 ring-1 ring-tg-button/30 shadow-sm animate-pulse-glow'
+                : 'opacity-90'
             }`}
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
@@ -489,9 +508,7 @@ export function BattleResultScreen({
                   className="h-14 w-14 rounded-full object-cover bg-tg-section"
                 />
               ) : (
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text"
-                >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text">
                   {opponentInitial}
                 </div>
               )}
@@ -505,9 +522,7 @@ export function BattleResultScreen({
             <p className="mt-2.5 max-w-[120px] truncate text-xs font-bold text-tg-text">
               {opponentName}
             </p>
-            <p className="text-[11px] text-tg-hint">
-              {isOpponentViewer ? 'You' : 'Opponent'}
-            </p>
+            <p className="text-[11px] text-tg-hint">{isOpponentViewer ? 'You' : 'Opponent'}</p>
 
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-2xl font-extrabold text-tg-text">

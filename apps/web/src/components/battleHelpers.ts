@@ -60,8 +60,13 @@ export function getBattleStartParam(
   const rawInitData =
     initData ??
     (typeof window !== 'undefined'
-      ? (window as unknown as { Telegram?: { WebApp?: { initData?: string; initDataUnsafe?: { start_param?: string } } } })
-          .Telegram?.WebApp?.initData
+      ? (
+          window as unknown as {
+            Telegram?: {
+              WebApp?: { initData?: string; initDataUnsafe?: { start_param?: string } };
+            };
+          }
+        ).Telegram?.WebApp?.initData
       : undefined);
 
   if (rawInitData) {
@@ -92,19 +97,15 @@ export function getTelegramBattleShareUrl(deepLink: string, text: string): strin
   return `https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent(text)}`;
 }
 
-export function shareBattle(
-  battleId: string,
-  botUsername?: string,
-): void {
+export function shareBattle(battleId: string, botUsername?: string): void {
   const deepLink = getBattleDeepLink(battleId, botUsername);
   const text = formatBattleShareText();
   const shareUrl = getTelegramBattleShareUrl(deepLink, text);
 
-  const telegramWebApp = (
+  const telegramWebApp =
     typeof window !== 'undefined'
       ? (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp
-      : undefined
-  );
+      : undefined;
 
   if (typeof telegramWebApp?.openTelegramLink === 'function') {
     telegramWebApp.openTelegramLink(shareUrl);
@@ -113,10 +114,7 @@ export function shareBattle(
   }
 }
 
-export async function copyBattleLink(
-  battleId: string,
-  botUsername?: string,
-): Promise<boolean> {
+export async function copyBattleLink(battleId: string, botUsername?: string): Promise<boolean> {
   const deepLink = getBattleDeepLink(battleId, botUsername);
   if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
     try {
@@ -130,11 +128,13 @@ export async function copyBattleLink(
 }
 
 export function getBattleViewerPerspective(
-  info: BattleInfoResponse | {
-    winner?: BattleWinner | null;
-    challengerUserId: number;
-    opponentUserId?: number | null;
-  },
+  info:
+    | BattleInfoResponse
+    | {
+        winner?: BattleWinner | null;
+        challengerUserId: number;
+        opponentUserId?: number | null;
+      },
   currentUserId: number,
 ): BattleViewerPerspective {
   if (!info.winner) {
@@ -277,4 +277,3 @@ export function format1v1VictoryShareText(
   }
   return `🏆 ${winnerName} defeated ${loserName} in a 1v1 Flagora Battle (${winnerScore} vs ${loserScore} pts)! 🚩\n\nThink you can beat me? Challenge me now! ⚔️`;
 }
-

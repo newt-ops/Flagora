@@ -30,7 +30,9 @@ export async function initRedis(url: string): Promise<RedisClient> {
     return redisClient;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown Redis connection error';
-    process.stderr.write(`Warning: Failed to connect to Redis (${message}). Falling back to in-memory store.\n`);
+    process.stderr.write(
+      `Warning: Failed to connect to Redis (${message}). Falling back to in-memory store.\n`,
+    );
     try {
       client.disconnect();
     } catch {

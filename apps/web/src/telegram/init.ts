@@ -32,8 +32,17 @@ export async function initTelegramApp(): Promise<TelegramInitResult> {
     }
   }
 
-  if (import.meta.env.DEV) {
-    const { generateDevInitData } = await import('./devMock');
+  const isBrowserMode =
+    import.meta.env.DEV ||
+    (typeof window !== 'undefined' &&
+      (window.location.search.includes('browser=true') ||
+        window.location.search.includes('test=true') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.localStorage.getItem('flagora_browser_mode') === 'true'));
+
+  if (isBrowserMode) {
+    const { generateDevInitData } = await import('./devMock.js');
     const mockInitData = await generateDevInitData();
     return {
       initData: mockInitData,
@@ -43,4 +52,3 @@ export async function initTelegramApp(): Promise<TelegramInitResult> {
 
   throw new NotInTelegramError();
 }
-

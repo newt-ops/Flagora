@@ -10,11 +10,10 @@ import type {
   BattleStartPayload,
   BattleStartFlag,
   PlayerProfile,
+  Continent,
 } from '@flagora/shared';
-import {
-  DEFAULT_RUN_TIER_MIX,
-  getDisplayName,
-} from '@flagora/shared';
+import { DEFAULT_RUN_TIER_MIX } from '@flagora/shared';
+import { getCachedFlags, getCachedFlagsByContinent } from '../game/flagCache.js';
 import {
   BattleNotFoundError,
   BattleExpiredError,
@@ -55,18 +54,40 @@ export interface CreateGroupLobbyParams {
   hostDisplayName: string;
   hostPhotoUrl?: string | null;
   maxPlayers?: number;
+  continent?: Continent;
+  flagCount?: number;
+  durationSeconds?: number;
 }
 
 export async function createGroupLobby(
   params: CreateGroupLobbyParams,
   db: Db,
 ): Promise<BattleSession> {
-  const { chatId, messageId, hostUserId, hostDisplayName, hostPhotoUrl, maxPlayers } = params;
+  const {
+    chatId,
+    messageId,
+    hostUserId,
+    hostDisplayName,
+    hostPhotoUrl,
+    maxPlayers,
+    continent,
+    flagCount,
+    durationSeconds,
+  } = params;
 
   const clampedMax = Math.min(
     GROUP_BATTLE_CONFIG.maxPlayersLimit,
     Math.max(GROUP_BATTLE_CONFIG.minPlayers, maxPlayers || GROUP_BATTLE_CONFIG.defaultMaxPlayers),
   );
+  const clampedDuration =
+    durationSeconds && durationSeconds >= 15 && durationSeconds <= 300
+      ? durationSeconds
+      : GROUP_BATTLE_CONFIG.battleDurationMs / 1000;
+  const clampedFlags = flagCount && flagCount >= 5 && flagCount <= 50 ? flagCount : 10;
+  const validContinent: Continent =
+    continent && ['world', 'africa', 'asia', 'europe', 'americas', 'oceania'].includes(continent)
+      ? continent
+      : 'world';
 
   const now = new Date();
 
@@ -79,10 +100,9 @@ export async function createGroupLobby(
 
     if (existing) {
       if (messageId && existing.messageId !== messageId) {
-        await db.collection<BattleSession>('battles').updateOne(
-          { battleId: existing.battleId },
-          { $set: { messageId } },
-        );
+        await db
+          .collection<BattleSession>('battles')
+          .updateOne({ battleId: existing.battleId }, { $set: { messageId } });
         existing.messageId = messageId;
       }
       return existing;
@@ -109,7 +129,9 @@ export async function createGroupLobby(
     messageId: messageId ?? null,
     isGroupBattle: true,
     maxPlayers: clampedMax,
-    durationSeconds: GROUP_BATTLE_CONFIG.battleDurationMs / 1000,
+    durationSeconds: clampedDuration,
+    continent: validContinent,
+    flagCount: clampedFlags,
     hostUserId,
     challengerUserId: hostUserId,
     opponentUserId: null,
@@ -191,7 +213,10 @@ export async function joinGroupLobby(
   if (battle.participants?.some((p) => p.userId === userId)) {
     throw new BattleAlreadyJoinedError('You have already joined this battle lobby');
   }
-  if ((battle.participants?.length ?? 0) >= (battle.maxPlayers ?? GROUP_BATTLE_CONFIG.defaultMaxPlayers)) {
+  if (
+    (battle.participants?.length ?? 0) >=
+    (battle.maxPlayers ?? GROUP_BATTLE_CONFIG.defaultMaxPlayers)
+  ) {
     throw new LobbyFullError();
   }
 
@@ -220,11 +245,13 @@ export async function leaveGroupLobby(
     const remaining = participants.filter((p) => p.userId !== userId);
     if (remaining.length === 0) {
       // Host was alone -> cancel lobby
-      const updated = await db.collection<BattleSession>('battles').findOneAndUpdate(
-        { battleId, status: 'waiting' },
-        { $set: { status: 'expired', updatedAt: now } },
-        { returnDocument: 'after' },
-      );
+      const updated = await db
+        .collection<BattleSession>('battles')
+        .findOneAndUpdate(
+          { battleId, status: 'waiting' },
+          { $set: { status: 'expired', updatedAt: now } },
+          { returnDocument: 'after' },
+        );
       if (io) {
         io.to(`battle:${battleId}`).emit('battleError', {
           message: 'Host left and battle lobby was closed',
@@ -295,11 +322,13 @@ export async function cancelGroupLobby(
   }
 
   const now = new Date();
-  const updated = await db.collection<BattleSession>('battles').findOneAndUpdate(
-    { battleId, status: 'waiting', hostUserId: requestingUserId },
-    { $set: { status: 'expired', updatedAt: now } },
-    { returnDocument: 'after' },
-  );
+  const updated = await db
+    .collection<BattleSession>('battles')
+    .findOneAndUpdate(
+      { battleId, status: 'waiting', hostUserId: requestingUserId },
+      { $set: { status: 'expired', updatedAt: now } },
+      { returnDocument: 'after' },
+    );
 
   if (!updated) {
     throw new BattleNotFoundError();
@@ -356,14 +385,16 @@ async function executeStartGroupBattle(
     throw new BattleAlreadyStartedError('Battle could not be started or already started');
   }
 
-  // 1. Generate single synchronized flag sequence for all participants
-  const selectedFlags = selectRunFlags(DEFAULT_RUN_TIER_MIX);
+  const countryPool = getCachedFlagsByContinent(startedBattle.continent);
+  const targetCount = startedBattle.flagCount || 10;
+  const flagsPool = countryPool.length >= targetCount ? countryPool : getCachedFlags();
+  const selectedFlags = selectRunFlags(DEFAULT_RUN_TIER_MIX, [], flagsPool, targetCount);
   const runFlags: RunFlagItem[] = selectedFlags.map((country, index) => ({
     flagIndex: index,
     isoCode: country.isoCode,
     name: country.name,
     tier: country.tier,
-    choices: generateChoices(country),
+    choices: generateChoices(country, flagsPool.length >= 4 ? flagsPool : getCachedFlags()),
     answered: false,
     correct: false,
   }));
@@ -586,8 +617,7 @@ export async function finalizeGroupBattle(
 
   const now = new Date();
   const startedAtMs = battle.startedAt ? new Date(battle.startedAt).getTime() : 0;
-  const durationMs =
-    (battle.durationSeconds ?? GROUP_BATTLE_CONFIG.battleDurationMs / 1000) * 1000;
+  const durationMs = (battle.durationSeconds ?? GROUP_BATTLE_CONFIG.battleDurationMs / 1000) * 1000;
   const isTimeExpired = startedAtMs > 0 && now.getTime() >= startedAtMs + durationMs;
 
   const participants = battle.participants ?? [];
@@ -835,18 +865,18 @@ export async function getGroupBattleInfo(
     battle.status === 'waiting' &&
     new Date(battle.expiresAt).getTime() > Date.now() &&
     !isParticipant &&
-    (battle.participants?.length ?? 0) < (battle.maxPlayers ?? GROUP_BATTLE_CONFIG.defaultMaxPlayers);
+    (battle.participants?.length ?? 0) <
+      (battle.maxPlayers ?? GROUP_BATTLE_CONFIG.defaultMaxPlayers);
 
   const myParticipant = battle.participants?.find((p) => p.userId === requestingUserId);
+  const durationMs = (battle.durationSeconds ?? GROUP_BATTLE_CONFIG.battleDurationMs / 1000) * 1000;
   const remainingSeconds =
     battle.status === 'in_progress' && battle.startedAt
       ? Math.max(
           0,
-          Math.ceil(
-            (GROUP_BATTLE_CONFIG.battleDurationMs - (Date.now() - new Date(battle.startedAt).getTime())) / 1000,
-          ),
+          Math.ceil((durationMs - (Date.now() - new Date(battle.startedAt).getTime())) / 1000),
         )
-      : GROUP_BATTLE_CONFIG.battleDurationMs / 1000;
+      : durationMs / 1000;
 
   return {
     battleId: battle.battleId,
@@ -868,8 +898,9 @@ export async function getGroupBattleInfo(
     participants: battle.participants,
     podium: battle.podium,
     completedAt: battle.completedAt,
-    totalFlags: 10,
-    durationSeconds: GROUP_BATTLE_CONFIG.battleDurationMs / 1000,
+    totalFlags: battle.flagCount ?? 10,
+    durationSeconds: battle.durationSeconds ?? GROUP_BATTLE_CONFIG.battleDurationMs / 1000,
+    continent: battle.continent ?? 'world',
     startedAt: battle.startedAt ?? null,
     flags: battle.flags ?? [],
     myRunId: myParticipant?.runId ?? null,

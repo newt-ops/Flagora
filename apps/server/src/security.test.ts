@@ -22,7 +22,10 @@ describe('Phase 1 & Security Hardening Tests', () => {
   const testAdminSecret = 'super-secret-admin-token-xyz';
   const testWebhookSecret = 'telegram-webhook-secret-token-abc';
 
-  function timingSafeEqualStrings(a: string | undefined | null, b: string | undefined | null): boolean {
+  function timingSafeEqualStrings(
+    a: string | undefined | null,
+    b: string | undefined | null,
+  ): boolean {
     if (typeof a !== 'string' || typeof b !== 'string') {
       return false;
     }
@@ -66,7 +69,11 @@ describe('Phase 1 & Security Hardening Tests', () => {
       try {
         const adminSecret = process.env.TEST_ADMIN_SECRET;
         const providedSecret = req.headers['x-admin-secret'];
-        if (!adminSecret || typeof providedSecret !== 'string' || !timingSafeEqualStrings(providedSecret, adminSecret)) {
+        if (
+          !adminSecret ||
+          typeof providedSecret !== 'string' ||
+          !timingSafeEqualStrings(providedSecret, adminSecret)
+        ) {
           res.status(403).json({ error: 'Forbidden', message: 'Invalid admin secret' });
           return;
         }
@@ -87,7 +94,11 @@ describe('Phase 1 & Security Hardening Tests', () => {
           return;
         }
       } else {
-        if (!providedToken || typeof providedToken !== 'string' || !timingSafeEqualStrings(providedToken, webhookSecret)) {
+        if (
+          !providedToken ||
+          typeof providedToken !== 'string' ||
+          !timingSafeEqualStrings(providedToken, webhookSecret)
+        ) {
           res.status(401).json({ error: 'Unauthorized', message: 'Invalid webhook secret token' });
           return;
         }
@@ -97,7 +108,10 @@ describe('Phase 1 & Security Hardening Tests', () => {
       if (update?.pre_checkout_query) {
         const query = update.pre_checkout_query;
         const isStars = !query.currency || query.currency === 'XTR';
-        const isProPayload = !query.invoice_payload || (typeof query.invoice_payload === 'string' && query.invoice_payload.startsWith('pro_sub_'));
+        const isProPayload =
+          !query.invoice_payload ||
+          (typeof query.invoice_payload === 'string' &&
+            query.invoice_payload.startsWith('pro_sub_'));
         if (isStars && isProPayload) {
           res.status(200).json({ ok: true });
         } else {
@@ -112,7 +126,10 @@ describe('Phase 1 & Security Hardening Tests', () => {
         const telegramUserId = Number(message.from?.id);
         const chargeId = payment.telegram_payment_charge_id;
         const isStars = !payment.currency || payment.currency === 'XTR';
-        const isProPayload = !payment.invoice_payload || (typeof payment.invoice_payload === 'string' && payment.invoice_payload.startsWith('pro_sub_'));
+        const isProPayload =
+          !payment.invoice_payload ||
+          (typeof payment.invoice_payload === 'string' &&
+            payment.invoice_payload.startsWith('pro_sub_'));
 
         if (telegramUserId && chargeId && isStars && isProPayload) {
           try {
@@ -150,11 +167,13 @@ describe('Phase 1 & Security Hardening Tests', () => {
       res.json({ ok: true, result: `https://t.me/$${payload || 'mock_invoice_link'}` });
     });
 
-    app.use((err: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
-      void next;
-      const message = err instanceof Error ? err.message : 'Internal server error';
-      res.status(500).json({ error: 'Internal server error', message });
-    });
+    app.use(
+      (err: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+        void next;
+        const message = err instanceof Error ? err.message : 'Internal server error';
+        res.status(500).json({ error: 'Internal server error', message });
+      },
+    );
 
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => {
@@ -334,7 +353,9 @@ describe('Phase 1 & Security Hardening Tests', () => {
     });
     assert.equal(firstDelivery.status, 200);
 
-    const profileAfterFirst = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: testUserId });
+    const profileAfterFirst = await db
+      .collection<PlayerProfile>('profiles')
+      .findOne({ telegramUserId: testUserId });
     assert.equal(profileAfterFirst?.pins, 100);
 
     const secondDelivery = await fetch(`${baseUrl}/api/telegram/webhook`, {
@@ -347,7 +368,9 @@ describe('Phase 1 & Security Hardening Tests', () => {
     });
     assert.equal(secondDelivery.status, 200);
 
-    const profileAfterSecond = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: testUserId });
+    const profileAfterSecond = await db
+      .collection<PlayerProfile>('profiles')
+      .findOne({ telegramUserId: testUserId });
     assert.equal(profileAfterSecond?.pins, 100);
 
     const processedDocs = await db.collection('processed_payments').countDocuments({ chargeId });
@@ -397,7 +420,9 @@ describe('Phase 1 & Security Hardening Tests', () => {
     });
     assert.equal(res.status, 200);
 
-    const profile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: nonStarUserId });
+    const profile = await db
+      .collection<PlayerProfile>('profiles')
+      .findOne({ telegramUserId: nonStarUserId });
     assert.equal(profile?.pins, 50);
 
     const sub = await db.collection('subscriptions').findOne({ telegramUserId: nonStarUserId });
@@ -495,7 +520,9 @@ describe('Phase 1 & Security Hardening Tests', () => {
     assert.ok(Array.isArray(statusData.perks));
     assert.ok(statusData.perks.includes('verified_badge'));
 
-    const updatedProfile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: e2eUserId });
+    const updatedProfile = await db
+      .collection<PlayerProfile>('profiles')
+      .findOne({ telegramUserId: e2eUserId });
     assert.equal(updatedProfile?.pins, 50);
   });
 });

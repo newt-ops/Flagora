@@ -66,15 +66,9 @@ export function AnimatedModal({
           <div className="flex items-center justify-between pb-2 mb-4">
             <div className="min-w-0 pr-2">
               {title && (
-                <h2 className="text-base sm:text-lg font-bold text-tg-text truncate">
-                  {title}
-                </h2>
+                <h2 className="text-base sm:text-lg font-bold text-tg-text truncate">{title}</h2>
               )}
-              {description && (
-                <p className="text-xs text-tg-hint mt-0.5 truncate">
-                  {description}
-                </p>
-              )}
+              {description && <p className="text-xs text-tg-hint mt-0.5 truncate">{description}</p>}
             </div>
             {showCloseButton && (
               <button

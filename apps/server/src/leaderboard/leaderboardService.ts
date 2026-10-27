@@ -26,11 +26,14 @@ export async function updateLeaderboardScore(
 async function getVerifiedUserSet(userIds: number[], db: Db): Promise<Set<number>> {
   if (userIds.length === 0) return new Set();
   try {
-    const subs = await db.collection('subscriptions').find({
-      telegramUserId: { $in: userIds },
-      status: 'active',
-      currentPeriodEnd: { $gt: new Date() },
-    }).toArray();
+    const subs = await db
+      .collection('subscriptions')
+      .find({
+        telegramUserId: { $in: userIds },
+        status: 'active',
+        currentPeriodEnd: { $gt: new Date() },
+      })
+      .toArray();
     return new Set(subs.map((s: any) => s.telegramUserId));
   } catch {
     return new Set();
@@ -241,9 +244,7 @@ export async function getPlayerLeaderboardRank(
   }
 
   if (db && redisFailed && key === LEADERBOARD_KEY) {
-    const profile = await db
-      .collection<PlayerProfile>('profiles')
-      .findOne({ telegramUserId });
+    const profile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId });
 
     if (profile && profile.bestScore > 0) {
       const higherCount = await db
@@ -260,24 +261,20 @@ export async function getPlayerLeaderboardRank(
 
   if (db && redisFailed && key.startsWith('leaderboard:daily:')) {
     const targetDate = key.replace('leaderboard:daily:', '');
-    const userRun = await db
-      .collection<GameRun>('runs')
-      .findOne({
-        telegramUserId,
-        mode: 'daily',
-        dailyDate: targetDate,
-        'finalScore.totalScore': { $exists: true },
-      });
+    const userRun = await db.collection<GameRun>('runs').findOne({
+      telegramUserId,
+      mode: 'daily',
+      dailyDate: targetDate,
+      'finalScore.totalScore': { $exists: true },
+    });
 
     if (userRun?.finalScore) {
       const userScore = userRun.finalScore.totalScore;
-      const higherCount = await db
-        .collection<GameRun>('runs')
-        .countDocuments({
-          mode: 'daily',
-          dailyDate: targetDate,
-          'finalScore.totalScore': { $gt: userScore },
-        });
+      const higherCount = await db.collection<GameRun>('runs').countDocuments({
+        mode: 'daily',
+        dailyDate: targetDate,
+        'finalScore.totalScore': { $gt: userScore },
+      });
 
       return {
         ranked: true,
@@ -294,12 +291,10 @@ export async function getPlayerLeaderboardRank(
       .findOne({ telegramUserId, currentSeason: season });
 
     if (profile && (profile.battleRating ?? 0) > 0) {
-      const higherCount = await db
-        .collection<PlayerProfile>('profiles')
-        .countDocuments({
-          currentSeason: season,
-          battleRating: { $gt: profile.battleRating },
-        });
+      const higherCount = await db.collection<PlayerProfile>('profiles').countDocuments({
+        currentSeason: season,
+        battleRating: { $gt: profile.battleRating },
+      });
 
       return {
         ranked: true,
@@ -316,18 +311,12 @@ export async function getPlayerLeaderboardRank(
   };
 }
 
-export async function reconcileLeaderboard(
-  db: Db,
-  redis: RedisClient,
-): Promise<{ count: number }> {
+export async function reconcileLeaderboard(db: Db, redis: RedisClient): Promise<{ count: number }> {
   await redis.del(LEADERBOARD_KEY);
 
   const cursor = db
     .collection<PlayerProfile>('profiles')
-    .find(
-      { bestScore: { $gt: 0 } },
-      { projection: { telegramUserId: 1, bestScore: 1 } },
-    );
+    .find({ bestScore: { $gt: 0 } }, { projection: { telegramUserId: 1, bestScore: 1 } });
 
   const BATCH_SIZE = 500;
   let batch: { telegramUserId: number; bestScore: number }[] = [];

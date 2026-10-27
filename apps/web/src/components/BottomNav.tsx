@@ -35,12 +35,12 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             }`}
             title={tab.label}
           >
-            <Icon className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-105' : 'hover:scale-110'}`} />
+            <Icon
+              className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-105' : 'hover:scale-110'}`}
+            />
             <span
               className={`overflow-hidden whitespace-nowrap text-xs font-semibold transition-all duration-300 ease-out ${
-                isActive
-                  ? 'max-w-[100px] opacity-100 ml-1.5'
-                  : 'max-w-0 opacity-0 ml-0'
+                isActive ? 'max-w-[100px] opacity-100 ml-1.5' : 'max-w-0 opacity-0 ml-0'
               }`}
             >
               {tab.label}

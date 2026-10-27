@@ -43,8 +43,13 @@ export function getChallengeStartParam(
   const rawInitData =
     initData ??
     (typeof window !== 'undefined'
-      ? (window as unknown as { Telegram?: { WebApp?: { initData?: string; initDataUnsafe?: { start_param?: string } } } })
-          .Telegram?.WebApp?.initData
+      ? (
+          window as unknown as {
+            Telegram?: {
+              WebApp?: { initData?: string; initDataUnsafe?: { start_param?: string } };
+            };
+          }
+        ).Telegram?.WebApp?.initData
       : undefined);
 
   if (rawInitData) {

@@ -47,9 +47,7 @@ export function HeadToHeadResultScreen({
         <div className="mt-6 grid w-full grid-cols-2 gap-3">
           <div
             className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              challengerWon
-                ? 'ring-2 ring-tg-button shadow-sm'
-                : ''
+              challengerWon ? 'ring-2 ring-tg-button shadow-sm' : ''
             }`}
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
@@ -60,9 +58,7 @@ export function HeadToHeadResultScreen({
                   className="h-14 w-14 rounded-full object-cover ring-2 ring-tg-button"
                 />
               ) : (
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text"
-                >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text">
                   {challengerInitial}
                 </div>
               )}
@@ -76,9 +72,7 @@ export function HeadToHeadResultScreen({
             <p className="mt-2.5 max-w-[120px] truncate text-xs font-bold text-tg-text">
               {challengeInfo.challengerDisplayName}
             </p>
-            <p className="text-[11px] text-tg-hint">
-              {isChallengerViewer ? 'You' : 'Challenger'}
-            </p>
+            <p className="text-[11px] text-tg-hint">{isChallengerViewer ? 'You' : 'Challenger'}</p>
 
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-2xl font-extrabold text-tg-text">
@@ -96,9 +90,7 @@ export function HeadToHeadResultScreen({
 
           <div
             className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              opponentWon
-                ? 'ring-2 ring-tg-button shadow-sm'
-                : ''
+              opponentWon ? 'ring-2 ring-tg-button shadow-sm' : ''
             }`}
           >
             <div className="relative flex h-16 w-16 items-center justify-center">
@@ -109,9 +101,7 @@ export function HeadToHeadResultScreen({
                   className="h-14 w-14 rounded-full object-cover ring-2 ring-tg-button"
                 />
               ) : (
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text"
-                >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text">
                   {opponentInitial}
                 </div>
               )}
@@ -125,9 +115,7 @@ export function HeadToHeadResultScreen({
             <p className="mt-2.5 max-w-[120px] truncate text-xs font-bold text-tg-text">
               {challengeInfo.opponentDisplayName ?? 'Opponent'}
             </p>
-            <p className="text-[11px] text-tg-hint">
-              {isOpponentViewer ? 'You' : 'Opponent'}
-            </p>
+            <p className="text-[11px] text-tg-hint">{isOpponentViewer ? 'You' : 'Opponent'}</p>
 
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-2xl font-extrabold text-tg-text">

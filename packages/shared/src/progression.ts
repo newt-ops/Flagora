@@ -46,7 +46,11 @@ export function isDoubleXpActive(date: Date = new Date()): boolean {
   return DOUBLE_XP_CONFIG.daysOfWeekUtc.includes(day);
 }
 
-export function calculateAwardedXp(baseXp: number, isPro: boolean, date: Date = new Date()): number {
+export function calculateAwardedXp(
+  baseXp: number,
+  isPro: boolean,
+  date: Date = new Date(),
+): number {
   if (isPro && isDoubleXpActive(date)) {
     return baseXp * DOUBLE_XP_CONFIG.multiplier;
   }

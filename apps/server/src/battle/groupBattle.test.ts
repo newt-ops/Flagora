@@ -101,6 +101,31 @@ describe('Group Multiplayer Battles (v2.1 Backend)', () => {
       assert.equal(lobbyMax.maxPlayers, 20);
     });
 
+    it('creates lobby with customized player slots, continent, flags, and duration', async () => {
+      const lobby = await createGroupLobby(
+        {
+          hostUserId: 150,
+          hostDisplayName: 'CustomHost',
+          maxPlayers: 15,
+          continent: 'africa',
+          flagCount: 20,
+          durationSeconds: 90,
+        },
+        db,
+      );
+
+      assert.equal(lobby.maxPlayers, 15);
+      assert.equal(lobby.continent, 'africa');
+      assert.equal(lobby.flagCount, 20);
+      assert.equal(lobby.durationSeconds, 90);
+
+      const info = await getGroupBattleInfo(lobby.battleId, 150, db);
+      assert.equal(info.maxPlayers, 15);
+      assert.equal(info.continent, 'africa');
+      assert.equal(info.totalFlags, 20);
+      assert.equal(info.durationSeconds, 90);
+    });
+
     it('returns existing active lobby if already waiting in the same chatId', async () => {
       const lobby1 = await createGroupLobby(
         {
@@ -206,16 +231,19 @@ describe('Group Multiplayer Battles (v2.1 Backend)', () => {
 
       for (const rej of rejected) {
         if (rej.status === 'rejected') {
-          assert.ok(
-            rej.reason instanceof LobbyFullError,
-            'Rejected reason must be LobbyFullError',
-          );
+          assert.ok(rej.reason instanceof LobbyFullError, 'Rejected reason must be LobbyFullError');
         }
       }
 
       // Verify in MongoDB that participants count is strictly 2
-      const finalDoc = await db.collection<BattleSession>('battles').findOne({ battleId: lobby.battleId });
-      assert.equal(finalDoc?.participants?.length, 2, 'Lobby participants must strictly equal maxPlayers (2)');
+      const finalDoc = await db
+        .collection<BattleSession>('battles')
+        .findOne({ battleId: lobby.battleId });
+      assert.equal(
+        finalDoc?.participants?.length,
+        2,
+        'Lobby participants must strictly equal maxPlayers (2)',
+      );
     });
   });
 
@@ -461,9 +489,51 @@ describe('Group Multiplayer Battles (v2.1 Backend)', () => {
       // Create profiles to receive pin credits
       const profilesCol = db.collection<PlayerProfile>('profiles');
       await profilesCol.insertMany([
-        { telegramUserId: 1100, username: 'host', firstName: 'Host', level: 1, xp: 0, pins: 100, bestScore: 0, currentStreak: 1, longestStreak: 1, lastPlayedDate: '2026-10-10', gamesPlayed: 0, createdAt: new Date(), updatedAt: new Date() },
-        { telegramUserId: 1101, username: 'silver', firstName: 'Silver', level: 1, xp: 0, pins: 50, bestScore: 0, currentStreak: 1, longestStreak: 1, lastPlayedDate: '2026-10-10', gamesPlayed: 0, createdAt: new Date(), updatedAt: new Date() },
-        { telegramUserId: 1102, username: 'bronze', firstName: 'Bronze', level: 1, xp: 0, pins: 20, bestScore: 0, currentStreak: 1, longestStreak: 1, lastPlayedDate: '2026-10-10', gamesPlayed: 0, createdAt: new Date(), updatedAt: new Date() },
+        {
+          telegramUserId: 1100,
+          username: 'host',
+          firstName: 'Host',
+          level: 1,
+          xp: 0,
+          pins: 100,
+          bestScore: 0,
+          currentStreak: 1,
+          longestStreak: 1,
+          lastPlayedDate: '2026-10-10',
+          gamesPlayed: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          telegramUserId: 1101,
+          username: 'silver',
+          firstName: 'Silver',
+          level: 1,
+          xp: 0,
+          pins: 50,
+          bestScore: 0,
+          currentStreak: 1,
+          longestStreak: 1,
+          lastPlayedDate: '2026-10-10',
+          gamesPlayed: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          telegramUserId: 1102,
+          username: 'bronze',
+          firstName: 'Bronze',
+          level: 1,
+          xp: 0,
+          pins: 20,
+          bestScore: 0,
+          currentStreak: 1,
+          longestStreak: 1,
+          lastPlayedDate: '2026-10-10',
+          gamesPlayed: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
       ]);
 
       const started = await startGroupBattle(lobby.battleId, 1100, db);
@@ -477,9 +547,18 @@ describe('Group Multiplayer Battles (v2.1 Backend)', () => {
       const silverRunId = started.participants?.find((p) => p.userId === 1101)!.runId!;
       const bronzeRunId = started.participants?.find((p) => p.userId === 1102)!.runId!;
 
-      await runsCol.updateOne({ runId: hostRunId }, { $set: { runningTotal: 1200, status: 'finished' } });
-      await runsCol.updateOne({ runId: silverRunId }, { $set: { runningTotal: 950, status: 'finished' } });
-      await runsCol.updateOne({ runId: bronzeRunId }, { $set: { runningTotal: 800, status: 'finished' } });
+      await runsCol.updateOne(
+        { runId: hostRunId },
+        { $set: { runningTotal: 1200, status: 'finished' } },
+      );
+      await runsCol.updateOne(
+        { runId: silverRunId },
+        { $set: { runningTotal: 950, status: 'finished' } },
+      );
+      await runsCol.updateOne(
+        { runId: bronzeRunId },
+        { $set: { runningTotal: 800, status: 'finished' } },
+      );
 
       // Run finalization concurrently to test idempotency
       const [final1, final2] = await Promise.all([

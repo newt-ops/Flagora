@@ -4,7 +4,11 @@ export function easeOutExpo(t: number): number {
   return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
 }
 
-export function calculateInterpolatedCount(start: number, target: number, progress: number): number {
+export function calculateInterpolatedCount(
+  start: number,
+  target: number,
+  progress: number,
+): number {
   const eased = easeOutExpo(Math.max(0, Math.min(1, progress)));
   return Math.round(start + (target - start) * eased);
 }

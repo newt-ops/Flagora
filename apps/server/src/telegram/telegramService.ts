@@ -131,9 +131,7 @@ export async function sendTelegramMessageWithId(
   }
 }
 
-export async function sendTelegramMessage(
-  options: SendTelegramMessageOptions,
-): Promise<boolean> {
+export async function sendTelegramMessage(options: SendTelegramMessageOptions): Promise<boolean> {
   const result = await sendTelegramMessageWithId(options);
   return result.ok;
 }
@@ -146,7 +144,8 @@ export async function deleteTelegramMessage(options: {
 }): Promise<boolean> {
   const token = options.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return false;
-  const base = options.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
+  const base =
+    options.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
 
   try {
     const res = await fetch(`${base}/bot${token}/deleteMessage`, {
@@ -163,9 +162,7 @@ export async function deleteTelegramMessage(options: {
   }
 }
 
-export async function editTelegramMessage(
-  options: EditTelegramMessageOptions,
-): Promise<boolean> {
+export async function editTelegramMessage(options: EditTelegramMessageOptions): Promise<boolean> {
   const token = options.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
     return false;
@@ -264,7 +261,10 @@ export async function notifyChallengeCompletion(
     const winner = challenge.winner ?? 'tie';
 
     const rawUsername =
-      overrides?.botUsername ?? process.env.TELEGRAM_BOT_USERNAME ?? process.env.BOT_USERNAME ?? 'flagora_bot';
+      overrides?.botUsername ??
+      process.env.TELEGRAM_BOT_USERNAME ??
+      process.env.BOT_USERNAME ??
+      'flagora_bot';
     const botUsername = rawUsername.replace(/^@/, '');
     const deepLink = getChallengeDeepLink(challenge.challengeId, botUsername);
 
@@ -324,7 +324,10 @@ export async function notifyRematchInvitation(
       : `Player ${requesterUserId}`;
 
     const rawUsername =
-      overrides?.botUsername ?? process.env.TELEGRAM_BOT_USERNAME ?? process.env.BOT_USERNAME ?? 'flagora_bot';
+      overrides?.botUsername ??
+      process.env.TELEGRAM_BOT_USERNAME ??
+      process.env.BOT_USERNAME ??
+      'flagora_bot';
     const botUsername = rawUsername.replace(/^@/, '');
     const deepLink = getChallengeDeepLink(newChallengeId, botUsername);
 
@@ -374,7 +377,10 @@ export async function notifyBattleCompletion(
     const winner = battle.winner ?? 'tie';
 
     const rawUsername =
-      overrides?.botUsername ?? process.env.TELEGRAM_BOT_USERNAME ?? process.env.BOT_USERNAME ?? 'flagora_bot';
+      overrides?.botUsername ??
+      process.env.TELEGRAM_BOT_USERNAME ??
+      process.env.BOT_USERNAME ??
+      'flagora_bot';
     const botUsername = rawUsername.replace(/^@/, '');
     const deepLink = getBattleDeepLink(battle.battleId, botUsername);
 
@@ -438,7 +444,10 @@ export async function notifyOpponentReady(
     const readyName = readyProfile ? getDisplayName(readyProfile) : 'Your opponent';
 
     const rawUsername =
-      overrides?.botUsername ?? process.env.TELEGRAM_BOT_USERNAME ?? process.env.BOT_USERNAME ?? 'flagora_bot';
+      overrides?.botUsername ??
+      process.env.TELEGRAM_BOT_USERNAME ??
+      process.env.BOT_USERNAME ??
+      'flagora_bot';
     const botUsername = rawUsername.replace(/^@/, '');
     const deepLink = getBattleDeepLink(battleId, botUsername);
 
@@ -480,13 +489,12 @@ export async function notifyReferralReward(
   }
 }
 
-
 export async function createInvoiceLink(
   title: string,
   description: string,
   payload: string,
   currency: string,
-  prices: { label: string, amount: number }[],
+  prices: { label: string; amount: number }[],
   botToken?: string,
   apiBaseUrl?: string,
 ): Promise<string | null> {
@@ -502,7 +510,7 @@ export async function createInvoiceLink(
         title,
         description,
         payload,
-        provider_token: "",
+        provider_token: '',
         currency,
         prices,
       }),
@@ -576,7 +584,8 @@ export async function getTelegramBotMe(
 ): Promise<TelegramBotUser | null> {
   const token = overrides?.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return null;
-  const base = overrides?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
+  const base =
+    overrides?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
 
   try {
     const res = await fetch(`${base}/bot${token}/getMe`);
@@ -598,7 +607,8 @@ export async function getTelegramWebhookInfo(
 ): Promise<TelegramWebhookInfo | null> {
   const token = overrides?.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return null;
-  const base = overrides?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
+  const base =
+    overrides?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
 
   try {
     const res = await fetch(`${base}/bot${token}/getWebhookInfo`);
@@ -626,7 +636,8 @@ export async function setTelegramWebhook(options: {
 }): Promise<{ ok: boolean; description?: string }> {
   const token = options.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return { ok: false, description: 'Missing bot token' };
-  const base = options.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
+  const base =
+    options.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
 
   const payload: Record<string, unknown> = {
     url: options.url,
@@ -666,7 +677,8 @@ export async function deleteTelegramWebhook(options?: {
 }): Promise<{ ok: boolean; description?: string }> {
   const token = options?.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return { ok: false, description: 'Missing bot token' };
-  const base = options?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
+  const base =
+    options?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
 
   const payload: Record<string, unknown> = {};
   if (options?.dropPendingUpdates !== undefined) {
@@ -698,7 +710,8 @@ export async function getTelegramUpdates(options?: {
 }): Promise<any[]> {
   const token = options?.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return [];
-  const base = options?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
+  const base =
+    options?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
 
   const payload: Record<string, unknown> = {};
   if (options?.offset !== undefined) payload.offset = options.offset;
@@ -733,7 +746,8 @@ export async function setTelegramBotCommands(
 ): Promise<boolean> {
   const token = overrides?.botToken ?? process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return false;
-  const base = overrides?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
+  const base =
+    overrides?.apiBaseUrl ?? process.env.TELEGRAM_API_BASE_URL ?? 'https://api.telegram.org';
 
   const defaultCommands = [
     { command: 'start', description: 'Open Flagora & main menu' },
@@ -786,4 +800,3 @@ export async function setTelegramBotCommands(
     return false;
   }
 }
-

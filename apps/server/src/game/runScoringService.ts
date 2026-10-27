@@ -77,10 +77,7 @@ export function scoreAnswer(
   };
 }
 
-export function finalizeRun(
-  run: GameRun,
-  serverNowMs: number = Date.now(),
-): FinalizedRunResult {
+export function finalizeRun(run: GameRun, serverNowMs: number = Date.now()): FinalizedRunResult {
   const elapsedMs = Math.max(0, serverNowMs - new Date(run.startedAt).getTime());
   const timeUsedMs = Math.min(elapsedMs, run.runDurationMs);
   const leftoverMs = Math.max(0, run.runDurationMs - elapsedMs);

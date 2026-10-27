@@ -1,12 +1,6 @@
 import { Sparkles, Trophy, Flame } from './icons.js';
 
-export type AnimatedIconType =
-  | 'success'
-  | 'error'
-  | 'warning'
-  | 'reward'
-  | 'trophy'
-  | 'streak';
+export type AnimatedIconType = 'success' | 'error' | 'warning' | 'reward' | 'trophy' | 'streak';
 
 export type AnimatedIconSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -24,12 +18,7 @@ const sizeClasses: Record<AnimatedIconSize, { container: string; icon: string }>
   xl: { container: 'w-20 h-20 rounded-3xl', icon: 'w-12 h-12' },
 };
 
-export function AnimatedIcon({
-  type,
-  size = 'md',
-  className = '',
-  ariaLabel,
-}: AnimatedIconProps) {
+export function AnimatedIcon({ type, size = 'md', className = '', ariaLabel }: AnimatedIconProps) {
   const { container, icon } = sizeClasses[size];
 
   if (type === 'success') {

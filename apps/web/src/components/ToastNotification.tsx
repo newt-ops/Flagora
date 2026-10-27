@@ -1,29 +1,6 @@
 import { useEffect } from 'react';
-import { X, CheckCircle2, AlertCircle, Sparkles } from './icons.js';
-import { useToastStore, type ToastItem, type ToastType } from '../store/toastStore.js';
-
-const toastStyles: Record<ToastType, { border: string; bg: string; iconColor: string }> = {
-  success: {
-    border: 'border-emerald-500/30',
-    bg: 'bg-emerald-500/10',
-    iconColor: 'text-emerald-500',
-  },
-  error: {
-    border: 'border-red-500/30',
-    bg: 'bg-red-500/10',
-    iconColor: 'text-red-500',
-  },
-  warning: {
-    border: 'border-amber-500/30',
-    bg: 'bg-amber-500/10',
-    iconColor: 'text-amber-500',
-  },
-  info: {
-    border: 'border-tg-button/30',
-    bg: 'bg-tg-button/10',
-    iconColor: 'text-tg-button',
-  },
-};
+import { Check, AlertCircle, Sparkles } from './icons.js';
+import { useToastStore, type ToastItem } from '../store/toastStore.js';
 
 export function ToastNotificationItem({
   toast,
@@ -32,8 +9,7 @@ export function ToastNotificationItem({
   toast: ToastItem;
   onDismiss: (id: string) => void;
 }) {
-  const { type, message, title, durationMs = 3200, id } = toast;
-  const style = toastStyles[type];
+  const { type, message, title, durationMs = 2800, id } = toast;
 
   useEffect(() => {
     if (durationMs <= 0) return;
@@ -44,31 +20,39 @@ export function ToastNotificationItem({
     return () => clearTimeout(timer);
   }, [id, durationMs, onDismiss]);
 
+  const isCopy =
+    message.toLowerCase().includes('copied') || message.toLowerCase().includes('clipboard');
+
   return (
     <div
       role="alert"
-      className={`pointer-events-auto flex items-center justify-between w-full max-w-sm gap-3 px-4 py-3 rounded-2xl bg-tg-section border ${style.border} shadow-xl backdrop-blur-md animate-toast-in`}
+      onClick={() => onDismiss(id)}
+      className="pointer-events-auto cursor-pointer flex items-center gap-2.5 px-4 py-2 rounded-full bg-tg-section/95 border border-tg-secondary-bg/90 shadow-2xl shadow-black/50 backdrop-blur-2xl transition-all duration-200 active:scale-95 animate-toast-in max-w-[calc(100vw-2rem)] select-none"
     >
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className={`p-1.5 rounded-xl ${style.bg} ${style.iconColor} shrink-0`}>
-          {type === 'success' && <CheckCircle2 className="w-4 h-4" />}
-          {type === 'error' && <AlertCircle className="w-4 h-4" />}
-          {type === 'warning' && <AlertCircle className="w-4 h-4" />}
-          {type === 'info' && <Sparkles className="w-4 h-4" />}
-        </div>
-        <div className="min-w-0">
-          {title && <p className="text-xs font-bold text-tg-text truncate">{title}</p>}
-          <p className="text-xs text-tg-text font-medium leading-relaxed truncate">{message}</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={() => onDismiss(id)}
-        aria-label="Dismiss notification"
-        className="p-1 rounded-full text-tg-hint hover:text-tg-text hover:bg-tg-secondary-bg transition-colors shrink-0"
+      <div
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+          type === 'error'
+            ? 'bg-tg-destructive/20 text-tg-destructive'
+            : type === 'warning'
+              ? 'bg-amber-500/20 text-amber-400'
+              : 'bg-tg-button/20 text-tg-button'
+        }`}
       >
-        <X className="w-4 h-4" />
-      </button>
+        {isCopy || type === 'success' ? (
+          <Check className="h-3 w-3 stroke-[2.5]" />
+        ) : type === 'error' ? (
+          <AlertCircle className="h-3 w-3 stroke-[2.5]" />
+        ) : type === 'warning' ? (
+          <AlertCircle className="h-3 w-3 stroke-[2.5]" />
+        ) : (
+          <Sparkles className="h-3 w-3 stroke-[2.5]" />
+        )}
+      </div>
+
+      <div className="flex items-center gap-1.5 min-w-0">
+        {title && <span className="text-xs font-bold text-tg-text truncate shrink-0">{title}</span>}
+        <span className="text-xs font-semibold text-tg-text truncate">{message}</span>
+      </div>
     </div>
   );
 }
@@ -82,14 +66,10 @@ export function ToastContainer() {
   return (
     <div
       aria-live="polite"
-      className="fixed top-[max(12px,var(--app-safe-top))] left-0 right-0 z-50 pointer-events-none flex flex-col items-center gap-2 px-4"
+      className="fixed top-[max(1rem,calc(var(--app-safe-top,0px)+0.75rem))] inset-x-0 z-50 pointer-events-none flex flex-col items-center gap-2 px-4"
     >
       {toasts.map((toast) => (
-        <ToastNotificationItem
-          key={toast.id}
-          toast={toast}
-          onDismiss={dismissToast}
-        />
+        <ToastNotificationItem key={toast.id} toast={toast} onDismiss={dismissToast} />
       ))}
     </div>
   );

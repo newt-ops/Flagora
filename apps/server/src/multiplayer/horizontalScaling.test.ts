@@ -74,7 +74,8 @@ describe('Horizontal Scaling Readiness', () => {
 
       app.post('/api/battles', sessionMiddleware, async (req, res) => {
         try {
-          const userId = (req as unknown as { sessionUser?: { telegramUserId: number } }).sessionUser?.telegramUserId;
+          const userId = (req as unknown as { sessionUser?: { telegramUserId: number } })
+            .sessionUser?.telegramUserId;
           if (!userId) {
             res.status(401).json({ error: 'Unauthorized' });
             return;
@@ -89,7 +90,8 @@ describe('Horizontal Scaling Readiness', () => {
 
       app.post('/api/battles/:id/join', sessionMiddleware, async (req, res) => {
         try {
-          const userId = (req as unknown as { sessionUser?: { telegramUserId: number } }).sessionUser?.telegramUserId;
+          const userId = (req as unknown as { sessionUser?: { telegramUserId: number } })
+            .sessionUser?.telegramUserId;
           if (!userId) {
             res.status(401).json({ error: 'Unauthorized' });
             return;
@@ -216,9 +218,11 @@ describe('Horizontal Scaling Readiness', () => {
     assert.equal(challengerBothPresent.battleId, battleId);
     assert.equal(opponentBothPresent.battleId, battleId);
 
-    const opponentSeesChallengerReadyPromise = new Promise<PlayerReadyBroadcastPayload>((resolve) => {
-      opponentSocket.once('battlePlayerReady', resolve);
-    });
+    const opponentSeesChallengerReadyPromise = new Promise<PlayerReadyBroadcastPayload>(
+      (resolve) => {
+        opponentSocket.once('battlePlayerReady', resolve);
+      },
+    );
 
     const challengerReadyRes = await new Promise<PlayerReadyResponse>((resolve) => {
       challengerSocket.emit('playerReady', { battleId }, resolve);
@@ -254,10 +258,7 @@ describe('Horizontal Scaling Readiness', () => {
     assert.equal(opponentBattleStart.battleId, battleId);
     assert.equal(challengerBattleStart.flags.length, 10);
     assert.equal(opponentBattleStart.flags.length, 10);
-    assert.equal(
-      challengerBattleStart.flags[0].isoCode,
-      opponentBattleStart.flags[0].isoCode,
-    );
+    assert.equal(challengerBattleStart.flags[0].isoCode, opponentBattleStart.flags[0].isoCode);
 
     const opponentProgressPromise = new Promise<OpponentProgressPayload>((resolve) => {
       opponentSocket.once('opponentProgress', resolve);
@@ -348,13 +349,19 @@ describe('Horizontal Scaling Readiness', () => {
     });
     assert.equal(joinRes.success, true);
 
-    const isPresentBefore = await sharedRedis.sismember(`battle:${battleId}:presence`, String(userId));
+    const isPresentBefore = await sharedRedis.sismember(
+      `battle:${battleId}:presence`,
+      String(userId),
+    );
     assert.equal(isPresentBefore, 1);
 
     socket.disconnect();
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const isPresentAfter = await sharedRedis.sismember(`battle:${battleId}:presence`, String(userId));
+    const isPresentAfter = await sharedRedis.sismember(
+      `battle:${battleId}:presence`,
+      String(userId),
+    );
     assert.equal(isPresentAfter, 0);
   });
 

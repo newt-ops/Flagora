@@ -43,13 +43,11 @@ import { BattleResultScreen } from './components/BattleResultScreen.js';
 import { ErrorState } from './components/ErrorState.js';
 import { NonTelegramFallback } from './components/NonTelegramFallback.js';
 import { PlayScreen } from './components/PlayScreen.js';
+import type { GroupBattleCustomConfig } from './components/GroupBattleCustomModal.js';
 import { BottomNav, type NavTab } from './components/BottomNav.js';
 import { PlaySkeleton, CardSkeleton } from './components/Skeletons.js';
 import { ToastContainer } from './components/ToastNotification.js';
-import {
-  initTelegramWebApp,
-  syncTelegramBackButton,
-} from './telegram/telegramWebApp.js';
+import { initTelegramWebApp, syncTelegramBackButton } from './telegram/telegramWebApp.js';
 
 export function App() {
   const queryClient = useQueryClient();
@@ -79,7 +77,9 @@ export function App() {
   const [currentRun, setCurrentRun] = useState<StartRunResponse | null>(null);
   const [lastResult, setLastResult] = useState<FinishRunResponse | null>(null);
   const [activeChallengeId, setActiveChallengeId] = useState<string | null>(null);
-  const [activeChallengeInfo, setActiveChallengeInfo] = useState<ChallengeInfoResponse | null>(null);
+  const [activeChallengeInfo, setActiveChallengeInfo] = useState<ChallengeInfoResponse | null>(
+    null,
+  );
   const [isStartingChallenge, setIsStartingChallenge] = useState(false);
   const [isAcceptingChallenge, setIsAcceptingChallenge] = useState(false);
   const [isStartingRematch, setIsStartingRematch] = useState(false);
@@ -89,7 +89,9 @@ export function App() {
   const [activeBattleId, setActiveBattleId] = useState<string | null>(null);
   const [activeBattleInfo, setActiveBattleInfo] = useState<BattleInfoResponse | null>(null);
   const [activeBattleStart, setActiveBattleStart] = useState<BattleStartPayload | null>(null);
-  const [activeBattleFinished, setActiveBattleFinished] = useState<BattleFinishedPayload | null>(null);
+  const [activeBattleFinished, setActiveBattleFinished] = useState<BattleFinishedPayload | null>(
+    null,
+  );
   const [isStartingBattle, setIsStartingBattle] = useState(false);
   const [isStartingGroupBattle, setIsStartingGroupBattle] = useState(false);
   const [isLoadingBattleInfo, setIsLoadingBattleInfo] = useState(false);
@@ -204,14 +206,20 @@ export function App() {
               ? Boolean(info.participants?.some((p) => p.userId === profile?.telegramUserId))
               : Boolean(info.isChallenger || info.opponentUserId === profile?.telegramUserId);
 
-            if (info.status === 'in_progress' && isParticipant && info.flags && info.flags.length > 0) {
+            if (
+              info.status === 'in_progress' &&
+              isParticipant &&
+              info.flags &&
+              info.flags.length > 0
+            ) {
               setActiveBattleStart({
                 battleId: info.battleId,
-                startedAt: typeof info.startedAt === 'string'
-                  ? info.startedAt
-                  : info.startedAt
-                  ? new Date(info.startedAt).toISOString()
-                  : new Date().toISOString(),
+                startedAt:
+                  typeof info.startedAt === 'string'
+                    ? info.startedAt
+                    : info.startedAt
+                      ? new Date(info.startedAt).toISOString()
+                      : new Date().toISOString(),
                 runDurationMs: (info.durationSeconds ?? 60) * 1000,
                 flags: info.flags,
                 challengerRunId: info.myRunId || '',
@@ -294,11 +302,15 @@ export function App() {
     };
   }, [sessionToken, profile]);
 
-  const handleStartPractice = async (rawOptions?: {
-    continent?: string;
-    flagCount?: number;
-    durationSeconds?: number;
-  } | unknown) => {
+  const handleStartPractice = async (
+    rawOptions?:
+      | {
+          continent?: string;
+          flagCount?: number;
+          durationSeconds?: number;
+        }
+      | unknown,
+  ) => {
     if (!sessionToken) {
       return;
     }
@@ -317,7 +329,9 @@ export function App() {
     try {
       const run = await startRun(sessionToken, options);
       setRunMode(
-        options?.continent || options?.flagCount || options?.durationSeconds ? 'custom' : 'practice',
+        options?.continent || options?.flagCount || options?.durationSeconds
+          ? 'custom'
+          : 'practice',
       );
       setCurrentRun(run);
       setScreen('playing');
@@ -453,14 +467,14 @@ export function App() {
     }
   };
 
-  const handleStartGroupBattle = async (maxPlayers = 5) => {
+  const handleStartGroupBattle = async (config?: GroupBattleCustomConfig | number) => {
     if (!sessionToken) {
       return;
     }
     setStartError(null);
     setIsStartingGroupBattle(true);
     try {
-      const response = await createGroupBattle(sessionToken, maxPlayers);
+      const response = await createGroupBattle(sessionToken, config);
       setActiveBattleId(response.battleId);
       const info = await getBattleInfo(sessionToken, response.battleId);
       setActiveBattleInfo(info);
@@ -527,13 +541,14 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    return syncTelegramBackButton(screen !== 'profile' || activeTab !== 'play', handleBackToProfile);
+    return syncTelegramBackButton(
+      screen !== 'profile' || activeTab !== 'play',
+      handleBackToProfile,
+    );
   }, [screen, activeTab]);
 
   return (
-    <main
-      className="flex min-h-screen flex-col items-center justify-start bg-tg-secondary-bg text-tg-text pl-[max(0.875rem,calc(var(--app-safe-left,0px)+0.875rem))] pr-[max(0.875rem,calc(var(--app-safe-right,0px)+0.875rem))] sm:px-4 pt-[calc(var(--app-safe-top,0px)+1.25rem)] pb-[calc(var(--app-safe-bottom,0px)+5.5rem)]"
-    >
+    <main className="flex min-h-screen flex-col items-center justify-start bg-tg-secondary-bg text-tg-text pl-[max(0.875rem,calc(var(--app-safe-left,0px)+0.875rem))] pr-[max(0.875rem,calc(var(--app-safe-right,0px)+0.875rem))] sm:px-4 pt-[calc(var(--app-safe-top,0px)+1.25rem)] pb-[calc(var(--app-safe-bottom,0px)+5.5rem)]">
       <ToastContainer />
       {isLoading && <PlaySkeleton />}
 
@@ -541,7 +556,16 @@ export function App() {
 
       {isLoadingBattleInfo && <CardSkeleton message="Loading live battle..." />}
 
-      {!isLoading && isNotInTelegram && <NonTelegramFallback />}
+      {!isLoading && isNotInTelegram && (
+        <NonTelegramFallback
+          onEnterBrowserMode={() => {
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem('flagora_browser_mode', 'true');
+            }
+            refetch();
+          }}
+        />
+      )}
 
       {!isLoading && !isNotInTelegram && error && (
         <ErrorState title="Authentication Error" message={error} onRetry={refetch} />
@@ -556,159 +580,179 @@ export function App() {
               runMode === 'daily'
                 ? handleStartDaily
                 : runMode === 'challenge'
-                ? handleStartChallenge
-                : () => void handleStartPractice()
+                  ? handleStartChallenge
+                  : () => void handleStartPractice()
             }
           />
         </div>
       )}
 
-      {!isLoading && !isLoadingChallengeInfo && !isLoadingBattleInfo && !error && screen === 'profile' && profile && (
-        <>
-          {activeTab === 'play' && (
-            <PlayScreen
-              profile={profile}
-              dailyStatus={dailyStatus}
-              streakStatus={streakStatus}
-              rankStatus={rankStatus}
-              sessionToken={sessionToken}
-              onPlayPractice={() => void handleStartPractice()}
-              onStartCustomGame={handleStartPractice}
-              onStartDaily={handleStartDaily}
-              onChallengeFriend={handleStartChallenge}
-              onBattleFriend={handleStartBattle}
-              onStartGroupBattle={() => void handleStartGroupBattle(5)}
-              onViewDailyLeaderboard={handleOpenDailyLeaderboard}
-              onNavigateToProfile={() => setActiveTab('profile')}
-              isPro={isPro}
-              onRefetchProfile={() => {
-                refetch();
-                refetchRank();
-              }}
-              onRefetchStreakStatus={refetchStreakStatus}
-              isStarting={isStarting}
-              isStartingDaily={isStartingDaily}
-              isStartingChallenge={isStartingChallenge}
-              isStartingBattle={isStartingBattle}
-              isStartingGroupBattle={isStartingGroupBattle}
-            />
-          )}
-
-          {activeTab === 'leaderboard' && sessionToken && (
-            <div className="w-full max-w-md mx-auto pb-20">
-              <LeaderboardScreen
-                sessionToken={sessionToken}
-                currentUserId={profile.telegramUserId}
-                initialMode={leaderboardMode}
-                onBack={() => setActiveTab('play')}
-                showBackButton={false}
-                onPlay={handleStartPractice}
-                onPlayDaily={handleStartDaily}
-                onBattleLive={handleStartBattle}
-                isStarting={isStarting || isStartingDaily}
-                dailyAttempted={Boolean(dailyStatus?.attempted)}
-              />
-            </div>
-          )}
-
-          {activeTab === 'profile' && (
-            <div className="w-full max-w-md mx-auto pb-20">
-              <ProfileCard
+      {!isLoading &&
+        !isLoadingChallengeInfo &&
+        !isLoadingBattleInfo &&
+        !error &&
+        screen === 'profile' &&
+        profile && (
+          <>
+            {activeTab === 'play' && (
+              <PlayScreen
                 profile={profile}
                 dailyStatus={dailyStatus}
                 streakStatus={streakStatus}
                 rankStatus={rankStatus}
-                proStatus={proStatus}
                 sessionToken={sessionToken}
+                onPlayPractice={() => void handleStartPractice()}
+                onStartCustomGame={handleStartPractice}
+                onStartDaily={handleStartDaily}
+                onChallengeFriend={handleStartChallenge}
+                onBattleFriend={handleStartBattle}
+                onStartGroupBattle={handleStartGroupBattle}
+                onViewDailyLeaderboard={handleOpenDailyLeaderboard}
+                onNavigateToProfile={() => setActiveTab('profile')}
+                isPro={isPro}
                 onRefetchProfile={() => {
                   refetch();
                   refetchRank();
                 }}
                 onRefetchStreakStatus={refetchStreakStatus}
-                onRefetchProStatus={refetchProStatus}
-                showGameActions={false}
+                isStarting={isStarting}
+                isStartingDaily={isStartingDaily}
+                isStartingChallenge={isStartingChallenge}
+                isStartingBattle={isStartingBattle}
+                isStartingGroupBattle={isStartingGroupBattle}
               />
-            </div>
-          )}
+            )}
 
-          <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-        </>
-      )}
+            {activeTab === 'leaderboard' && sessionToken && (
+              <div className="w-full max-w-md mx-auto pb-28">
+                <LeaderboardScreen
+                  sessionToken={sessionToken}
+                  currentUserId={profile.telegramUserId}
+                  initialMode={leaderboardMode}
+                  onBack={() => setActiveTab('play')}
+                  showBackButton={false}
+                  onPlay={handleStartPractice}
+                  onPlayDaily={handleStartDaily}
+                  onBattleLive={handleStartBattle}
+                  isStarting={isStarting || isStartingDaily}
+                  dailyAttempted={Boolean(dailyStatus?.attempted)}
+                />
+              </div>
+            )}
 
-      {!isLoading && !isLoadingChallengeInfo && !error && screen === 'challenge_landing' && activeChallengeInfo && (
-        <ChallengeLandingScreen
-          challengeInfo={activeChallengeInfo}
-          onAccept={handleAcceptChallenge}
-          onDismiss={handleBackToProfile}
-          onShareChallenge={handleShareChallenge}
-          isAccepting={isAcceptingChallenge}
-        />
-      )}
+            {activeTab === 'profile' && (
+              <div className="w-full max-w-md mx-auto pb-28">
+                <ProfileCard
+                  profile={profile}
+                  dailyStatus={dailyStatus}
+                  streakStatus={streakStatus}
+                  rankStatus={rankStatus}
+                  proStatus={proStatus}
+                  sessionToken={sessionToken}
+                  onRefetchProfile={() => {
+                    refetch();
+                    refetchRank();
+                  }}
+                  onRefetchStreakStatus={refetchStreakStatus}
+                  onRefetchProStatus={refetchProStatus}
+                  showGameActions={false}
+                />
+              </div>
+            )}
 
-      {!isLoading && !isLoadingChallengeInfo && !error && screen === 'head_to_head' && activeChallengeInfo && profile && (
-        <HeadToHeadResultScreen
-          challengeInfo={activeChallengeInfo}
-          currentUserId={profile.telegramUserId}
-          onRematch={handleRematch}
-          onBackToProfile={handleBackToProfile}
-          isStartingRematch={isStartingRematch}
-        />
-      )}
+            <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+          </>
+        )}
 
-      {!isLoading && !isLoadingBattleInfo && screen === 'battle_lobby' && activeBattleId && profile && (
-        <BattleLobbyScreen
-          battleId={activeBattleId}
-          battleInfo={activeBattleInfo}
-          currentUserId={profile.telegramUserId}
-          bothPlayersPresent={
-            isBattleBothPresent ||
-            Boolean(activeBattleInfo?.opponentUserId && activeBattleInfo.status !== 'waiting')
-          }
-          opponentJoinedPayload={battleOpponentJoined}
-          isReady={isBattleReady}
-          opponentReady={
-            isBattleOpponentReady ||
-            Boolean(
-              activeBattleInfo?.challengerUserId === profile.telegramUserId
-                ? activeBattleInfo?.opponentReady
-                : activeBattleInfo?.challengerReady
-            )
-          }
-          countdown={battleCountdown}
-          onReady={sendBattleReady}
-          onBack={handleBackToProfile}
-          isConnecting={isBattleSocketConnecting}
-          error={battleSocketError}
-          isGroupBattle={Boolean(activeBattleInfo?.isGroupBattle)}
-          groupParticipants={
-            battleGroupParticipants.length > 0
-              ? battleGroupParticipants
-              : (activeBattleInfo?.participants ?? [])
-          }
-          onStartGroupBattle={startGroupBattle}
-          onLeaveGroupLobby={async () => {
-            await leaveGroupLobby();
-            handleBackToProfile();
-          }}
-          onCancelGroupLobby={async () => {
-            if (activeBattleId && sessionToken) {
-              try {
-                await cancelGroupBattle(sessionToken, activeBattleId);
-              } catch {
-                void 0;
-              }
+      {!isLoading &&
+        !isLoadingChallengeInfo &&
+        !error &&
+        screen === 'challenge_landing' &&
+        activeChallengeInfo && (
+          <ChallengeLandingScreen
+            challengeInfo={activeChallengeInfo}
+            onAccept={handleAcceptChallenge}
+            onDismiss={handleBackToProfile}
+            onShareChallenge={handleShareChallenge}
+            isAccepting={isAcceptingChallenge}
+          />
+        )}
+
+      {!isLoading &&
+        !isLoadingChallengeInfo &&
+        !error &&
+        screen === 'head_to_head' &&
+        activeChallengeInfo &&
+        profile && (
+          <HeadToHeadResultScreen
+            challengeInfo={activeChallengeInfo}
+            currentUserId={profile.telegramUserId}
+            onRematch={handleRematch}
+            onBackToProfile={handleBackToProfile}
+            isStartingRematch={isStartingRematch}
+          />
+        )}
+
+      {!isLoading &&
+        !isLoadingBattleInfo &&
+        screen === 'battle_lobby' &&
+        activeBattleId &&
+        profile && (
+          <BattleLobbyScreen
+            battleId={activeBattleId}
+            battleInfo={activeBattleInfo}
+            currentUserId={profile.telegramUserId}
+            bothPlayersPresent={
+              isBattleBothPresent ||
+              Boolean(activeBattleInfo?.opponentUserId && activeBattleInfo.status !== 'waiting')
             }
-            handleBackToProfile();
-          }}
-        />
-      )}
+            opponentJoinedPayload={battleOpponentJoined}
+            isReady={isBattleReady}
+            opponentReady={
+              isBattleOpponentReady ||
+              Boolean(
+                activeBattleInfo?.challengerUserId === profile.telegramUserId
+                  ? activeBattleInfo?.opponentReady
+                  : activeBattleInfo?.challengerReady,
+              )
+            }
+            countdown={battleCountdown}
+            onReady={sendBattleReady}
+            onBack={handleBackToProfile}
+            isConnecting={isBattleSocketConnecting}
+            error={battleSocketError}
+            isGroupBattle={Boolean(activeBattleInfo?.isGroupBattle)}
+            groupParticipants={
+              battleGroupParticipants.length > 0
+                ? battleGroupParticipants
+                : (activeBattleInfo?.participants ?? [])
+            }
+            onStartGroupBattle={startGroupBattle}
+            onLeaveGroupLobby={async () => {
+              await leaveGroupLobby();
+              handleBackToProfile();
+            }}
+            onCancelGroupLobby={async () => {
+              if (activeBattleId && sessionToken) {
+                try {
+                  await cancelGroupBattle(sessionToken, activeBattleId);
+                } catch {
+                  void 0;
+                }
+              }
+              handleBackToProfile();
+            }}
+          />
+        )}
 
       {screen === 'battle_live' && (activeBattleStart || battleStartPayload) && profile && (
         <LiveBattleScreen
           battleStart={activeBattleStart || battleStartPayload!}
           opponentDisplayName={
             activeBattleInfo?.challengerUserId === profile.telegramUserId
-              ? battleOpponentJoined?.opponentDisplayName || activeBattleInfo?.opponentDisplayName || 'Opponent'
+              ? battleOpponentJoined?.opponentDisplayName ||
+                activeBattleInfo?.opponentDisplayName ||
+                'Opponent'
               : activeBattleInfo?.challengerDisplayName || 'Host'
           }
           opponentProgress={battleOpponentProgress}
@@ -736,11 +780,7 @@ export function App() {
       )}
 
       {!isLoading && !error && screen === 'playing' && currentRun && sessionToken && (
-        <GameScreen
-          run={currentRun}
-          sessionToken={sessionToken}
-          onFinish={handleFinishGame}
-        />
+        <GameScreen run={currentRun} sessionToken={sessionToken} onFinish={handleFinishGame} />
       )}
 
       {!isLoading && !error && screen === 'results' && lastResult && (

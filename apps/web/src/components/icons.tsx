@@ -56,12 +56,14 @@ export interface IconProps extends Omit<HugeiconsProps, 'icon'> {
   strokeWidth?: number;
 }
 
-export type HugeIcon = React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
+export type HugeIcon = React.ForwardRefExoticComponent<
+  IconProps & React.RefAttributes<SVGSVGElement>
+>;
 
 export function createHugeIcon(iconData: IconSvgElement): HugeIcon {
   return forwardRef<SVGSVGElement, IconProps>(function HugeIconComponent(
     { size = 20, strokeWidth = 1.5, color = 'currentColor', className, ...rest },
-    ref
+    ref,
   ) {
     return (
       <HugeiconsIcon

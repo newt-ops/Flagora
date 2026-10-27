@@ -1,7 +1,10 @@
 import crypto from 'node:crypto';
 import type { Db } from 'mongodb';
 import type { Redis as RedisClient } from 'ioredis';
-import { updateLeaderboardScore, getDailyLeaderboardKey } from '../leaderboard/leaderboardService.js';
+import {
+  updateLeaderboardScore,
+  getDailyLeaderboardKey,
+} from '../leaderboard/leaderboardService.js';
 import { notifyChallengeCompletion } from '../telegram/telegramService.js';
 import {
   DEFAULT_RUN_TIER_MIX,
@@ -78,17 +81,19 @@ export async function createRun(
 
   const flags: RunFlagItem[] =
     options?.flags ??
-    selectRunFlags(DEFAULT_RUN_TIER_MIX, [], flagsPool, targetCount, pinnedIsoCodes).map((flag, index) => {
-      const choices = generateChoices(flag, flagsPool.length >= 4 ? flagsPool : getCachedFlags());
-      return {
-        flagIndex: index,
-        isoCode: flag.isoCode,
-        name: flag.name,
-        tier: flag.tier,
-        choices,
-        answered: false,
-      };
-    });
+    selectRunFlags(DEFAULT_RUN_TIER_MIX, [], flagsPool, targetCount, pinnedIsoCodes).map(
+      (flag, index) => {
+        const choices = generateChoices(flag, flagsPool.length >= 4 ? flagsPool : getCachedFlags());
+        return {
+          flagIndex: index,
+          isoCode: flag.isoCode,
+          name: flag.name,
+          tier: flag.tier,
+          choices,
+          answered: false,
+        };
+      },
+    );
 
   const now = options?.startedAt ?? new Date();
   const runId = options?.runId ?? crypto.randomUUID();
@@ -226,7 +231,11 @@ export async function finishRun(
     throw new UnauthorizedRunAccessError();
   }
 
-  if ((run.status === 'finished' || run.status === 'expired') && run.profileCredited && run.finalScore) {
+  if (
+    (run.status === 'finished' || run.status === 'expired') &&
+    run.profileCredited &&
+    run.finalScore
+  ) {
     return run.finalScore;
   }
 
@@ -342,7 +351,6 @@ export async function finishRun(
     process.stderr.write(`Warning: Failed to process referral on first run: ${message}\n`);
   }
 
-
   if (isChallenge && run.challengeId) {
     const challengesCollection = db.collection<Challenge>('challenges');
     const challenge = await challengesCollection.findOne({ challengeId: run.challengeId });
@@ -400,7 +408,9 @@ export async function finishRun(
         await updateLeaderboardScore(telegramUserId, bestScore, redis);
       }
     } catch (err) {
-      process.stderr.write(`Warning: Failed to update Redis leaderboard for user ${telegramUserId}: ${err}\n`);
+      process.stderr.write(
+        `Warning: Failed to update Redis leaderboard for user ${telegramUserId}: ${err}\n`,
+      );
     }
   }
 

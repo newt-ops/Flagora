@@ -108,7 +108,9 @@ describe('Phase 11 Prompt 04: Referral Abuse Hardening', () => {
       },
       insertOne: async (doc: Referral) => {
         if (referralsMap.has(doc.newPlayerTelegramUserId)) {
-          const err = new Error('E11000 duplicate key error collection: referrals index: newPlayerTelegramUserId_1');
+          const err = new Error(
+            'E11000 duplicate key error collection: referrals index: newPlayerTelegramUserId_1',
+          );
           (err as unknown as { code: number }).code = 11000;
           throw err;
         }
@@ -438,7 +440,9 @@ describe('Phase 11 Prompt 04: Referral Abuse Hardening', () => {
     const nextDayPlayerId = 2211;
     profilesMap.set(nextDayPlayerId, createTestPlayer(nextDayPlayerId, 0));
     await registerReferralSignup(inviterId, nextDayPlayerId, db);
-    const resultNextDay = await processReferralOnFirstRun(nextDayPlayerId, db, redis, { now: day2 });
+    const resultNextDay = await processReferralOnFirstRun(nextDayPlayerId, db, redis, {
+      now: day2,
+    });
 
     assert.ok(resultNextDay);
     assert.equal(resultNextDay.creditedNewPlayer, true);

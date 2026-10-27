@@ -20,7 +20,8 @@ export function ChallengeLandingScreen({
   const isAcceptable = isChallengeAcceptable(challengeInfo);
   const isSelf = challengeInfo.isChallenger;
   const isExpired = challengeInfo.status === 'expired';
-  const isAlreadyTaken = !challengeInfo.isOpen && !challengeInfo.isChallenger && !challengeInfo.isOpponent;
+  const isAlreadyTaken =
+    !challengeInfo.isOpen && !challengeInfo.isChallenger && !challengeInfo.isOpponent;
   const initial = getInitials(challengeInfo.challengerDisplayName);
 
   return (

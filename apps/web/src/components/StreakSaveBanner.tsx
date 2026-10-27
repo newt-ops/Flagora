@@ -58,7 +58,10 @@ export function StreakSaveBanner({
     return null;
   }
 
-  const { title, subtitle, buttonText } = getStreakSaveBannerCopy(streakStatus.currentStreak, isPro);
+  const { title, subtitle, buttonText } = getStreakSaveBannerCopy(
+    streakStatus.currentStreak,
+    isPro,
+  );
 
   return (
     <>

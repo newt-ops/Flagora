@@ -22,6 +22,7 @@ import type {
   RankedLeaderboardResponse,
   ProStatusResponse,
   CreateInvoiceLinkResponse,
+  Continent,
 } from '@flagora/shared';
 
 const API_URL =
@@ -122,9 +123,13 @@ export async function startRun(
 
   const cleanPayload = isOptionsValid
     ? {
-        ...(options.continent && typeof options.continent === 'string' ? { continent: options.continent } : {}),
+        ...(options.continent && typeof options.continent === 'string'
+          ? { continent: options.continent }
+          : {}),
         ...(typeof options.flagCount === 'number' ? { flagCount: options.flagCount } : {}),
-        ...(typeof options.durationSeconds === 'number' ? { durationSeconds: options.durationSeconds } : {}),
+        ...(typeof options.durationSeconds === 'number'
+          ? { durationSeconds: options.durationSeconds }
+          : {}),
       }
     : undefined;
 
@@ -195,10 +200,7 @@ export async function answerRun(
   return response.json();
 }
 
-export async function finishRun(
-  sessionToken: string,
-  runId: string,
-): Promise<FinishRunResponse> {
+export async function finishRun(sessionToken: string, runId: string): Promise<FinishRunResponse> {
   const response = await fetch(`${API_URL}/api/runs/${runId}/finish`, {
     method: 'POST',
     headers: {
@@ -250,9 +252,7 @@ export async function getLeaderboardTop(
   return response.json();
 }
 
-export async function getLeaderboardMe(
-  sessionToken: string,
-): Promise<LeaderboardMeResponse> {
+export async function getLeaderboardMe(sessionToken: string): Promise<LeaderboardMeResponse> {
   const response = await fetch(`${API_URL}/api/leaderboard/me`, {
     method: 'GET',
     headers: {
@@ -276,9 +276,7 @@ export async function getLeaderboardMe(
   return response.json();
 }
 
-export async function startDailyRun(
-  sessionToken: string,
-): Promise<StartRunResponse> {
+export async function startDailyRun(sessionToken: string): Promise<StartRunResponse> {
   const response = await fetch(`${API_URL}/api/daily/start`, {
     method: 'POST',
     headers: {
@@ -302,9 +300,7 @@ export async function startDailyRun(
   return response.json();
 }
 
-export async function getDailyStatus(
-  sessionToken: string,
-): Promise<DailyChallengeStatusResponse> {
+export async function getDailyStatus(sessionToken: string): Promise<DailyChallengeStatusResponse> {
   const response = await fetch(`${API_URL}/api/daily/status`, {
     method: 'GET',
     headers: {
@@ -355,9 +351,7 @@ export async function getDailyLeaderboard(
   return response.json();
 }
 
-export async function createChallenge(
-  sessionToken: string,
-): Promise<CreateChallengeResponse> {
+export async function createChallenge(sessionToken: string): Promise<CreateChallengeResponse> {
   const response = await fetch(`${API_URL}/api/challenges`, {
     method: 'POST',
     headers: {
@@ -412,12 +406,15 @@ export async function acceptChallenge(
   sessionToken: string,
   challengeId: string,
 ): Promise<AcceptChallengeResponse> {
-  const response = await fetch(`${API_URL}/api/challenges/${encodeURIComponent(challengeId)}/accept`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${sessionToken}`,
+  const response = await fetch(
+    `${API_URL}/api/challenges/${encodeURIComponent(challengeId)}/accept`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     let message = `Failed to accept challenge: status ${response.status}`;
@@ -439,12 +436,15 @@ export async function rematchChallenge(
   sessionToken: string,
   challengeId: string,
 ): Promise<CreateChallengeResponse> {
-  const response = await fetch(`${API_URL}/api/challenges/${encodeURIComponent(challengeId)}/rematch`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${sessionToken}`,
+  const response = await fetch(
+    `${API_URL}/api/challenges/${encodeURIComponent(challengeId)}/rematch`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     let message = `Failed to create rematch: status ${response.status}`;
@@ -462,9 +462,7 @@ export async function rematchChallenge(
   return response.json();
 }
 
-export async function createBattle(
-  sessionToken: string,
-): Promise<CreateBattleResponse> {
+export async function createBattle(sessionToken: string): Promise<CreateBattleResponse> {
   const response = await fetch(`${API_URL}/api/battles`, {
     method: 'POST',
     headers: {
@@ -546,12 +544,15 @@ export async function joinGroupBattle(
   sessionToken: string,
   battleId: string,
 ): Promise<BattleSession> {
-  const response = await fetch(`${API_URL}/api/battles/${encodeURIComponent(battleId)}/group-join`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${sessionToken}`,
+  const response = await fetch(
+    `${API_URL}/api/battles/${encodeURIComponent(battleId)}/group-join`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     let message = `Failed to join group battle: status ${response.status}`;
@@ -569,17 +570,34 @@ export async function joinGroupBattle(
   return response.json();
 }
 
+export interface CreateGroupBattleConfig {
+  maxPlayers?: number;
+  continent?: Continent;
+  flagCount?: number;
+  durationSeconds?: number;
+}
+
 export async function createGroupBattle(
   sessionToken: string,
-  maxPlayers = 5,
+  options?: CreateGroupBattleConfig | number,
 ): Promise<BattleSession> {
+  const payload =
+    typeof options === 'number'
+      ? { maxPlayers: options }
+      : {
+          maxPlayers: options?.maxPlayers ?? 5,
+          continent: options?.continent ?? 'world',
+          flagCount: options?.flagCount ?? 10,
+          durationSeconds: options?.durationSeconds ?? 60,
+        };
+
   const response = await fetch(`${API_URL}/api/battles/group`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${sessionToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ maxPlayers }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -602,12 +620,15 @@ export async function cancelGroupBattle(
   sessionToken: string,
   battleId: string,
 ): Promise<BattleSession> {
-  const response = await fetch(`${API_URL}/api/battles/${encodeURIComponent(battleId)}/group-cancel`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${sessionToken}`,
+  const response = await fetch(
+    `${API_URL}/api/battles/${encodeURIComponent(battleId)}/group-cancel`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     let message = `Failed to cancel group battle: status ${response.status}`;
@@ -625,7 +646,6 @@ export async function cancelGroupBattle(
   return response.json();
 }
 
-
 interface RewardErrorPayload {
   error?: string;
   message?: string;
@@ -634,9 +654,7 @@ interface RewardErrorPayload {
   resetAtUtc?: string;
 }
 
-export async function getStreakStatus(
-  sessionToken: string,
-): Promise<StreakStatusResponse> {
+export async function getStreakStatus(sessionToken: string): Promise<StreakStatusResponse> {
   const response = await fetch(`${API_URL}/api/streak/status`, {
     method: 'GET',
     headers: {
@@ -660,9 +678,7 @@ export async function getStreakStatus(
   return response.json();
 }
 
-export async function saveStreak(
-  sessionToken: string,
-): Promise<StreakSaveSuccessResponse> {
+export async function saveStreak(sessionToken: string): Promise<StreakSaveSuccessResponse> {
   const response = await fetch(`${API_URL}/api/streak/save`, {
     method: 'POST',
     headers: {
@@ -673,7 +689,13 @@ export async function saveStreak(
 
   if (!response.ok) {
     let message = `Failed to save streak: status ${response.status}`;
-    let body: { error?: string; message?: string; dailyCap?: number; usedCount?: number; resetAtUtc?: string } | null = null;
+    let body: {
+      error?: string;
+      message?: string;
+      dailyCap?: number;
+      usedCount?: number;
+      resetAtUtc?: string;
+    } | null = null;
     try {
       body = await response.json();
       if (body?.message) {
@@ -692,7 +714,10 @@ export async function saveStreak(
       );
     }
 
-    if (response.status === 400 && (message.includes('not at risk') || body?.error === 'Streak not at risk')) {
+    if (
+      response.status === 400 &&
+      (message.includes('not at risk') || body?.error === 'Streak not at risk')
+    ) {
       throw new StreakNotAtRiskApiError(message);
     }
 
@@ -701,7 +726,6 @@ export async function saveStreak(
 
   return response.json();
 }
-
 
 export async function fetchRankStatus(sessionToken: string): Promise<RankStatusResponse> {
   const response = await fetch(`${API_URL}/api/rank/status`, {
@@ -730,7 +754,9 @@ export async function fetchRankedLeaderboard(
   sessionToken: string,
   limit?: number,
 ): Promise<RankedLeaderboardResponse> {
-  const url = limit ? `${API_URL}/api/rank/leaderboard?limit=${limit}` : `${API_URL}/api/rank/leaderboard`;
+  const url = limit
+    ? `${API_URL}/api/rank/leaderboard?limit=${limit}`
+    : `${API_URL}/api/rank/leaderboard`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${sessionToken}`,
@@ -752,7 +778,6 @@ export async function fetchRankedLeaderboard(
 
   return response.json();
 }
-
 
 export async function createProInvoiceLink(
   sessionToken: string,
@@ -781,9 +806,7 @@ export async function createProInvoiceLink(
   return response.json();
 }
 
-export async function fetchProStatus(
-  sessionToken: string,
-): Promise<ProStatusResponse> {
+export async function fetchProStatus(sessionToken: string): Promise<ProStatusResponse> {
   const response = await fetch(`${API_URL}/api/pro/status`, {
     headers: {
       Authorization: `Bearer ${sessionToken}`,
@@ -805,4 +828,3 @@ export async function fetchProStatus(
 
   return response.json();
 }
-

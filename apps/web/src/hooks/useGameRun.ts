@@ -18,12 +18,7 @@ export function useGameRun() {
       flagIndex: number;
       selectedIsoCode: string;
     }) => {
-      return answerRun(
-        params.sessionToken,
-        params.runId,
-        params.flagIndex,
-        params.selectedIsoCode,
-      );
+      return answerRun(params.sessionToken, params.runId, params.flagIndex, params.selectedIsoCode);
     },
   });
 
@@ -33,10 +28,7 @@ export function useGameRun() {
     },
   });
 
-  const triggerStartRun = async (
-    sessionToken: string,
-    options?: StartRunOptions,
-  ) => {
+  const triggerStartRun = async (sessionToken: string, options?: StartRunOptions) => {
     return startMutation.mutateAsync({ sessionToken, options });
   };
 

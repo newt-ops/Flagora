@@ -13,7 +13,10 @@ import {
   getRankedLeaderboardKey,
 } from '@flagora/shared';
 import { initRedis, closeRedis } from '../db/redis.js';
-import { createRequireSessionMiddleware, type AuthenticatedSessionRequest } from '../session/requireSession.js';
+import {
+  createRequireSessionMiddleware,
+  type AuthenticatedSessionRequest,
+} from '../session/requireSession.js';
 import { createSessionToken } from '../session/tokens.js';
 import {
   calculateRatingDelta,
@@ -49,36 +52,44 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
     app.use(express.json());
     const sessionMiddleware = createRequireSessionMiddleware(sessionSecret);
 
-    app.get('/api/rank/status', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized' });
-          return;
+    app.get(
+      '/api/rank/status',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+          }
+          const status = await getRankStatus(telegramUserId, db, redis);
+          res.status(200).json(status);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Error';
+          res.status(500).json({ error: message });
         }
-        const status = await getRankStatus(telegramUserId, db, redis);
-        res.status(200).json(status);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Error';
-        res.status(500).json({ error: message });
-      }
-    });
+      },
+    );
 
-    app.get('/api/rank/leaderboard', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized' });
-          return;
+    app.get(
+      '/api/rank/leaderboard',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+          }
+          const limit = Number(req.query.limit) || 50;
+          const result = await getRankedLeaderboard(telegramUserId, db, redis, limit);
+          res.status(200).json(result);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Error';
+          res.status(500).json({ error: message });
         }
-        const limit = Number(req.query.limit) || 50;
-        const result = await getRankedLeaderboard(telegramUserId, db, redis, limit);
-        res.status(200).json(result);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Error';
-        res.status(500).json({ error: message });
-      }
-    });
+      },
+    );
 
     server = http.createServer(app);
     await new Promise<void>((resolve) => {
@@ -142,7 +153,13 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       const profile = makeProfile(101, { battleRating: 10, currentSeason: '2026-09' });
       await db.collection('profiles').insertOne(profile);
 
-      const update = await processBattleRatingUpdate(101, 'loss', db, redis, new Date('2026-09-12T12:00:00Z'));
+      const update = await processBattleRatingUpdate(
+        101,
+        'loss',
+        db,
+        redis,
+        new Date('2026-09-12T12:00:00Z'),
+      );
       assert.equal(update.oldRating, 10);
       assert.equal(update.newRating, 0);
       assert.equal(update.ratingDelta, -10);
@@ -155,7 +172,13 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       const profile = makeProfile(102, { battleRating: 0, currentSeason: '2026-09' });
       await db.collection('profiles').insertOne(profile);
 
-      const update = await processBattleRatingUpdate(102, 'loss', db, redis, new Date('2026-09-12T12:00:00Z'));
+      const update = await processBattleRatingUpdate(
+        102,
+        'loss',
+        db,
+        redis,
+        new Date('2026-09-12T12:00:00Z'),
+      );
       assert.equal(update.oldRating, 0);
       assert.equal(update.newRating, 0);
       assert.equal(update.ratingDelta, 0);
@@ -165,7 +188,13 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       const profile = makeProfile(103, { battleRating: 290, currentSeason: '2026-09' });
       await db.collection('profiles').insertOne(profile);
 
-      const update = await processBattleRatingUpdate(103, 'win', db, redis, new Date('2026-09-12T12:00:00Z'));
+      const update = await processBattleRatingUpdate(
+        103,
+        'win',
+        db,
+        redis,
+        new Date('2026-09-12T12:00:00Z'),
+      );
       assert.equal(update.oldRating, 290);
       assert.equal(update.newRating, 310);
       assert.equal(update.ratingDelta, 20);
@@ -178,7 +207,13 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       const profile = makeProfile(104, { battleRating: 100, currentSeason: '2026-09' });
       await db.collection('profiles').insertOne(profile);
 
-      const update = await processBattleRatingUpdate(104, 'tie', db, redis, new Date('2026-09-12T12:00:00Z'));
+      const update = await processBattleRatingUpdate(
+        104,
+        'tie',
+        db,
+        redis,
+        new Date('2026-09-12T12:00:00Z'),
+      );
       assert.equal(update.oldRating, 100);
       assert.equal(update.newRating, 102);
       assert.equal(update.ratingDelta, 2);
@@ -283,7 +318,16 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
           runningTotal: 900,
           runDurationMs: 60000,
           startedAt: new Date(),
-          finalScore: { totalScore: 900, basePoints: 900, timeBonus: 0, streakBonus: 0, tierBonus: 0, perfectRunBonus: 0, correctCount: 1, totalFlags: 1 },
+          finalScore: {
+            totalScore: 900,
+            basePoints: 900,
+            timeBonus: 0,
+            streakBonus: 0,
+            tierBonus: 0,
+            perfectRunBonus: 0,
+            correctCount: 1,
+            totalFlags: 1,
+          },
         },
         {
           runId: opponentRunId,
@@ -296,7 +340,16 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
           runningTotal: 700,
           runDurationMs: 60000,
           startedAt: new Date(),
-          finalScore: { totalScore: 700, basePoints: 700, timeBonus: 0, streakBonus: 0, tierBonus: 0, perfectRunBonus: 0, correctCount: 1, totalFlags: 1 },
+          finalScore: {
+            totalScore: 700,
+            basePoints: 700,
+            timeBonus: 0,
+            streakBonus: 0,
+            tierBonus: 0,
+            perfectRunBonus: 0,
+            correctCount: 1,
+            totalFlags: 1,
+          },
         },
       ]);
 
@@ -305,8 +358,12 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       assert.equal(finalized.status, 'completed');
       assert.equal(finalized.winner, 'challenger');
 
-      const updatedChallenger = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: 301 });
-      const updatedOpponent = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: 302 });
+      const updatedChallenger = await db
+        .collection<PlayerProfile>('profiles')
+        .findOne({ telegramUserId: 301 });
+      const updatedOpponent = await db
+        .collection<PlayerProfile>('profiles')
+        .findOne({ telegramUserId: 302 });
 
       assert.equal(updatedChallenger?.battleRating, 120);
       assert.equal(updatedOpponent?.battleRating, 35);
@@ -352,7 +409,16 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
           runningTotal: 800,
           runDurationMs: 60000,
           startedAt: new Date(),
-          finalScore: { totalScore: 800, basePoints: 800, timeBonus: 0, streakBonus: 0, tierBonus: 0, perfectRunBonus: 0, correctCount: 1, totalFlags: 1 },
+          finalScore: {
+            totalScore: 800,
+            basePoints: 800,
+            timeBonus: 0,
+            streakBonus: 0,
+            tierBonus: 0,
+            perfectRunBonus: 0,
+            correctCount: 1,
+            totalFlags: 1,
+          },
         },
         {
           runId: opponentRunId,
@@ -365,7 +431,16 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
           runningTotal: 800,
           runDurationMs: 60000,
           startedAt: new Date(),
-          finalScore: { totalScore: 800, basePoints: 800, timeBonus: 0, streakBonus: 0, tierBonus: 0, perfectRunBonus: 0, correctCount: 1, totalFlags: 1 },
+          finalScore: {
+            totalScore: 800,
+            basePoints: 800,
+            timeBonus: 0,
+            streakBonus: 0,
+            tierBonus: 0,
+            perfectRunBonus: 0,
+            correctCount: 1,
+            totalFlags: 1,
+          },
         },
       ]);
 
@@ -373,8 +448,12 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       assert.ok(finalized);
       assert.equal(finalized.winner, 'tie');
 
-      const updatedChallenger = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: 303 });
-      const updatedOpponent = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: 304 });
+      const updatedChallenger = await db
+        .collection<PlayerProfile>('profiles')
+        .findOne({ telegramUserId: 303 });
+      const updatedOpponent = await db
+        .collection<PlayerProfile>('profiles')
+        .findOne({ telegramUserId: 304 });
 
       assert.equal(updatedChallenger?.battleRating, 202);
       assert.equal(updatedOpponent?.battleRating, 202);
@@ -389,7 +468,9 @@ describe('Ranked Tiers and Battle Rating Backend', () => {
       const run = await createRun(401, db, { mode: 'practice' });
       await finishRun(run.runId, 401, db, redis);
 
-      const postPractice = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: 401 });
+      const postPractice = await db
+        .collection<PlayerProfile>('profiles')
+        .findOne({ telegramUserId: 401 });
       assert.equal(postPractice?.battleRating, 150);
 
       const season = getUtcSeasonString();

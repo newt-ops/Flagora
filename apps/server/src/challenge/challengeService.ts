@@ -103,10 +103,7 @@ export async function createChallenge(
   };
 }
 
-export async function getChallenge(
-  challengeId: string,
-  db: Db,
-): Promise<Challenge | null> {
+export async function getChallenge(challengeId: string, db: Db): Promise<Challenge | null> {
   const collection = db.collection<Challenge>('challenges');
   const challenge = await collection.findOne({ challengeId });
   if (!challenge) {
@@ -143,19 +140,25 @@ export async function getChallengeInfo(
   }
 
   const profilesCollection = db.collection<PlayerProfile>('profiles');
-  const challengerProfile = await profilesCollection.findOne({ telegramUserId: challenge.challengerUserId });
+  const challengerProfile = await profilesCollection.findOne({
+    telegramUserId: challenge.challengerUserId,
+  });
   const challengerDisplayName = challengerProfile
     ? getDisplayName(challengerProfile)
     : `Player ${challenge.challengerUserId}`;
 
   const isOpen = challenge.status === 'pending' && challenge.opponentUserId === null;
   const isChallenger = requestingUserId === challenge.challengerUserId;
-  const isOpponent = Boolean(challenge.opponentUserId && requestingUserId === challenge.opponentUserId);
+  const isOpponent = Boolean(
+    challenge.opponentUserId && requestingUserId === challenge.opponentUserId,
+  );
 
   let opponentDisplayName: string | null = null;
   let opponentPhotoUrl: string | null = null;
   if (challenge.opponentUserId) {
-    const opponentProfile = await profilesCollection.findOne({ telegramUserId: challenge.opponentUserId });
+    const opponentProfile = await profilesCollection.findOne({
+      telegramUserId: challenge.opponentUserId,
+    });
     opponentDisplayName = opponentProfile
       ? getDisplayName(opponentProfile)
       : `Player ${challenge.opponentUserId}`;

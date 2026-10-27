@@ -1,12 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  easeOutExpo,
-  calculateInterpolatedCount,
-} from './AnimatedCounter.js';
-import {
-  createConfettiParticles,
-} from './ConfettiCanvas.js';
+import { easeOutExpo, calculateInterpolatedCount } from './AnimatedCounter.js';
+import { createConfettiParticles } from './ConfettiCanvas.js';
 
 describe('Animated UI logic and math', () => {
   describe('AnimatedCounter easing functions', () => {

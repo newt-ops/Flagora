@@ -20,7 +20,10 @@ function getCollection(db?: Db): Collection<Subscription> {
   return targetDb.collection<Subscription>(COLLECTION_NAME);
 }
 
-export async function getSubscription(telegramUserId: number, db?: Db): Promise<Subscription | null> {
+export async function getSubscription(
+  telegramUserId: number,
+  db?: Db,
+): Promise<Subscription | null> {
   try {
     const collection = getCollection(db);
     const result = await collection.findOne({ telegramUserId });
@@ -44,9 +47,7 @@ export async function hasEarlyAccess(
   db?: Db,
 ): Promise<boolean> {
   const telegramUserId =
-    typeof playerOrUserId === 'number'
-      ? playerOrUserId
-      : playerOrUserId.telegramUserId;
+    typeof playerOrUserId === 'number' ? playerOrUserId : playerOrUserId.telegramUserId;
   return hasActiveSubscription(telegramUserId, db);
 }
 

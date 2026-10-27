@@ -7,7 +7,10 @@ import { type Db } from 'mongodb';
 import { initDatabase, closeDatabase } from '../db/mongo.js';
 import { seedFlags } from '../game/seedFlags.js';
 import { initFlagCache } from '../game/flagCache.js';
-import { createRequireSessionMiddleware, type AuthenticatedSessionRequest } from '../session/requireSession.js';
+import {
+  createRequireSessionMiddleware,
+  type AuthenticatedSessionRequest,
+} from '../session/requireSession.js';
 import { createSessionToken } from '../session/tokens.js';
 import { createRun, finishRun, getRunHistory } from '../game/runService.js';
 import { updatePinnedFlags, findOrCreatePlayerProfile } from '../profile/profileService.js';
@@ -38,54 +41,81 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
     app.use(express.json());
     const sessionMiddleware = createRequireSessionMiddleware(sessionSecret);
 
-    app.post('/api/profile/pinned-flags', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
+    app.post(
+      '/api/profile/pinned-flags',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+
+          const { pinnedIsoCodes } = req.body ?? {};
+          if (
+            !Array.isArray(pinnedIsoCodes) ||
+            pinnedIsoCodes.some((code) => typeof code !== 'string')
+          ) {
+            res
+              .status(400)
+              .json({
+                error: 'Bad request',
+                message: 'pinnedIsoCodes must be an array of strings',
+              });
+            return;
+          }
+
+          const isPro = await hasActiveSubscription(telegramUserId, db);
+          if (!isPro) {
+            res
+              .status(403)
+              .json({
+                error: 'Forbidden',
+                message: 'Active Pro subscription required to pin flags',
+              });
+            return;
+          }
+
+          const updated = await updatePinnedFlags(telegramUserId, pinnedIsoCodes, db);
+          res
+            .status(200)
+            .json({
+              success: true,
+              pinnedIsoCodes: updated.pinnedIsoCodes ?? [],
+              profile: updated,
+            });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to update pinned flags';
+          res.status(500).json({ error: 'Internal server error', message });
         }
+      },
+    );
 
-        const { pinnedIsoCodes } = req.body ?? {};
-        if (!Array.isArray(pinnedIsoCodes) || pinnedIsoCodes.some((code) => typeof code !== 'string')) {
-          res.status(400).json({ error: 'Bad request', message: 'pinnedIsoCodes must be an array of strings' });
-          return;
+    app.get(
+      '/api/runs/history',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+
+          const rawPage = Number(req.query.page);
+          const rawLimit = Number(req.query.limit);
+          const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+          const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 10;
+
+          const history = await getRunHistory(telegramUserId, db, { page, limit });
+          res.status(200).json(history);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to fetch run history';
+          res.status(500).json({ error: 'Internal server error', message });
         }
-
-        const isPro = await hasActiveSubscription(telegramUserId, db);
-        if (!isPro) {
-          res.status(403).json({ error: 'Forbidden', message: 'Active Pro subscription required to pin flags' });
-          return;
-        }
-
-        const updated = await updatePinnedFlags(telegramUserId, pinnedIsoCodes, db);
-        res.status(200).json({ success: true, pinnedIsoCodes: updated.pinnedIsoCodes ?? [], profile: updated });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to update pinned flags';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
-
-    app.get('/api/runs/history', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
-        }
-
-        const rawPage = Number(req.query.page);
-        const rawLimit = Number(req.query.limit);
-        const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
-        const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 10;
-
-        const history = await getRunHistory(telegramUserId, db, { page, limit });
-        res.status(200).json(history);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to fetch run history';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
+      },
+    );
 
     server = http.createServer(app);
     await new Promise<void>((resolve) => {
@@ -115,7 +145,10 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
     await db.collection('runs').deleteMany({});
   });
 
-  async function grantSubscription(userId: number, expiresAt = new Date(Date.now() + 30 * 86400000)) {
+  async function grantSubscription(
+    userId: number,
+    expiresAt = new Date(Date.now() + 30 * 86400000),
+  ) {
     await db.collection('subscriptions').updateOne(
       { telegramUserId: userId },
       {
@@ -241,7 +274,9 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         assert.equal(proFinish.xpEarned, baseExpectedXp * DOUBLE_XP_CONFIG.multiplier);
       }
 
-      const updatedProProfile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: proUser });
+      const updatedProProfile = await db
+        .collection<PlayerProfile>('profiles')
+        .findOne({ telegramUserId: proUser });
       assert.equal(updatedProProfile?.xp, proFinish.xpEarned);
     });
   });
@@ -351,7 +386,11 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         headers: { Authorization: `Bearer ${freeToken}` },
       });
       assert.equal(freeRes1.status, 200);
-      const freeData1 = (await freeRes1.json()) as { runs: unknown[]; total: number; hasMore: boolean };
+      const freeData1 = (await freeRes1.json()) as {
+        runs: unknown[];
+        total: number;
+        hasMore: boolean;
+      };
       assert.equal(freeData1.runs.length, 10);
       assert.equal(freeData1.total, 10);
       assert.equal(freeData1.hasMore, false);
@@ -368,7 +407,11 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         headers: { Authorization: `Bearer ${freeToken}` },
       });
       assert.equal(freeResPage1.status, 200);
-      const freeDataPage1 = (await freeResPage1.json()) as { runs: unknown[]; total: number; hasMore: boolean };
+      const freeDataPage1 = (await freeResPage1.json()) as {
+        runs: unknown[];
+        total: number;
+        hasMore: boolean;
+      };
       assert.equal(freeDataPage1.runs.length, 5);
       assert.equal(freeDataPage1.total, 10);
       assert.equal(freeDataPage1.hasMore, true);
@@ -377,7 +420,11 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         headers: { Authorization: `Bearer ${freeToken}` },
       });
       assert.equal(freeResPage2.status, 200);
-      const freeDataPage2 = (await freeResPage2.json()) as { runs: unknown[]; total: number; hasMore: boolean };
+      const freeDataPage2 = (await freeResPage2.json()) as {
+        runs: unknown[];
+        total: number;
+        hasMore: boolean;
+      };
       assert.equal(freeDataPage2.runs.length, 5);
       assert.equal(freeDataPage2.total, 10);
       assert.equal(freeDataPage2.hasMore, false);
@@ -386,7 +433,11 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         headers: { Authorization: `Bearer ${freeToken}` },
       });
       assert.equal(freeResPage3.status, 200);
-      const freeDataPage3 = (await freeResPage3.json()) as { runs: unknown[]; total: number; hasMore: boolean };
+      const freeDataPage3 = (await freeResPage3.json()) as {
+        runs: unknown[];
+        total: number;
+        hasMore: boolean;
+      };
       assert.equal(freeDataPage3.runs.length, 0);
       assert.equal(freeDataPage3.total, 10);
       assert.equal(freeDataPage3.hasMore, false);
@@ -395,7 +446,11 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         headers: { Authorization: `Bearer ${proToken}` },
       });
       assert.equal(proResPage1.status, 200);
-      const proDataPage1 = (await proResPage1.json()) as { runs: unknown[]; total: number; hasMore: boolean };
+      const proDataPage1 = (await proResPage1.json()) as {
+        runs: unknown[];
+        total: number;
+        hasMore: boolean;
+      };
       assert.equal(proDataPage1.runs.length, 10);
       assert.equal(proDataPage1.total, 15);
       assert.equal(proDataPage1.hasMore, true);
@@ -404,7 +459,11 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         headers: { Authorization: `Bearer ${proToken}` },
       });
       assert.equal(proResPage2.status, 200);
-      const proDataPage2 = (await proResPage2.json()) as { runs: unknown[]; total: number; hasMore: boolean };
+      const proDataPage2 = (await proResPage2.json()) as {
+        runs: unknown[];
+        total: number;
+        hasMore: boolean;
+      };
       assert.equal(proDataPage2.runs.length, 5);
       assert.equal(proDataPage2.total, 15);
       assert.equal(proDataPage2.hasMore, false);
@@ -413,7 +472,16 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         headers: { Authorization: `Bearer ${proToken}` },
       });
       assert.equal(proResAll.status, 200);
-      const proDataAll = (await proResAll.json()) as { runs: Array<{ runId: string; mode: string; score: number; date: string; correctCount: number }>; total: number };
+      const proDataAll = (await proResAll.json()) as {
+        runs: Array<{
+          runId: string;
+          mode: string;
+          score: number;
+          date: string;
+          correctCount: number;
+        }>;
+        total: number;
+      };
       assert.equal(proDataAll.runs.length, 15);
       assert.equal(proDataAll.total, 15);
 
@@ -466,7 +534,9 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
       assert.equal(body.success, true);
       assert.deepEqual(body.pinnedIsoCodes, ['FR', 'JP', 'BR']);
 
-      const profile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: proUser });
+      const profile = await db
+        .collection<PlayerProfile>('profiles')
+        .findOne({ telegramUserId: proUser });
       assert.deepEqual(profile?.pinnedIsoCodes, ['FR', 'JP', 'BR']);
     });
 
@@ -509,12 +579,16 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
         `Variety check: Pinned flag DE should not appear in 100% of runs (appeared ${dePickedActive}/${totalRuns})`,
       );
 
-      await db.collection('subscriptions').updateOne(
-        { telegramUserId: proUser },
-        { $set: { currentPeriodEnd: new Date(Date.now() - 1000) } },
-      );
+      await db
+        .collection('subscriptions')
+        .updateOne(
+          { telegramUserId: proUser },
+          { $set: { currentPeriodEnd: new Date(Date.now() - 1000) } },
+        );
 
-      const profileAfterLapse = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: proUser });
+      const profileAfterLapse = await db
+        .collection<PlayerProfile>('profiles')
+        .findOne({ telegramUserId: proUser });
       assert.deepEqual(profileAfterLapse?.pinnedIsoCodes, pinnedTarget);
 
       let frPickedLapsed = 0;

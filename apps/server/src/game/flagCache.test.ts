@@ -98,10 +98,9 @@ describe('Phase 9 Prompt 02: Selective Caching', () => {
     const original = getCachedFlagByIso('ps');
     assert.equal(original?.name, 'Palestine');
 
-    await db.collection<CountryFlag>('flags').updateOne(
-      { isoCode: 'ps' },
-      { $set: { name: 'State of Palestine' } },
-    );
+    await db
+      .collection<CountryFlag>('flags')
+      .updateOne({ isoCode: 'ps' }, { $set: { name: 'State of Palestine' } });
 
     assert.equal(getCachedFlagByIso('ps')?.name, 'Palestine');
 
@@ -111,10 +110,9 @@ describe('Phase 9 Prompt 02: Selective Caching', () => {
     const updated = getCachedFlagByIso('ps');
     assert.equal(updated?.name, 'State of Palestine');
 
-    await db.collection<CountryFlag>('flags').updateOne(
-      { isoCode: 'ps' },
-      { $set: { name: 'Palestine' } },
-    );
+    await db
+      .collection<CountryFlag>('flags')
+      .updateOne({ isoCode: 'ps' }, { $set: { name: 'Palestine' } });
     await reloadFlagCache(db);
   });
 
@@ -139,10 +137,9 @@ describe('Phase 9 Prompt 02: Selective Caching', () => {
     const initialProfile = await findOrCreatePlayerProfile(testUser, db);
     assert.equal(initialProfile.pins, 0);
 
-    await db.collection('profiles').updateOne(
-      { telegramUserId: 881234 },
-      { $set: { pins: 777, bestScore: 9999 } },
-    );
+    await db
+      .collection('profiles')
+      .updateOne({ telegramUserId: 881234 }, { $set: { pins: 777, bestScore: 9999 } });
 
     const freshRead = await getPlayerProfileByUserId(881234, db);
     assert.ok(freshRead);

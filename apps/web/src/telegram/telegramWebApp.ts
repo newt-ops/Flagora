@@ -34,13 +34,12 @@ export function getTelegramWebApp(): TelegramWebAppInstance | undefined {
     typeof window !== 'undefined'
       ? window
       : typeof globalThis !== 'undefined'
-      ? globalThis
-      : undefined;
+        ? globalThis
+        : undefined;
   if (!root) {
     return undefined;
   }
-  return (root as unknown as { Telegram?: { WebApp?: TelegramWebAppInstance } })
-    .Telegram?.WebApp;
+  return (root as unknown as { Telegram?: { WebApp?: TelegramWebAppInstance } }).Telegram?.WebApp;
 }
 
 export function updateSafeAreaInsets(tg?: TelegramWebAppInstance): void {

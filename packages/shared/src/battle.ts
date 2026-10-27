@@ -1,3 +1,5 @@
+import type { Continent } from './flags.js';
+
 export type BattleStatus = 'waiting' | 'ready' | 'in_progress' | 'completed' | 'expired';
 
 export type BattleWinner = 'challenger' | 'opponent' | 'tie';
@@ -17,6 +19,13 @@ export interface BattleParticipant {
   pinsEarned?: number;
 }
 
+export interface CreateGroupBattleOptions {
+  maxPlayers?: number;
+  continent?: Continent;
+  flagCount?: number;
+  durationSeconds?: number;
+}
+
 export interface BattleSession {
   battleId: string;
   chatId?: number | null;
@@ -24,6 +33,8 @@ export interface BattleSession {
   isGroupBattle?: boolean;
   maxPlayers?: number;
   durationSeconds?: number;
+  continent?: Continent;
+  flagCount?: number;
   hostUserId?: number;
   challengerUserId: number;
   challengerTelegramUserId?: number;
@@ -101,6 +112,7 @@ export interface BattleInfoResponse {
   flags?: BattleStartFlag[];
   myRunId?: string | null;
   remainingSeconds?: number;
+  continent?: Continent;
 }
 
 export interface JoinBattleResponse {
@@ -124,10 +136,7 @@ export function getEffectiveBattleStatus(
   return battle.status;
 }
 
-export function getBattleDeepLink(
-  battleId: string,
-  botUsername: string = 'flagora_bot',
-): string {
+export function getBattleDeepLink(battleId: string, botUsername: string = 'flagora_bot'): string {
   const cleanUsername = botUsername.replace(/^@/, '');
   return `https://t.me/${cleanUsername}?startapp=${encodeURIComponent(`battle_${battleId}`)}`;
 }
@@ -306,5 +315,8 @@ export interface BattleServerToClientEvents {
   battleFinished: (payload: BattleFinishedPayload) => void;
   groupPlayerProgress?: (payload: GroupProgressPayload) => void;
   groupBattleFinished?: (payload: GroupBattleFinishedPayload) => void;
-  groupParticipantsUpdated?: (payload: { battleId: string; participants: BattleParticipant[] }) => void;
+  groupParticipantsUpdated?: (payload: {
+    battleId: string;
+    participants: BattleParticipant[];
+  }) => void;
 }

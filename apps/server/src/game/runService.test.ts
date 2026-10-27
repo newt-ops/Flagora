@@ -210,7 +210,10 @@ describe('runService and Variant C scoring with profile progression', () => {
     const ans3 = await submitAnswer(runId, userId, 2, runDoc.flags[2].isoCode, db);
     assert.equal(ans3.correct, true);
     assert.equal(ans3.comboCount, 1);
-    assert.equal(ans3.pointsThisFlag, Math.round(SCORING_CONFIG.tierBasePoints[runDoc.flags[2].tier] * 1.1));
+    assert.equal(
+      ans3.pointsThisFlag,
+      Math.round(SCORING_CONFIG.tierBasePoints[runDoc.flags[2].tier] * 1.1),
+    );
   });
 
   it('rejects answering the same flagIndex twice', async () => {
@@ -241,10 +244,9 @@ describe('runService and Variant C scoring with profile progression', () => {
     assert.ok(runDoc);
 
     const expiredStartTime = new Date(Date.now() - 65_000);
-    await db.collection<GameRun>('runs').updateOne(
-      { runId },
-      { $set: { startedAt: expiredStartTime } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne({ runId }, { $set: { startedAt: expiredStartTime } });
 
     await assert.rejects(
       async () => {
@@ -406,10 +408,12 @@ describe('runService and Variant C scoring with profile progression', () => {
     await profilesCollection.insertOne(initialProfile);
 
     const run1 = await createRun(userId, db);
-    await db.collection<GameRun>('runs').updateOne(
-      { runId: run1.runId },
-      { $set: { runningTotal: 300, startedAt: new Date(Date.now() - 60_000) } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne(
+        { runId: run1.runId },
+        { $set: { runningTotal: 300, startedAt: new Date(Date.now() - 60_000) } },
+      );
     const finishLow = await finishRun(run1.runId, userId, db);
     assert.equal(finishLow.totalScore, 300);
     assert.equal(finishLow.bestScore, 500);
@@ -419,10 +423,12 @@ describe('runService and Variant C scoring with profile progression', () => {
     assert.equal(profileAfterLow?.bestScore, 500);
 
     const run2 = await createRun(userId, db);
-    await db.collection<GameRun>('runs').updateOne(
-      { runId: run2.runId },
-      { $set: { runningTotal: 800, startedAt: new Date(Date.now() - 60_000) } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne(
+        { runId: run2.runId },
+        { $set: { runningTotal: 800, startedAt: new Date(Date.now() - 60_000) } },
+      );
     const finishHigh = await finishRun(run2.runId, userId, db);
     assert.equal(finishHigh.totalScore, 800);
     assert.equal(finishHigh.bestScore, 800);
@@ -432,10 +438,12 @@ describe('runService and Variant C scoring with profile progression', () => {
     assert.equal(profileAfterHigh?.bestScore, 800);
 
     const run3 = await createRun(userId, db);
-    await db.collection<GameRun>('runs').updateOne(
-      { runId: run3.runId },
-      { $set: { runningTotal: 650, startedAt: new Date(Date.now() - 60_000) } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne(
+        { runId: run3.runId },
+        { $set: { runningTotal: 650, startedAt: new Date(Date.now() - 60_000) } },
+      );
     const finishMedium = await finishRun(run3.runId, userId, db);
     assert.equal(finishMedium.totalScore, 650);
     assert.equal(finishMedium.bestScore, 800);
@@ -466,10 +474,12 @@ describe('runService and Variant C scoring with profile progression', () => {
     await profilesCollection.insertOne(initialProfile);
 
     const run = await createRun(userId, db);
-    await db.collection<GameRun>('runs').updateOne(
-      { runId: run.runId },
-      { $set: { runningTotal: 600, startedAt: new Date(Date.now() - 60_000) } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne(
+        { runId: run.runId },
+        { $set: { runningTotal: 600, startedAt: new Date(Date.now() - 60_000) } },
+      );
 
     const result = await finishRun(run.runId, userId, db);
     assert.equal(result.xpEarned, 60);
@@ -513,7 +523,17 @@ describe('runService and Variant C scoring with profile progression', () => {
         $set: {
           runningTotal: 400,
           startedAt: new Date(Date.now() - 60_000),
-          flags: [{ flagIndex: 0, isoCode: 'FR', name: 'France', tier: 1, choices: [], answered: true, correct: true }],
+          flags: [
+            {
+              flagIndex: 0,
+              isoCode: 'FR',
+              name: 'France',
+              tier: 1,
+              choices: [],
+              answered: true,
+              correct: true,
+            },
+          ],
         },
       },
     );
@@ -524,7 +544,17 @@ describe('runService and Variant C scoring with profile progression', () => {
         $set: {
           runningTotal: 500,
           startedAt: new Date(Date.now() - 60_000),
-          flags: [{ flagIndex: 0, isoCode: 'DE', name: 'Germany', tier: 1, choices: [], answered: true, correct: true }],
+          flags: [
+            {
+              flagIndex: 0,
+              isoCode: 'DE',
+              name: 'Germany',
+              tier: 1,
+              choices: [],
+              answered: true,
+              correct: true,
+            },
+          ],
         },
       },
     );

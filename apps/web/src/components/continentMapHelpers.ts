@@ -1,31 +1,29 @@
 import type { Continent } from '@flagora/shared';
 
 const AMERICAS_COUNTRY_IDS = [
-  124, 484, 840, 32, 68, 76, 152, 170, 218, 600, 604, 858, 862, 192, 214, 320, 340,
-  388, 474, 558, 591, 630, 659, 662, 670, 780, 796, 332, 222, 328, 740, 84, 188,
+  124, 484, 840, 32, 68, 76, 152, 170, 218, 600, 604, 858, 862, 192, 214, 320, 340, 388, 474, 558,
+  591, 630, 659, 662, 670, 780, 796, 332, 222, 328, 740, 84, 188,
 ];
 
 const EUROPE_COUNTRY_IDS = [
-  8, 20, 40, 56, 70, 100, 191, 196, 203, 208, 233, 246, 250, 276, 300, 348, 352, 372,
-  380, 428, 438, 440, 442, 470, 492, 499, 528, 578, 616, 620, 642, 643, 674, 688, 703,
-  705, 724, 752, 756, 792, 804, 807, 826, 112, 51, 31, 268, 498,
+  8, 20, 40, 56, 70, 100, 191, 196, 203, 208, 233, 246, 250, 276, 300, 348, 352, 372, 380, 428, 438,
+  440, 442, 470, 492, 499, 528, 578, 616, 620, 642, 643, 674, 688, 703, 705, 724, 752, 756, 792,
+  804, 807, 826, 112, 51, 31, 268, 498,
 ];
 
 const AFRICA_COUNTRY_IDS = [
-  12, 24, 204, 72, 86, 108, 120, 132, 140, 148, 174, 178, 180, 188, 262, 818, 231, 266,
-  288, 324, 624, 384, 404, 426, 430, 434, 450, 454, 466, 478, 504, 508, 516, 562, 566,
-  646, 678, 686, 694, 706, 710, 729, 716, 728, 768, 788, 800, 834, 894, 854,
+  12, 24, 204, 72, 86, 108, 120, 132, 140, 148, 174, 178, 180, 188, 262, 818, 231, 266, 288, 324,
+  624, 384, 404, 426, 430, 434, 450, 454, 466, 478, 504, 508, 516, 562, 566, 646, 678, 686, 694,
+  706, 710, 729, 716, 728, 768, 788, 800, 834, 894, 854,
 ];
 
 const ASIA_COUNTRY_IDS = [
-  4, 50, 64, 96, 104, 116, 156, 626, 356, 360, 364, 368, 376, 392, 400, 398, 408, 410,
-  414, 418, 422, 458, 462, 496, 524, 512, 586, 275, 608, 634, 682, 702, 144, 760, 764,
-  762, 795, 860, 887, 704,
+  4, 50, 64, 96, 104, 116, 156, 626, 356, 360, 364, 368, 376, 392, 400, 398, 408, 410, 414, 418,
+  422, 458, 462, 496, 524, 512, 586, 275, 608, 634, 682, 702, 144, 760, 764, 762, 795, 860, 887,
+  704,
 ];
 
-const OCEANIA_COUNTRY_IDS = [
-  36, 242, 583, 584, 520, 554, 585, 598, 882, 90, 776, 548, 798,
-];
+const OCEANIA_COUNTRY_IDS = [36, 242, 583, 584, 520, 554, 585, 598, 882, 90, 776, 548, 798];
 
 const CONTINENT_BY_COUNTRY_ID = new Map<number, Continent>();
 
@@ -51,9 +49,7 @@ export function isAntarctica(geoId: string | number | undefined | null): boolean
   return num === 10;
 }
 
-export function getContinentFromGeoId(
-  geoId: string | number | undefined | null,
-): Continent | null {
+export function getContinentFromGeoId(geoId: string | number | undefined | null): Continent | null {
   if (geoId === undefined || geoId === null) return null;
   const num = Number(geoId);
   if (isNaN(num) || num === 10) return null;
@@ -97,7 +93,8 @@ export function getContinentStyle(
       fill: 'var(--tg-theme-button-color, #2481cc)',
       stroke: 'var(--tg-theme-button-color, #2481cc)',
       strokeWidth: 0.8,
-      className: 'transition-colors duration-200 outline-none cursor-pointer opacity-40 hover:opacity-75',
+      className:
+        'transition-colors duration-200 outline-none cursor-pointer opacity-40 hover:opacity-75',
       isClickable: true,
     };
   }
@@ -185,7 +182,8 @@ export function getContinentFantasyLore(continent: Continent): ContinentFantasyL
         realmName: 'The Grand Frontier',
         subtitle: 'Arctic Tundra to Andean Cordillera',
         countryCount: 35,
-        loreText: 'Boundless double continents spanned by wild rainforests and towering cordilleras.',
+        loreText:
+          'Boundless double continents spanned by wild rainforests and towering cordilleras.',
         tag: '35 Sovereign Nations',
       };
     case 'oceania':

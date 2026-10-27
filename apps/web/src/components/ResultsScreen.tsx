@@ -14,10 +14,7 @@ import {
 } from './icons.js';
 import type { FinishRunResponse } from '@flagora/shared';
 import { getStreakBadgeText } from './streakDisplayHelpers.js';
-import {
-  shouldShowPlayAgain,
-  shouldShowDailyLeaderboardButton,
-} from './dailyChallengeHelpers.js';
+import { shouldShowPlayAgain, shouldShowDailyLeaderboardButton } from './dailyChallengeHelpers.js';
 import { ConfettiCanvas } from './ConfettiCanvas.js';
 import { AnimatedCounter } from './AnimatedCounter.js';
 
@@ -64,7 +61,11 @@ export function ResultsScreen({
         </div>
 
         <h2 className="mt-4 text-xs font-semibold uppercase tracking-wider text-tg-hint">
-          {isDaily ? 'Daily Challenge Completed' : isChallenge ? 'Challenge Created' : 'Run Completed'}
+          {isDaily
+            ? 'Daily Challenge Completed'
+            : isChallenge
+              ? 'Challenge Created'
+              : 'Run Completed'}
         </h2>
 
         <div className="mt-1 flex items-baseline justify-center gap-1">

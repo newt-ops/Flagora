@@ -12,10 +12,7 @@ import type {
   PingResponse,
   TypedSocketServer,
 } from './socketTypes.js';
-import {
-  startBattleSession,
-  submitBattleAnswer,
-} from '../battle/battleService.js';
+import { startBattleSession, submitBattleAnswer } from '../battle/battleService.js';
 import { joinGroupLobby } from '../battle/groupBattleService.js';
 import type { PlayerProfile } from '@flagora/shared';
 import { notifyOpponentReady } from '../telegram/telegramService.js';
@@ -135,8 +132,11 @@ export function initSocketServer(
           (battle.participants?.length ?? 0) < (battle.maxPlayers ?? 5)
         ) {
           try {
-            const userProfile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: userId });
-            const displayName = userProfile?.firstName || userProfile?.username || `Player ${userId}`;
+            const userProfile = await db
+              .collection<PlayerProfile>('profiles')
+              .findOne({ telegramUserId: userId });
+            const displayName =
+              userProfile?.firstName || userProfile?.username || `Player ${userId}`;
             const photoUrl = userProfile?.photoUrl ?? null;
             await joinGroupLobby(
               {

@@ -203,7 +203,9 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
           </div>
         </div>
 
-        <div className={`mt-3 ${timerSeconds <= 10 ? 'animate-pulse-urgent rounded-xl p-1 -m-1' : ''}`}>
+        <div
+          className={`mt-3 ${timerSeconds <= 10 ? 'animate-pulse-urgent rounded-xl p-1 -m-1' : ''}`}
+        >
           <div className="flex items-center justify-between text-xs font-medium text-tg-hint">
             <span className="flex items-center gap-1">
               <Timer className="h-3.5 w-3.5" />
@@ -222,9 +224,7 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
               height="100%"
               rx="3"
               className={`transition-all duration-100 ease-linear ${
-                timerSeconds <= 10
-                  ? 'fill-tg-destructive'
-                  : 'fill-tg-button'
+                timerSeconds <= 10 ? 'fill-tg-destructive' : 'fill-tg-button'
               }`}
             />
           </svg>
@@ -301,7 +301,8 @@ export function GameScreen({ run, sessionToken, onFinish }: GameScreenProps) {
                   buttonStyle = 'bg-tg-button text-tg-button-text font-bold animate-scale-pop';
                 }
               } else if (isCorrectReveal) {
-                buttonStyle = 'bg-tg-button text-tg-button-text font-bold animate-scale-pop shadow-sm';
+                buttonStyle =
+                  'bg-tg-button text-tg-button-text font-bold animate-scale-pop shadow-sm';
               }
 
               return (

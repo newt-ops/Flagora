@@ -38,96 +38,110 @@ describe('run HTTP endpoints', () => {
     app.use(express.json());
     const sessionMiddleware = createRequireSessionMiddleware(sessionSecret);
 
-    app.post('/api/runs/start', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
-        }
-        const { continent, flagCount, durationSeconds } = req.body ?? {};
-        const run = await createRun(telegramUserId, db, {
-          continent,
-          flagCount,
-          durationSeconds,
-          mode: continent || flagCount || durationSeconds ? 'custom' : 'practice',
-        });
-        res.status(200).json(run);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to start run';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
-
-    app.post('/api/runs/:id/answer', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
-        }
-        const id = String(req.params.id);
-        const { flagIndex, selectedIsoCode } = req.body;
-
-        if (typeof flagIndex !== 'number' || typeof selectedIsoCode !== 'string') {
-          res.status(400).json({
-            error: 'Bad request',
-            message: 'flagIndex (number) and selectedIsoCode (string) are required',
+    app.post(
+      '/api/runs/start',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+          const { continent, flagCount, durationSeconds } = req.body ?? {};
+          const run = await createRun(telegramUserId, db, {
+            continent,
+            flagCount,
+            durationSeconds,
+            mode: continent || flagCount || durationSeconds ? 'custom' : 'practice',
           });
-          return;
+          res.status(200).json(run);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to start run';
+          res.status(500).json({ error: 'Internal server error', message });
         }
+      },
+    );
 
-        const result = await submitAnswer(id, telegramUserId, flagIndex, selectedIsoCode, db);
-        res.status(200).json(result);
-      } catch (error) {
-        if (error instanceof RunNotFoundError) {
-          res.status(404).json({ error: 'Not found', message: error.message });
-          return;
-        }
-        if (error instanceof UnauthorizedRunAccessError) {
-          res.status(403).json({ error: 'Forbidden', message: error.message });
-          return;
-        }
-        if (error instanceof TimeExpiredError) {
-          res.status(400).json({ error: 'Time expired', message: error.message, timeExpired: true });
-          return;
-        }
-        if (
-          error instanceof RunAlreadyFinishedError ||
-          error instanceof FlagAlreadyAnsweredError ||
-          error instanceof InvalidFlagIndexError
-        ) {
-          res.status(400).json({ error: 'Bad request', message: error.message });
-          return;
-        }
-        const message = error instanceof Error ? error.message : 'Answer submission failed';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
+    app.post(
+      '/api/runs/:id/answer',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+          const id = String(req.params.id);
+          const { flagIndex, selectedIsoCode } = req.body;
 
-    app.post('/api/runs/:id/finish', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
+          if (typeof flagIndex !== 'number' || typeof selectedIsoCode !== 'string') {
+            res.status(400).json({
+              error: 'Bad request',
+              message: 'flagIndex (number) and selectedIsoCode (string) are required',
+            });
+            return;
+          }
+
+          const result = await submitAnswer(id, telegramUserId, flagIndex, selectedIsoCode, db);
+          res.status(200).json(result);
+        } catch (error) {
+          if (error instanceof RunNotFoundError) {
+            res.status(404).json({ error: 'Not found', message: error.message });
+            return;
+          }
+          if (error instanceof UnauthorizedRunAccessError) {
+            res.status(403).json({ error: 'Forbidden', message: error.message });
+            return;
+          }
+          if (error instanceof TimeExpiredError) {
+            res
+              .status(400)
+              .json({ error: 'Time expired', message: error.message, timeExpired: true });
+            return;
+          }
+          if (
+            error instanceof RunAlreadyFinishedError ||
+            error instanceof FlagAlreadyAnsweredError ||
+            error instanceof InvalidFlagIndexError
+          ) {
+            res.status(400).json({ error: 'Bad request', message: error.message });
+            return;
+          }
+          const message = error instanceof Error ? error.message : 'Answer submission failed';
+          res.status(500).json({ error: 'Internal server error', message });
         }
-        const id = String(req.params.id);
-        const result = await finishRun(id, telegramUserId, db);
-        res.status(200).json(result);
-      } catch (error) {
-        if (error instanceof RunNotFoundError) {
-          res.status(404).json({ error: 'Not found', message: error.message });
-          return;
+      },
+    );
+
+    app.post(
+      '/api/runs/:id/finish',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+          const id = String(req.params.id);
+          const result = await finishRun(id, telegramUserId, db);
+          res.status(200).json(result);
+        } catch (error) {
+          if (error instanceof RunNotFoundError) {
+            res.status(404).json({ error: 'Not found', message: error.message });
+            return;
+          }
+          if (error instanceof UnauthorizedRunAccessError) {
+            res.status(403).json({ error: 'Forbidden', message: error.message });
+            return;
+          }
+          const message = error instanceof Error ? error.message : 'Failed to finish run';
+          res.status(500).json({ error: 'Internal server error', message });
         }
-        if (error instanceof UnauthorizedRunAccessError) {
-          res.status(403).json({ error: 'Forbidden', message: error.message });
-          return;
-        }
-        const message = error instanceof Error ? error.message : 'Failed to finish run';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
+      },
+    );
 
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => {
@@ -262,10 +276,9 @@ describe('run HTTP endpoints', () => {
     });
     const { runId } = await startRes.json();
 
-    await db.collection<GameRun>('runs').updateOne(
-      { runId },
-      { $set: { startedAt: new Date(Date.now() - 70_000) } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne({ runId }, { $set: { startedAt: new Date(Date.now() - 70_000) } });
 
     const answerRes = await fetch(`${baseUrl}/api/runs/${runId}/answer`, {
       method: 'POST',

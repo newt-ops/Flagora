@@ -52,7 +52,9 @@ function createLimiterInstance(options: RateLimitOptions): RateLimiterAbstract {
     });
 
     limiter = new RateLimiterRedis({
-      storeClient: client as unknown as ConstructorParameters<typeof RateLimiterRedis>[0]['storeClient'],
+      storeClient: client as unknown as ConstructorParameters<
+        typeof RateLimiterRedis
+      >[0]['storeClient'],
       keyPrefix: `rl:${options.endpoint}`,
       points: options.limit,
       duration: options.windowSeconds,

@@ -52,10 +52,7 @@ export function LeaderboardSkeleton() {
 
       <div className="tg-section flex flex-col p-1.5 shadow-sm">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div
-            key={i}
-            className="flex items-center justify-between rounded-xl px-3 py-2.5"
-          >
+          <div key={i} className="flex items-center justify-between rounded-xl px-3 py-2.5">
             <div className="flex items-center gap-2.5">
               <div className="h-7 w-7 rounded-lg bg-tg-secondary-bg" />
               <div className="h-8 w-8 rounded-full bg-tg-secondary-bg" />

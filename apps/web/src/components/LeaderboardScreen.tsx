@@ -6,10 +6,7 @@ import {
   isUnrankedPlayer,
   getRankBadgeClass,
 } from './leaderboardHelpers.js';
-import {
-  getLeaderboardTitle,
-  getLeaderboardSubtitle,
-} from './dailyChallengeHelpers.js';
+import { getLeaderboardTitle, getLeaderboardSubtitle } from './dailyChallengeHelpers.js';
 import type { LeaderboardEntry } from '@flagora/shared';
 import { VerifiedBadge } from './VerifiedBadge.js';
 
@@ -39,7 +36,10 @@ export function LeaderboardScreen({
   showBackButton = true,
 }: LeaderboardScreenProps) {
   const [mode, setMode] = useState<'global' | 'daily' | 'ranked'>(initialMode);
-  const { topEntries, myRank, season, isLoading, error, refetch } = useLeaderboard(sessionToken, mode);
+  const { topEntries, myRank, season, isLoading, error, refetch } = useLeaderboard(
+    sessionToken,
+    mode,
+  );
 
   const showPinnedRow = shouldShowPinnedMyRank(myRank, topEntries, currentUserId);
   const isUnranked = isUnrankedPlayer(myRank);
@@ -104,17 +104,12 @@ export function LeaderboardScreen({
         </button>
       </div>
 
-      <p className="text-center text-xs text-tg-hint">
-        {getLeaderboardSubtitle(mode, season)}
-      </p>
+      <p className="text-center text-xs text-tg-hint">{getLeaderboardSubtitle(mode, season)}</p>
 
       {isLoading && (
         <div className="tg-section flex flex-col p-1.5 shadow-sm animate-pulse">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between rounded-xl px-3 py-2.5"
-            >
+            <div key={i} className="flex items-center justify-between rounded-xl px-3 py-2.5">
               <div className="flex items-center gap-2.5">
                 <div className="h-7 w-7 rounded-lg bg-tg-secondary-bg" />
                 <div className="h-8 w-8 rounded-full bg-tg-secondary-bg" />
@@ -153,8 +148,8 @@ export function LeaderboardScreen({
                   {mode === 'daily'
                     ? 'Be the first player to complete today’s challenge!'
                     : mode === 'ranked'
-                    ? 'Be the first player to rank on this season’s ladder!'
-                    : 'Be the first player to rank on Flagora!'}
+                      ? 'Be the first player to rank on this season’s ladder!'
+                      : 'Be the first player to rank on Flagora!'}
                 </p>
               </div>
             ) : (
@@ -166,9 +161,7 @@ export function LeaderboardScreen({
                   <div
                     key={entry.telegramUserId}
                     className={`flex items-center justify-between rounded-xl px-3 py-2.5 transition-colors ${
-                      isMe
-                        ? 'bg-tg-button/15'
-                        : 'hover:bg-tg-secondary-bg/60'
+                      isMe ? 'bg-tg-button/15' : 'hover:bg-tg-secondary-bg/60'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 overflow-hidden">
@@ -188,9 +181,7 @@ export function LeaderboardScreen({
                             className="h-7 w-7 rounded-full object-cover bg-tg-section ring-1 ring-tg-button/50"
                           />
                         ) : (
-                          <div
-                            className="flex h-7 w-7 items-center justify-center rounded-full bg-tg-button text-xs font-bold text-tg-button-text"
-                          >
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-tg-button text-xs font-bold text-tg-button-text">
                             {initial}
                           </div>
                         )}
@@ -263,8 +254,8 @@ export function LeaderboardScreen({
                   {mode === 'daily'
                     ? 'Not Ranked Today'
                     : mode === 'ranked'
-                    ? 'Not Ranked This Season'
-                    : 'Not Ranked Yet'}
+                      ? 'Not Ranked This Season'
+                      : 'Not Ranked Yet'}
                 </span>
               </div>
               <p className="text-xs text-tg-hint">
@@ -273,8 +264,8 @@ export function LeaderboardScreen({
                     ? 'You have already completed today’s challenge.'
                     : 'Complete today’s daily challenge to record your score on the daily leaderboard!'
                   : mode === 'ranked'
-                  ? 'Play live 1v1 battles to earn rating points and climb the seasonal ladder!'
-                  : 'Play a run to record your score and claim your position on the leaderboard!'}
+                    ? 'Play live 1v1 battles to earn rating points and climb the seasonal ladder!'
+                    : 'Play a run to record your score and claim your position on the leaderboard!'}
               </p>
               {mode === 'daily' && !dailyAttempted && onPlayDaily && (
                 <button

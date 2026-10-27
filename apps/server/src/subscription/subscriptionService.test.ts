@@ -32,14 +32,14 @@ describe('Subscription Service', () => {
 
   it('creates a new subscription on successful payment', async () => {
     const sub = await processSuccessfulPayment(12345, 'charge_123');
-    
+
     assert.equal(sub.telegramUserId, 12345);
     assert.equal(sub.status, 'active');
     assert.equal(sub.telegramChargeId, 'charge_123');
-    
+
     const expectedEnd = new Date();
     expectedEnd.setMonth(expectedEnd.getMonth() + 1);
-    
+
     assert.ok(Math.abs(sub.currentPeriodEnd.getTime() - expectedEnd.getTime()) < 5000);
 
     const active = await hasActiveSubscription(12345);
@@ -49,21 +49,23 @@ describe('Subscription Service', () => {
   it('extends an existing active subscription', async () => {
     const firstSub = await processSuccessfulPayment(12345, 'charge_123');
     const secondSub = await processSuccessfulPayment(12345, 'charge_456');
-    
+
     const expectedEnd = new Date(firstSub.currentPeriodEnd);
     expectedEnd.setMonth(expectedEnd.getMonth() + 1);
-    
+
     assert.equal(secondSub.currentPeriodEnd.getTime(), expectedEnd.getTime());
     assert.equal(secondSub.telegramChargeId, 'charge_456');
   });
 
   it('returns false for hasActiveSubscription when expired', async () => {
     await processSuccessfulPayment(12345, 'charge_123');
-    
-    await db.collection('subscriptions').updateOne(
-      { telegramUserId: 12345 },
-      { $set: { currentPeriodEnd: new Date(Date.now() - 1000) } }
-    );
+
+    await db
+      .collection('subscriptions')
+      .updateOne(
+        { telegramUserId: 12345 },
+        { $set: { currentPeriodEnd: new Date(Date.now() - 1000) } },
+      );
 
     const active = await hasActiveSubscription(12345);
     assert.equal(active, false);

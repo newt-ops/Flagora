@@ -38,7 +38,10 @@ export function formatGroupLobbyMessage(
   const isFull = participants.length >= maxPlayers;
   const host = participants.find((p) => p.userId === battle.hostUserId) || participants[0];
   const hostName = host?.displayName ?? 'Host';
-  const cleanUsername = (botUsername || process.env.TELEGRAM_BOT_USERNAME || 'flagora_bot').replace(/^@/, '');
+  const cleanUsername = (botUsername || process.env.TELEGRAM_BOT_USERNAME || 'flagora_bot').replace(
+    /^@/,
+    '',
+  );
   const miniAppUrl = `https://t.me/${cleanUsername}?startapp=battle_${battle.battleId}`;
 
   const rosterList = participants
@@ -170,7 +173,9 @@ export async function handleTelegramUpdate(
         await replyQuery();
       } else if (data === 'menu_stats') {
         const profile = fromUser?.id
-          ? await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: Number(fromUser.id) })
+          ? await db
+              .collection<PlayerProfile>('profiles')
+              .findOne({ telegramUserId: Number(fromUser.id) })
           : null;
         const statsText = profile
           ? `📊 <b>Your Flagora Stats:</b>\n\n👤 <b>Name:</b> ${getDisplayName(profile)}\n⭐ <b>Level:</b> ${profile.level}\n✨ <b>XP:</b> ${profile.xp}\n🪙 <b>Pins:</b> ${profile.pins}\n🔥 <b>Current Streak:</b> ${profile.currentStreak} days\n🏆 <b>Best Score:</b> ${profile.bestScore}\n🎮 <b>Games Played:</b> ${profile.gamesPlayed}\n👥 <b>Friends Invited:</b> ${profile.referralCount ?? 0}`
@@ -376,7 +381,10 @@ export async function handleTelegramUpdate(
           } else if (battle.hostUserId !== userId) {
             await replyQuery('⚠️ Only the host can launch the battle!', true);
           } else if ((battle.participants?.length ?? 0) < 2) {
-            await replyQuery('⚠️ At least 2 players are needed to start! Ask group members to tap "🚩 Join".', true);
+            await replyQuery(
+              '⚠️ At least 2 players are needed to start! Ask group members to tap "🚩 Join".',
+              true,
+            );
           } else {
             try {
               await startGroupBattle(battleId, userId, db, options?.redis, options?.io);
@@ -446,7 +454,13 @@ export async function handleTelegramUpdate(
       if (isStars && isProPayload) {
         await answerPreCheckoutQuery(query.id, true, undefined, botToken, apiBaseUrl);
       } else {
-        await answerPreCheckoutQuery(query.id, false, 'Invalid currency or payment payload', botToken, apiBaseUrl);
+        await answerPreCheckoutQuery(
+          query.id,
+          false,
+          'Invalid currency or payment payload',
+          botToken,
+          apiBaseUrl,
+        );
       }
       return { handled: true, action: 'pre_checkout_query' };
     }
@@ -454,7 +468,9 @@ export async function handleTelegramUpdate(
     const message = update.message;
 
     // 3. New chat members (Bot added to group)
-    const newMembers = message?.new_chat_members || (message?.new_chat_participant ? [message.new_chat_participant] : []);
+    const newMembers =
+      message?.new_chat_members ||
+      (message?.new_chat_participant ? [message.new_chat_participant] : []);
     if (Array.isArray(newMembers) && newMembers.length > 0) {
       const isBotAdded = newMembers.some(
         (m: any) =>
@@ -487,14 +503,11 @@ export async function handleTelegramUpdate(
       const isStars = !payment.currency || payment.currency === 'XTR';
       const isProPayload =
         !payment.invoice_payload ||
-        (typeof payment.invoice_payload === 'string' && payment.invoice_payload.startsWith('pro_sub_'));
+        (typeof payment.invoice_payload === 'string' &&
+          payment.invoice_payload.startsWith('pro_sub_'));
 
       if (isStars && isProPayload && userId) {
-        await processSuccessfulPayment(
-          userId,
-          payment.telegram_payment_charge_id,
-          db,
-        );
+        await processSuccessfulPayment(userId, payment.telegram_payment_charge_id, db);
 
         await sendTelegramMessage({
           chatId: userId,
@@ -711,7 +724,9 @@ export async function handleTelegramUpdate(
       }
 
       if (command === '/stats') {
-        const profile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: chatId });
+        const profile = await db
+          .collection<PlayerProfile>('profiles')
+          .findOne({ telegramUserId: chatId });
         const statsText = profile
           ? `📊 <b>Your Flagora Stats:</b>\n\n👤 <b>Name:</b> ${getDisplayName(profile)}\n⭐ <b>Level:</b> ${profile.level}\n✨ <b>XP:</b> ${profile.xp}\n🪙 <b>Pins:</b> ${profile.pins}\n🔥 <b>Current Streak:</b> ${profile.currentStreak} days\n🏆 <b>Best Score:</b> ${profile.bestScore}\n🎮 <b>Games Played:</b> ${profile.gamesPlayed}\n👥 <b>Friends Invited:</b> ${profile.referralCount ?? 0}`
           : `📊 <b>Your Flagora Stats:</b>\n\nYou haven't played yet! Tap Launch Flagora to start your journey.`;
@@ -836,10 +851,9 @@ export async function handleTelegramUpdate(
             apiBaseUrl,
           });
           if (sent.ok && sent.messageId) {
-            await db.collection<BattleSession>('battles').updateOne(
-              { battleId: lobby.battleId },
-              { $set: { messageId: sent.messageId } },
-            );
+            await db
+              .collection<BattleSession>('battles')
+              .updateOne({ battleId: lobby.battleId }, { $set: { messageId: sent.messageId } });
           }
           return { handled: true, action: 'command_battle_group_created' };
         }

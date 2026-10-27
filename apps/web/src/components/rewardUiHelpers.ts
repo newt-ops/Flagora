@@ -1,6 +1,9 @@
 import { STREAK_SAVE_PIN_COST } from '@flagora/shared';
 
-export function getStreakSaveBannerCopy(streak: number, isPro: boolean): {
+export function getStreakSaveBannerCopy(
+  streak: number,
+  isPro: boolean,
+): {
   title: string;
   subtitle: string;
   buttonText: string;

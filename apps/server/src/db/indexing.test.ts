@@ -48,7 +48,9 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
 
     assert.ok(profilesIndexes.some((idx) => idx.key.telegramUserId === 1 && idx.unique === true));
     assert.ok(profilesIndexes.some((idx) => idx.key.bestScore === -1));
-    assert.ok(profilesIndexes.some((idx) => idx.key.currentSeason === 1 && idx.key.battleRating === -1));
+    assert.ok(
+      profilesIndexes.some((idx) => idx.key.currentSeason === 1 && idx.key.battleRating === -1),
+    );
 
     assert.ok(runsIndexes.some((idx) => idx.key.runId === 1 && idx.unique === true));
     assert.ok(runsIndexes.some((idx) => idx.key.telegramUserId === 1 && idx.key.createdAt === -1));
@@ -57,21 +59,33 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
     assert.ok(challengesIndexes.some((idx) => idx.key.challengeId === 1 && idx.unique === true));
     assert.ok(challengesIndexes.some((idx) => idx.key.challengerUserId === 1));
     assert.ok(challengesIndexes.some((idx) => idx.key.opponentUserId === 1));
-    assert.ok(challengesIndexes.some((idx) => idx.key.expiresAt === 1 && idx.expireAfterSeconds === 0));
+    assert.ok(
+      challengesIndexes.some((idx) => idx.key.expiresAt === 1 && idx.expireAfterSeconds === 0),
+    );
 
     assert.ok(battlesIndexes.some((idx) => idx.key.battleId === 1 && idx.unique === true));
     assert.ok(battlesIndexes.some((idx) => idx.key.challengerUserId === 1));
     assert.ok(battlesIndexes.some((idx) => idx.key.opponentUserId === 1));
-    assert.ok(battlesIndexes.some((idx) => idx.key.expiresAt === 1 && idx.expireAfterSeconds === 0));
+    assert.ok(
+      battlesIndexes.some((idx) => idx.key.expiresAt === 1 && idx.expireAfterSeconds === 0),
+    );
 
     assert.ok(defsIndexes.some((idx) => idx.key.date === 1 && idx.unique === true));
-    assert.ok(attemptsIndexes.some((idx) => idx.key.telegramUserId === 1 && idx.key.date === 1 && idx.unique === true));
+    assert.ok(
+      attemptsIndexes.some(
+        (idx) => idx.key.telegramUserId === 1 && idx.key.date === 1 && idx.unique === true,
+      ),
+    );
 
     assert.ok(flagsIndexes.some((idx) => idx.key.isoCode === 1 && idx.unique === true));
     assert.ok(flagsIndexes.some((idx) => idx.key.tier === 1));
 
     assert.ok(subsIndexes.some((idx) => idx.key.telegramUserId === 1 && idx.unique === true));
-    assert.ok(seasonIndexes.some((idx) => idx.key.telegramUserId === 1 && idx.key.season === 1 && idx.unique === true));
+    assert.ok(
+      seasonIndexes.some(
+        (idx) => idx.key.telegramUserId === 1 && idx.key.season === 1 && idx.unique === true,
+      ),
+    );
     assert.ok(paymentsIndexes.some((idx) => idx.key.chargeId === 1 && idx.unique === true));
   });
 
@@ -84,10 +98,7 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
       createdAt: new Date(),
     });
 
-    const userExplain = await db
-      .collection('profiles')
-      .find({ telegramUserId: 9901 })
-      .explain();
+    const userExplain = await db.collection('profiles').find({ telegramUserId: 9901 }).explain();
     assert.equal(planUsesIndex(userExplain), true);
 
     const scoreExplain = await db
@@ -108,10 +119,7 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
       createdAt: new Date(),
     });
 
-    const runIdExplain = await db
-      .collection('runs')
-      .find({ runId: 'run-idx-1' })
-      .explain();
+    const runIdExplain = await db.collection('runs').find({ runId: 'run-idx-1' }).explain();
     assert.equal(planUsesIndex(runIdExplain), true);
 
     const historyExplain = await db
@@ -132,10 +140,7 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
       createdAt: new Date(),
     });
 
-    const idExplain = await db
-      .collection('challenges')
-      .find({ challengeId: 'c-idx-1' })
-      .explain();
+    const idExplain = await db.collection('challenges').find({ challengeId: 'c-idx-1' }).explain();
     assert.equal(planUsesIndex(idExplain), true);
 
     const challengerExplain = await db
@@ -161,10 +166,7 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
       createdAt: new Date(),
     });
 
-    const battleIdExplain = await db
-      .collection('battles')
-      .find({ battleId: 'b-idx-1' })
-      .explain();
+    const battleIdExplain = await db.collection('battles').find({ battleId: 'b-idx-1' }).explain();
     assert.equal(planUsesIndex(battleIdExplain), true);
 
     const challengerExplain = await db
@@ -173,10 +175,7 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
       .explain();
     assert.equal(planUsesIndex(challengerExplain), true);
 
-    const opponentExplain = await db
-      .collection('battles')
-      .find({ opponentUserId: 9902 })
-      .explain();
+    const opponentExplain = await db.collection('battles').find({ opponentUserId: 9902 }).explain();
     assert.equal(planUsesIndex(opponentExplain), true);
   });
 
@@ -215,33 +214,33 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
       continent: 'Asia',
     });
 
-    const isoExplain = await db
-      .collection('flags')
-      .find({ isoCode: 'ps' })
-      .explain();
+    const isoExplain = await db.collection('flags').find({ isoCode: 'ps' }).explain();
     assert.equal(planUsesIndex(isoExplain), true);
 
-    const tierExplain = await db
-      .collection('flags')
-      .find({ tier: 1 })
-      .explain();
+    const tierExplain = await db.collection('flags').find({ tier: 1 }).explain();
     assert.equal(planUsesIndex(tierExplain), true);
   });
 
   it('verifies TTL indexes expire un-actioned records without affecting completed ones', async () => {
     const challengesIndexes = await db.collection('challenges').indexes();
-    const challengeTtl = challengesIndexes.find((idx) => idx.key.expiresAt === 1 && idx.expireAfterSeconds === 0);
+    const challengeTtl = challengesIndexes.find(
+      (idx) => idx.key.expiresAt === 1 && idx.expireAfterSeconds === 0,
+    );
     assert.ok(challengeTtl);
     assert.equal(challengeTtl.expireAfterSeconds, 0);
 
-    const challengePartial = challengeTtl.partialFilterExpression as { status?: { $in?: string[] } };
+    const challengePartial = challengeTtl.partialFilterExpression as {
+      status?: { $in?: string[] };
+    };
     assert.ok(challengePartial);
     assert.ok(challengePartial.status?.$in?.includes('pending'));
     assert.ok(challengePartial.status?.$in?.includes('expired'));
     assert.equal(challengePartial.status?.$in?.includes('completed'), false);
 
     const battlesIndexes = await db.collection('battles').indexes();
-    const battleTtl = battlesIndexes.find((idx) => idx.key.expiresAt === 1 && idx.expireAfterSeconds === 0);
+    const battleTtl = battlesIndexes.find(
+      (idx) => idx.key.expiresAt === 1 && idx.expireAfterSeconds === 0,
+    );
     assert.ok(battleTtl);
     assert.equal(battleTtl.expireAfterSeconds, 0);
 

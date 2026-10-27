@@ -115,7 +115,8 @@ export function LiveBattleScreen({
         const res = response.result;
         const currentFlag = battleStart.flags[currentFlagIndex];
         const isTier4 = Boolean(
-          (res as { isTier4?: boolean }).isTier4 ?? (currentFlag ? isTier4Flag(currentFlag.isoCode) : false),
+          (res as { isTier4?: boolean }).isTier4 ??
+          (currentFlag ? isTier4Flag(currentFlag.isoCode) : false),
         );
         triggerHaptic(res.correct ? 'success' : 'error');
         setRunningScore(res.runningTotal);
@@ -153,9 +154,7 @@ export function LiveBattleScreen({
   );
   const comboMultiplier = calculateComboMultiplier(comboCount);
 
-  const myRankItem = currentUserId
-    ? groupRankings.find((r) => r.userId === currentUserId)
-    : null;
+  const myRankItem = currentUserId ? groupRankings.find((r) => r.userId === currentUserId) : null;
   const myCurrentRank = myRankItem?.rank ?? 1;
   const opponentHasFinished = Boolean(
     opponentProgress && opponentProgress.flagIndex >= battleStart.flags.length - 1,
@@ -164,9 +163,7 @@ export function LiveBattleScreen({
   return (
     <div className="relative flex w-full max-w-md mx-auto flex-col items-center gap-4 text-tg-text">
       {isReconnecting && (
-        <div
-          className="fixed top-[calc(var(--app-safe-top,0px)+0.75rem)] z-50 flex items-center gap-2 rounded-full bg-tg-button/90 px-4 py-1.5 text-xs font-bold text-tg-button-text shadow-lg backdrop-blur-sm animate-float animate-pulse-glow"
-        >
+        <div className="fixed top-[calc(var(--app-safe-top,0px)+0.75rem)] z-50 flex items-center gap-2 rounded-full bg-tg-button/90 px-4 py-1.5 text-xs font-bold text-tg-button-text shadow-lg backdrop-blur-sm animate-float animate-pulse-glow">
           <WifiOff className="h-3.5 w-3.5 animate-pulse" />
           <span>Reconnecting to battle...</span>
         </div>
@@ -180,7 +177,8 @@ export function LiveBattleScreen({
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-tg-hint">
                   <span>You</span>
                   <span className="text-tg-text">
-                    ({Math.min(currentFlagIndex + 1, battleStart.flags.length)}/{battleStart.flags.length})
+                    ({Math.min(currentFlagIndex + 1, battleStart.flags.length)}/
+                    {battleStart.flags.length})
                   </span>
                   <span className="rounded-full bg-tg-button/15 px-2 py-0.5 text-[10px] font-bold text-tg-button">
                     Rank #{myCurrentRank}
@@ -214,7 +212,9 @@ export function LiveBattleScreen({
                       <div
                         key={r.userId}
                         className={`flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] ${
-                          isMe ? 'bg-tg-button/15 font-bold text-tg-button' : 'bg-tg-secondary-bg text-tg-hint'
+                          isMe
+                            ? 'bg-tg-button/15 font-bold text-tg-button'
+                            : 'bg-tg-secondary-bg text-tg-hint'
                         }`}
                       >
                         {i === 0 ? (
@@ -226,9 +226,7 @@ export function LiveBattleScreen({
                         )}
                         <span className="max-w-[50px] truncate">{r.displayName}</span>
                         <span className="font-bold text-tg-text">{r.score}</span>
-                        {r.completedAt && (
-                          <Check className="h-2.5 w-2.5 text-tg-button shrink-0" />
-                        )}
+                        {r.completedAt && <Check className="h-2.5 w-2.5 text-tg-button shrink-0" />}
                       </div>
                     );
                   })}
@@ -242,7 +240,8 @@ export function LiveBattleScreen({
               <div className="flex items-center gap-1 text-[11px] font-semibold text-tg-hint">
                 <span>You</span>
                 <span className="text-tg-text">
-                  ({Math.min(currentFlagIndex + 1, battleStart.flags.length)}/{battleStart.flags.length})
+                  ({Math.min(currentFlagIndex + 1, battleStart.flags.length)}/
+                  {battleStart.flags.length})
                 </span>
               </div>
               <div className="mt-1 flex items-center gap-1.5">
@@ -265,7 +264,8 @@ export function LiveBattleScreen({
               <div className="flex items-center gap-1 text-[11px] font-semibold text-tg-hint">
                 <span className="max-w-[90px] truncate">{opponentDisplayName || 'Opponent'}</span>
                 <span className="text-tg-text">
-                  ({opponentProgress ? opponentProgress.flagIndex + 1 : 0}/{battleStart.flags.length})
+                  ({opponentProgress ? opponentProgress.flagIndex + 1 : 0}/
+                  {battleStart.flags.length})
                 </span>
                 {opponentHasFinished && (
                   <span className="flex items-center gap-0.5 rounded-full bg-tg-button/15 px-1.5 py-0.5 text-[9px] font-bold text-tg-button">
@@ -300,7 +300,9 @@ export function LiveBattleScreen({
               <span>Battle Timer</span>
             </span>
             <div className="flex items-center gap-2">
-              <span className={timerSeconds <= 10 ? 'font-bold text-tg-destructive' : 'text-tg-text'}>
+              <span
+                className={timerSeconds <= 10 ? 'font-bold text-tg-destructive' : 'text-tg-text'}
+              >
                 {timerSeconds}s
               </span>
               {onForfeit && (
@@ -353,9 +355,7 @@ export function LiveBattleScreen({
               <CheckCircle2 className="h-8 w-8" />
             </div>
 
-            <h3 className="mt-3 text-lg font-black text-tg-text">
-              All Flags Completed!
-            </h3>
+            <h3 className="mt-3 text-lg font-black text-tg-text">All Flags Completed!</h3>
             <p className="mt-1 text-xs text-tg-hint">
               {isGroupBattle
                 ? 'Your answers are in. Watching arena opponents finish in real-time...'
@@ -367,9 +367,7 @@ export function LiveBattleScreen({
                 <span className="text-[10px] font-bold uppercase tracking-wider text-tg-hint">
                   Your Final Score
                 </span>
-                <span className="mt-0.5 text-xl font-black text-tg-button">
-                  {runningScore}
-                </span>
+                <span className="mt-0.5 text-xl font-black text-tg-button">{runningScore}</span>
               </div>
               <div className="flex flex-col items-center rounded-xl bg-tg-secondary-bg p-2.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-tg-hint">
@@ -401,7 +399,9 @@ export function LiveBattleScreen({
               </div>
               <div className="flex items-center gap-1 text-[11px] font-medium text-tg-hint">
                 <Timer className="h-3.5 w-3.5" />
-                <span className={timerSeconds <= 10 ? 'font-bold text-tg-destructive' : 'text-tg-text'}>
+                <span
+                  className={timerSeconds <= 10 ? 'font-bold text-tg-destructive' : 'text-tg-text'}
+                >
                   {timerSeconds}s left
                 </span>
               </div>
@@ -465,7 +465,8 @@ export function LiveBattleScreen({
                     <span className="text-[11px] font-bold text-tg-button">You</span>
                     <span className="mt-1 text-lg font-black text-tg-text">{runningScore}</span>
                     <span className="mt-0.5 flex items-center gap-0.5 text-[10px] font-bold text-tg-button">
-                      <Check className="h-3 w-3" /> Finished ({battleStart.flags.length}/{battleStart.flags.length})
+                      <Check className="h-3 w-3" /> Finished ({battleStart.flags.length}/
+                      {battleStart.flags.length})
                     </span>
                   </div>
 
@@ -484,7 +485,8 @@ export function LiveBattleScreen({
                       ) : (
                         <span className="flex items-center gap-1">
                           <Loader2 className="h-2.5 w-2.5 animate-spin text-tg-button" />
-                          Flag {(opponentProgress ? opponentProgress.flagIndex + 1 : 0)}/{battleStart.flags.length}
+                          Flag {opponentProgress ? opponentProgress.flagIndex + 1 : 0}/
+                          {battleStart.flags.length}
                         </span>
                       )}
                     </span>
@@ -494,11 +496,13 @@ export function LiveBattleScreen({
                 <div className="rounded-xl bg-tg-secondary-bg p-2 text-center text-xs font-semibold">
                   {runningScore > (opponentProgress?.runningTotal ?? 0) ? (
                     <span className="text-tg-button font-bold">
-                      You are in the lead by +{runningScore - (opponentProgress?.runningTotal ?? 0)} points!
+                      You are in the lead by +{runningScore - (opponentProgress?.runningTotal ?? 0)}{' '}
+                      points!
                     </span>
                   ) : runningScore < (opponentProgress?.runningTotal ?? 0) ? (
                     <span className="text-tg-hint">
-                      Opponent leads by +{(opponentProgress?.runningTotal ?? 0) - runningScore} points
+                      Opponent leads by +{(opponentProgress?.runningTotal ?? 0) - runningScore}{' '}
+                      points
                     </span>
                   ) : (
                     <span className="text-tg-text">Scores are tied at {runningScore} points!</span>

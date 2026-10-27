@@ -19,10 +19,7 @@ import {
   getTopLeaderboard,
   getPlayerLeaderboardRank,
 } from '../leaderboard/leaderboardService.js';
-import {
-  type DailyChallengeAttempt,
-  DailyChallengeAlreadyAttemptedError,
-} from './dailyTypes.js';
+import { type DailyChallengeAttempt, DailyChallengeAlreadyAttemptedError } from './dailyTypes.js';
 
 export async function getOrCreateDailyDefinition(
   date: string,

@@ -10,7 +10,12 @@ let flagsByContinent = new Map<Continent, CountryFlag[]>();
 function populateIndexMaps(flags: CountryFlag[]): void {
   inMemoryFlags = [...flags];
   flagsByIso = new Map();
-  flagsByTier = new Map([[1, []], [2, []], [3, []], [4, []]]);
+  flagsByTier = new Map([
+    [1, []],
+    [2, []],
+    [3, []],
+    [4, []],
+  ]);
   flagsByContinent = new Map();
 
   for (const flag of flags) {

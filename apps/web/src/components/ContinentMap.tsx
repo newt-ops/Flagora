@@ -31,9 +31,9 @@ export const ContinentMap = memo(function ContinentMap({
       <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-tg-button/20 blur-3xl pointer-events-none animate-pulse-glow" />
       <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full bg-tg-button/15 blur-3xl pointer-events-none animate-pulse-glow" />
 
-      <div className="relative w-full aspect-[2/1] flex items-center justify-center overflow-hidden rounded-xl">
+      <div className="relative w-full aspect-[2/1] overflow-hidden rounded-xl bg-tg-secondary-bg/30">
         <ComposableMap
-          key={selectedContinent}
+          key={`map-${selectedContinent}`}
           projection="geoNaturalEarth1"
           projectionConfig={{
             center: camera.center,
@@ -72,7 +72,7 @@ export const ContinentMap = memo(function ContinentMap({
         </ComposableMap>
 
         <div
-          key={selectedContinent}
+          key={`header-${selectedContinent}`}
           className="absolute top-2 left-2 right-2 flex items-center justify-between gap-2 rounded-xl bg-tg-section/90 backdrop-blur-md px-2.5 py-1.5 shadow-lg animate-scale-pop pointer-events-none"
         >
           <div className="flex items-center gap-2 min-w-0">
@@ -83,9 +83,7 @@ export const ContinentMap = memo(function ContinentMap({
               <p className="truncate text-xs font-black text-tg-text tracking-wide">
                 {lore.realmName}
               </p>
-              <p className="truncate text-[10px] text-tg-hint">
-                {lore.subtitle}
-              </p>
+              <p className="truncate text-[10px] text-tg-hint">{lore.subtitle}</p>
             </div>
           </div>
           <div className="shrink-0 rounded-full bg-tg-button/15 px-2.5 py-0.5 text-[10px] font-extrabold text-tg-button">

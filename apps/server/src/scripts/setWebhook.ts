@@ -19,18 +19,24 @@ async function main() {
   }
 
   if (!webhookUrl) {
-    process.stderr.write('Usage: pnpm --filter @flagora/server run bot:set-webhook <https://your-domain.com/api/telegram/webhook>\n');
+    process.stderr.write(
+      'Usage: pnpm --filter @flagora/server run bot:set-webhook <https://your-domain.com/api/telegram/webhook>\n',
+    );
     process.stderr.write('Or set TELEGRAM_WEBHOOK_URL in your .env file.\n');
     process.exit(1);
   }
 
   if (!webhookUrl.startsWith('https://')) {
-    process.stderr.write('⚠️ Telegram requires HTTPS for webhooks (e.g., https://your-server.com/api/telegram/webhook)\n');
+    process.stderr.write(
+      '⚠️ Telegram requires HTTPS for webhooks (e.g., https://your-server.com/api/telegram/webhook)\n',
+    );
   }
 
   const secretToken = process.env.TELEGRAM_WEBHOOK_SECRET;
 
-  process.stdout.write(`Registering webhook with Telegram:\n   URL: ${webhookUrl}\n   Secret Token: ${secretToken ? 'Configured ✅' : 'None (Warning: production requires TELEGRAM_WEBHOOK_SECRET)'}\n\n`);
+  process.stdout.write(
+    `Registering webhook with Telegram:\n   URL: ${webhookUrl}\n   Secret Token: ${secretToken ? 'Configured ✅' : 'None (Warning: production requires TELEGRAM_WEBHOOK_SECRET)'}\n\n`,
+  );
 
   const res = await setTelegramWebhook({
     url: webhookUrl,

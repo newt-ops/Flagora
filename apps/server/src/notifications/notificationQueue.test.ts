@@ -62,9 +62,18 @@ describe('async notification queue', () => {
         }
 
         const respond = () => {
-          if (shouldFailRequests || (failAttemptLimit > 0 && requestAttemptCount <= failAttemptLimit)) {
+          if (
+            shouldFailRequests ||
+            (failAttemptLimit > 0 && requestAttemptCount <= failAttemptLimit)
+          ) {
             res.writeHead(failureStatusCode, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ ok: false, error_code: failureStatusCode, description: 'Simulated failure' }));
+            res.end(
+              JSON.stringify({
+                ok: false,
+                error_code: failureStatusCode,
+                description: 'Simulated failure',
+              }),
+            );
           } else {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ ok: true, result: { message_id: 12345 } }));
@@ -172,11 +181,20 @@ describe('async notification queue', () => {
       const retryInterval1 = capturedRequests[1].timestamp - capturedRequests[0].timestamp;
       const retryInterval2 = capturedRequests[2].timestamp - capturedRequests[1].timestamp;
 
-      assert.ok(retryInterval1 >= 15, `First backoff interval should be >=15ms, was ${retryInterval1}ms`);
-      assert.ok(retryInterval2 >= 30, `Second backoff interval should be >=30ms, was ${retryInterval2}ms`);
+      assert.ok(
+        retryInterval1 >= 15,
+        `First backoff interval should be >=15ms, was ${retryInterval1}ms`,
+      );
+      assert.ok(
+        retryInterval2 >= 30,
+        `Second backoff interval should be >=30ms, was ${retryInterval2}ms`,
+      );
 
-      const permanentLog = stderrLogs.find((log) =>
-        log.includes('failed permanently') && log.includes('555123456') && log.includes('3 attempts'),
+      const permanentLog = stderrLogs.find(
+        (log) =>
+          log.includes('failed permanently') &&
+          log.includes('555123456') &&
+          log.includes('3 attempts'),
       );
       assert.ok(permanentLog, 'Should log permanent failure message with attempts count to stderr');
 
@@ -239,7 +257,13 @@ describe('async notification queue', () => {
     const opponentRunData = await acceptChallenge(challenge.challengeId, opponentId, db);
 
     for (let i = 0; i < 2; i++) {
-      await submitAnswer(opponentRunData.runId, opponentId, i, opponentRunData.flags[i].isoCode, db);
+      await submitAnswer(
+        opponentRunData.runId,
+        opponentId,
+        i,
+        opponentRunData.flags[i].isoCode,
+        db,
+      );
     }
 
     const finishStart = Date.now();
@@ -248,9 +272,14 @@ describe('async notification queue', () => {
 
     assert.ok(opponentFinishResult);
     assert.ok(opponentFinishResult.totalScore > 0);
-    assert.ok(finishElapsed < 200, `finishRun should return promptly without waiting on retries, took ${finishElapsed}ms`);
+    assert.ok(
+      finishElapsed < 200,
+      `finishRun should return promptly without waiting on retries, took ${finishElapsed}ms`,
+    );
 
-    const updatedChallenge = await db.collection('challenges').findOne({ challengeId: challenge.challengeId });
+    const updatedChallenge = await db
+      .collection('challenges')
+      .findOne({ challengeId: challenge.challengeId });
     assert.ok(updatedChallenge);
     assert.equal(updatedChallenge.status, 'completed');
     assert.equal(updatedChallenge.winner, 'challenger');

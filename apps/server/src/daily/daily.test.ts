@@ -7,7 +7,10 @@ import { MongoClient, type Db } from 'mongodb';
 import type { Redis as RedisClient } from 'ioredis';
 import type { PlayerProfile } from '@flagora/shared';
 import { initRedis, closeRedis } from '../db/redis.js';
-import { createRequireSessionMiddleware, type AuthenticatedSessionRequest } from '../session/requireSession.js';
+import {
+  createRequireSessionMiddleware,
+  type AuthenticatedSessionRequest,
+} from '../session/requireSession.js';
 import { createSessionToken } from '../session/tokens.js';
 import { finishRun, submitAnswer } from '../game/runService.js';
 import {
@@ -35,7 +38,9 @@ describe('daily challenge backend and rules', () => {
 
     await db.collection('profiles').createIndex({ telegramUserId: 1 }, { unique: true });
     await db.collection('daily_challenge_definitions').createIndex({ date: 1 }, { unique: true });
-    await db.collection('daily_challenge_attempts').createIndex({ telegramUserId: 1, date: 1 }, { unique: true });
+    await db
+      .collection('daily_challenge_attempts')
+      .createIndex({ telegramUserId: 1, date: 1 }, { unique: true });
 
     redis = await initRedis('memory');
 
@@ -43,59 +48,74 @@ describe('daily challenge backend and rules', () => {
     app.use(express.json());
     const sessionMiddleware = createRequireSessionMiddleware(sessionSecret);
 
-    app.post('/api/daily/start', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
+    app.post(
+      '/api/daily/start',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+
+          const run = await startDailyChallenge(telegramUserId, db);
+          res.status(200).json(run);
+        } catch (error) {
+          if (error instanceof DailyChallengeAlreadyAttemptedError) {
+            res.status(400).json({ error: 'Already attempted', message: error.message });
+            return;
+          }
+          const message =
+            error instanceof Error ? error.message : 'Failed to start daily challenge';
+          res.status(500).json({ error: 'Internal server error', message });
         }
+      },
+    );
 
-        const run = await startDailyChallenge(telegramUserId, db);
-        res.status(200).json(run);
-      } catch (error) {
-        if (error instanceof DailyChallengeAlreadyAttemptedError) {
-          res.status(400).json({ error: 'Already attempted', message: error.message });
-          return;
+    app.get(
+      '/api/daily/status',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+
+          const status = await getDailyChallengeStatus(telegramUserId, db);
+          res.status(200).json(status);
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : 'Failed to get daily challenge status';
+          res.status(500).json({ error: 'Internal server error', message });
         }
-        const message = error instanceof Error ? error.message : 'Failed to start daily challenge';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
+      },
+    );
 
-    app.get('/api/daily/status', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
+    app.get(
+      '/api/daily/leaderboard',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+
+          const rawLimit = Number(req.query.limit);
+          const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 50;
+          const result = await getDailyLeaderboard(telegramUserId, db, redis, undefined, limit);
+          res.status(200).json(result);
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : 'Failed to fetch daily leaderboard';
+          res.status(500).json({ error: 'Internal server error', message });
         }
-
-        const status = await getDailyChallengeStatus(telegramUserId, db);
-        res.status(200).json(status);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to get daily challenge status';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
-
-    app.get('/api/daily/leaderboard', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
-        }
-
-        const rawLimit = Number(req.query.limit);
-        const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 50;
-        const result = await getDailyLeaderboard(telegramUserId, db, redis, undefined, limit);
-        res.status(200).json(result);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to fetch daily leaderboard';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
+      },
+    );
 
     server = http.createServer(app);
     await new Promise<void>((resolve) => {
@@ -145,12 +165,9 @@ describe('daily challenge backend and rules', () => {
       .toArray();
     assert.equal(attempts.length, 1);
 
-    await assert.rejects(
-      async () => {
-        await startDailyChallenge(userId, db, testDate);
-      },
-      DailyChallengeAlreadyAttemptedError,
-    );
+    await assert.rejects(async () => {
+      await startDailyChallenge(userId, db, testDate);
+    }, DailyChallengeAlreadyAttemptedError);
   });
 
   it('delivers identical flag set and choices for all players on the same date', async () => {
@@ -215,7 +232,9 @@ describe('daily challenge backend and rules', () => {
     assert.ok(finishResult.pinsEarned > 0);
     assert.equal(finishResult.currentStreak, 1);
 
-    const profileAfter = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId: userId });
+    const profileAfter = await db
+      .collection<PlayerProfile>('profiles')
+      .findOne({ telegramUserId: userId });
     assert.equal(profileAfter?.bestScore, 500);
     assert.equal(profileAfter?.gamesPlayed, 1);
     assert.equal(profileAfter?.currentStreak, 1);

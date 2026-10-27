@@ -13,6 +13,7 @@ import {
   Rocket,
 } from './icons.js';
 import type { BattleInfoResponse, OpponentJoinedPayload, BattleParticipant } from '@flagora/shared';
+import { CONTINENT_LABELS } from '@flagora/shared';
 import { shareBattle, copyBattleLink, getInitials } from './battleHelpers.js';
 import { ConfirmationModal } from './ConfirmationModal.js';
 import { toast } from '../store/toastStore.js';
@@ -76,9 +77,12 @@ export function BattleLobbyScreen({
   };
 
   const isGroup = Boolean(isGroupBattle || battleInfo?.isGroupBattle);
-  const participants = groupParticipants.length > 0 ? groupParticipants : battleInfo?.participants ?? [];
+  const participants =
+    groupParticipants.length > 0 ? groupParticipants : (battleInfo?.participants ?? []);
   const maxPlayers = battleInfo?.maxPlayers ?? 5;
-  const isHost = battleInfo?.hostUserId ? battleInfo.hostUserId === currentUserId : battleInfo?.challengerUserId === currentUserId;
+  const isHost = battleInfo?.hostUserId
+    ? battleInfo.hostUserId === currentUserId
+    : battleInfo?.challengerUserId === currentUserId;
 
   const isChallenger = battleInfo?.challengerUserId === currentUserId;
 
@@ -133,7 +137,9 @@ export function BattleLobbyScreen({
               {countdown > 0 ? countdown : 'GO!'}
             </div>
           </div>
-          <p className="relative z-10 mt-6 text-xs font-semibold text-tg-hint animate-live-breath">Get Ready!</p>
+          <p className="relative z-10 mt-6 text-xs font-semibold text-tg-hint animate-live-breath">
+            Get Ready!
+          </p>
         </div>
       )}
 
@@ -169,7 +175,7 @@ export function BattleLobbyScreen({
         </div>
       )}
 
-      <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2.5 text-xs text-tg-hint">
+      <div className="flex w-full items-center justify-center flex-wrap gap-2 rounded-xl bg-tg-secondary-bg px-4 py-2.5 text-xs text-tg-hint">
         <span className="font-semibold text-tg-text">{totalFlags} Flags</span>
         <span>•</span>
         <span className="font-semibold text-tg-text">{durationSeconds}s Time Limit</span>
@@ -177,6 +183,14 @@ export function BattleLobbyScreen({
         <span className="font-semibold text-tg-button">
           {isGroup ? `${participants.length}/${maxPlayers} Players` : '1v1 Duel'}
         </span>
+        {battleInfo?.continent && battleInfo.continent !== 'world' && (
+          <>
+            <span>•</span>
+            <span className="font-semibold text-tg-button">
+              {CONTINENT_LABELS[battleInfo.continent] ?? battleInfo.continent}
+            </span>
+          </>
+        )}
       </div>
 
       {isGroup ? (
@@ -186,13 +200,16 @@ export function BattleLobbyScreen({
               Joined Players ({participants.length}/{maxPlayers})
             </span>
             <span className="rounded-full bg-tg-button/15 px-2.5 py-0.5 text-[10px] font-bold text-tg-button">
-              {participants.length >= maxPlayers ? 'Full' : `${maxPlayers - participants.length} slots open`}
+              {participants.length >= maxPlayers
+                ? 'Full'
+                : `${maxPlayers - participants.length} slots open`}
             </span>
           </div>
 
           <div className="grid w-full grid-cols-2 gap-2.5">
             {participants.map((p, idx) => {
-              const isPlayerHost = p.userId === (battleInfo?.hostUserId ?? battleInfo?.challengerUserId);
+              const isPlayerHost =
+                p.userId === (battleInfo?.hostUserId ?? battleInfo?.challengerUserId);
               const isMe = p.userId === currentUserId;
               return (
                 <div
@@ -246,7 +263,9 @@ export function BattleLobbyScreen({
                   <User className="h-5 w-5" />
                 </div>
                 <p className="mt-1.5 text-[11px] font-semibold text-tg-hint">Waiting...</p>
-                <span className="text-[10px] text-tg-hint/80">Slot {participants.length + i + 1}</span>
+                <span className="text-[10px] text-tg-hint/80">
+                  Slot {participants.length + i + 1}
+                </span>
               </div>
             ))}
           </div>
@@ -333,9 +352,13 @@ export function BattleLobbyScreen({
       ) : (
         <div className="flex w-full flex-col items-center rounded-2xl bg-tg-section p-5 text-center shadow-sm animate-scale-pop">
           <div className="grid w-full grid-cols-2 gap-3">
-            <div className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              challengerIsReady ? 'ring-1 ring-tg-button/40 bg-tg-button/10 animate-pulse-glow' : ''
-            }`}>
+            <div
+              className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
+                challengerIsReady
+                  ? 'ring-1 ring-tg-button/40 bg-tg-button/10 animate-pulse-glow'
+                  : ''
+              }`}
+            >
               <div className="relative flex h-14 w-14 items-center justify-center">
                 {challengerPhoto ? (
                   <img
@@ -366,9 +389,11 @@ export function BattleLobbyScreen({
               </span>
             </div>
 
-            <div className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
-              opponentIsReady ? 'ring-1 ring-tg-button/40 bg-tg-button/10 animate-pulse-glow' : ''
-            }`}>
+            <div
+              className={`flex flex-col items-center rounded-xl bg-tg-secondary-bg p-4 transition-all ${
+                opponentIsReady ? 'ring-1 ring-tg-button/40 bg-tg-button/10 animate-pulse-glow' : ''
+              }`}
+            >
               {hasOpponent ? (
                 <>
                   <div className="relative flex h-14 w-14 items-center justify-center">
@@ -464,9 +489,7 @@ export function BattleLobbyScreen({
 
             {bothPlayersPresent && (
               <div className="flex w-full flex-col items-center gap-2">
-                <p className="text-xs font-semibold text-tg-button">
-                  Both players connected!
-                </p>
+                <p className="text-xs font-semibold text-tg-button">Both players connected!</p>
                 {isReady ? (
                   <button
                     type="button"

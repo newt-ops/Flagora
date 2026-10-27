@@ -123,11 +123,15 @@ export function ProfileCard({
 
   const handleShareReferral = () => {
     triggerHaptic('success');
-    const text = 'Join me on Flagora! Test your flag knowledge, battle real players in real-time, and get +50 pins!';
+    const text =
+      'Join me on Flagora! Test your flag knowledge, battle real players in real-time, and get +50 pins!';
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
     if (typeof window !== 'undefined') {
-      const tg = (window as unknown as { Telegram?: { WebApp?: { openTelegramLink?: (url: string) => void } } })
-        .Telegram?.WebApp;
+      const tg = (
+        window as unknown as {
+          Telegram?: { WebApp?: { openTelegramLink?: (url: string) => void } };
+        }
+      ).Telegram?.WebApp;
       if (tg?.openTelegramLink) {
         tg.openTelegramLink(shareUrl);
       } else {
@@ -161,18 +165,12 @@ export function ProfileCard({
         </div>
 
         <div className="mt-3 flex items-center justify-center gap-1.5 flex-wrap">
-          <h2 className="text-lg font-bold text-tg-text">
-            {profile.firstName || displayName}
-          </h2>
-          {isVerifiedUser && (
-            <VerifiedBadge className="h-4 w-4 text-[#2AABEE]" />
-          )}
+          <h2 className="text-lg font-bold text-tg-text">{profile.firstName || displayName}</h2>
+          {isVerifiedUser && <VerifiedBadge className="h-4 w-4 text-[#2AABEE]" />}
         </div>
 
         {profile.username && (
-          <p className="text-xs text-tg-hint mt-0.5">
-            @{profile.username.replace(/^@/, '')}
-          </p>
+          <p className="text-xs text-tg-hint mt-0.5">@{profile.username.replace(/^@/, '')}</p>
         )}
 
         <div className="w-full mt-4">
@@ -213,10 +211,14 @@ export function ProfileCard({
           >
             <div className="flex items-center gap-2 min-w-0">
               <VerifiedBadge className="h-4 w-4 text-[#2AABEE] shrink-0" />
-              <span className="text-xs font-semibold text-tg-text truncate">Get Verified Badge</span>
+              <span className="text-xs font-semibold text-tg-text truncate">
+                Get Verified Badge
+              </span>
             </div>
             <div className="flex items-center gap-1 shrink-0 ml-2">
-              <span className="rounded-full bg-tg-button px-2 py-0.5 text-xs font-bold text-tg-button-text">1 Star</span>
+              <span className="rounded-full bg-tg-button px-2 py-0.5 text-xs font-bold text-tg-button-text">
+                1 Star
+              </span>
               <span className="text-tg-hint text-xs font-bold">›</span>
             </div>
           </button>
@@ -232,13 +234,8 @@ export function ProfileCard({
             <Trophy className="h-5 w-5" />
           </div>
           <div className="text-left min-w-0">
-            <p className="text-sm font-semibold text-tg-text truncate">
-              Battle Rating
-            </p>
-            <p
-              data-testid="profile-season-identifier"
-              className="text-xs text-tg-hint truncate"
-            >
+            <p className="text-sm font-semibold text-tg-text truncate">Battle Rating</p>
+            <p data-testid="profile-season-identifier" className="text-xs text-tg-hint truncate">
               Season: {seasonName}
             </p>
           </div>
@@ -276,7 +273,9 @@ export function ProfileCard({
             <Trophy className="h-3.5 w-3.5 text-tg-button" />
             <span className="text-[11px] font-medium uppercase tracking-wider">Best Score</span>
           </div>
-          <p className="mt-1 text-lg font-bold text-tg-text">{profile.bestScore.toLocaleString()}</p>
+          <p className="mt-1 text-lg font-bold text-tg-text">
+            {profile.bestScore.toLocaleString()}
+          </p>
         </div>
 
         <div className="flex flex-col items-center rounded-2xl bg-tg-section p-3 text-center shadow-none">
@@ -284,7 +283,9 @@ export function ProfileCard({
             <Gamepad2 className="h-3.5 w-3.5 text-tg-button" />
             <span className="text-[11px] font-medium uppercase tracking-wider">Games</span>
           </div>
-          <p className="mt-1 text-lg font-bold text-tg-text">{profile.gamesPlayed.toLocaleString()}</p>
+          <p className="mt-1 text-lg font-bold text-tg-text">
+            {profile.gamesPlayed.toLocaleString()}
+          </p>
         </div>
       </div>
 
@@ -431,7 +432,9 @@ export function ProfileCard({
                     ) : (
                       <Play className="h-3.5 w-3.5 fill-current shrink-0" />
                     )}
-                    <span>{isStartingDaily ? 'Starting Challenge...' : 'Play Daily Challenge'}</span>
+                    <span>
+                      {isStartingDaily ? 'Starting Challenge...' : 'Play Daily Challenge'}
+                    </span>
                   </button>
                 )}
               </div>

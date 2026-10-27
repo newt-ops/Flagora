@@ -97,11 +97,7 @@ describe('daily challenge helpers', () => {
         getLeaderboardSubtitle('ranked', '2026-09'),
         'September 2026 Season • Ranked by Battle Rating',
       );
-      assert.match(
-        getLeaderboardSubtitle('ranked', null),
-        /Season • Ranked by Battle Rating/,
-      );
+      assert.match(getLeaderboardSubtitle('ranked', null), /Season • Ranked by Battle Rating/);
     });
   });
 });
-

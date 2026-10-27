@@ -36,11 +36,7 @@ import type {
 import { selectRunFlags, generateChoices } from '../game/flagSelection.js';
 import { createRun, finishRun } from '../game/runService.js';
 import type { RunFlagItem, GameRun } from '../game/runTypes.js';
-import {
-  RunNotFoundError,
-  RunAlreadyFinishedError,
-  TimeExpiredError,
-} from '../game/runTypes.js';
+import { RunNotFoundError, RunAlreadyFinishedError, TimeExpiredError } from '../game/runTypes.js';
 import { scoreAnswer } from '../game/runScoringService.js';
 import { notifyBattleCompletion } from '../telegram/telegramService.js';
 import { processBattleRatingUpdate } from '../rank/rankService.js';
@@ -75,10 +71,7 @@ export async function createBattle(
   };
 }
 
-export async function getBattleById(
-  battleId: string,
-  db: Db,
-): Promise<BattleSession | null> {
+export async function getBattleById(battleId: string, db: Db): Promise<BattleSession | null> {
   return db.collection<BattleSession>('battles').findOne({ battleId });
 }
 
@@ -168,9 +161,7 @@ export async function checkAndFinalizeBattle(
       const challengerDisplayName = challengerProfile
         ? getDisplayName(challengerProfile)
         : 'Player';
-      const opponentDisplayName = opponentProfile
-        ? getDisplayName(opponentProfile)
-        : 'Player';
+      const opponentDisplayName = opponentProfile ? getDisplayName(opponentProfile) : 'Player';
 
       const challengerOutcome =
         winner === 'challenger' ? 'win' : winner === 'opponent' ? 'loss' : 'tie';
@@ -185,13 +176,7 @@ export async function checkAndFinalizeBattle(
           redis,
           completedAt,
         ),
-        processBattleRatingUpdate(
-          battle.opponentUserId!,
-          opponentOutcome,
-          db,
-          redis,
-          completedAt,
-        ),
+        processBattleRatingUpdate(battle.opponentUserId!, opponentOutcome, db, redis, completedAt),
       ]);
 
       const challengerResult: BattleParticipantResult = {
@@ -265,19 +250,16 @@ export async function getBattleInfo(
 
   const effectiveStatus = getEffectiveBattleStatus(battle);
   if (effectiveStatus === 'expired' && battle.status === 'waiting') {
-    await db.collection('battles').updateOne(
-      { battleId },
-      { $set: { status: 'expired', updatedAt: new Date() } },
-    );
+    await db
+      .collection('battles')
+      .updateOne({ battleId }, { $set: { status: 'expired', updatedAt: new Date() } });
     battle.status = 'expired';
   }
 
   const challengerProfile = await db
     .collection<PlayerProfile>('profiles')
     .findOne({ telegramUserId: battle.challengerUserId });
-  const challengerDisplayName = challengerProfile
-    ? getDisplayName(challengerProfile)
-    : 'Player';
+  const challengerDisplayName = challengerProfile ? getDisplayName(challengerProfile) : 'Player';
   const challengerPhotoUrl = challengerProfile?.photoUrl ?? null;
 
   let opponentDisplayName: string | null = null;
@@ -287,18 +269,14 @@ export async function getBattleInfo(
     const opponentProfile = await db
       .collection<PlayerProfile>('profiles')
       .findOne({ telegramUserId: battle.opponentUserId });
-    opponentDisplayName = opponentProfile
-      ? getDisplayName(opponentProfile)
-      : 'Player';
+    opponentDisplayName = opponentProfile ? getDisplayName(opponentProfile) : 'Player';
     opponentPhotoUrl = opponentProfile?.photoUrl ?? null;
   }
 
   const isChallenger = requestingUserId === battle.challengerUserId;
   const isOwnInvite = isChallenger;
-  const isOpponent =
-    battle.opponentUserId !== null && requestingUserId === battle.opponentUserId;
-  const isJoinable =
-    effectiveStatus === 'waiting' && battle.opponentUserId === null;
+  const isOpponent = battle.opponentUserId !== null && requestingUserId === battle.opponentUserId;
+  const isJoinable = effectiveStatus === 'waiting' && battle.opponentUserId === null;
 
   let challengerResult: BattleParticipantResult | null = null;
   let opponentResult: BattleParticipantResult | null = null;
@@ -425,9 +403,7 @@ export async function joinBattle(
   const opponentProfile = await db
     .collection<PlayerProfile>('profiles')
     .findOne({ telegramUserId: opponentUserId });
-  const opponentDisplayName = opponentProfile
-    ? getDisplayName(opponentProfile)
-    : 'Player';
+  const opponentDisplayName = opponentProfile ? getDisplayName(opponentProfile) : 'Player';
   const opponentPhotoUrl = opponentProfile?.photoUrl ?? null;
 
   if (io) {
@@ -592,8 +568,8 @@ export async function submitBattleAnswer(
   const runId = isGroup
     ? participant?.runId
     : isChallenger
-    ? battle.challengerRunId
-    : battle.opponentRunId;
+      ? battle.challengerRunId
+      : battle.opponentRunId;
   if (!runId) {
     throw new RunNotFoundError();
   }

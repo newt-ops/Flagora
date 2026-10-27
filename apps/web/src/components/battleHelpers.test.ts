@@ -46,7 +46,10 @@ describe('battleHelpers', () => {
     });
 
     it('parses battle param from raw initData', () => {
-      assert.equal(getBattleStartParam('', '', 'start_param=battle_init-789&auth_date=123'), 'init-789');
+      assert.equal(
+        getBattleStartParam('', '', 'start_param=battle_init-789&auth_date=123'),
+        'init-789',
+      );
     });
 
     it('returns null for empty or non-matching initData', () => {
@@ -313,4 +316,3 @@ describe('battleHelpers', () => {
     });
   });
 });
-

@@ -172,11 +172,14 @@ export function useBattleSocket({
       }
     });
 
-    socket.on('groupParticipantsUpdated', (payload: { battleId: string; participants: BattleParticipant[] }) => {
-      if (payload.battleId === battleId) {
-        setGroupParticipants(payload.participants);
-      }
-    });
+    socket.on(
+      'groupParticipantsUpdated',
+      (payload: { battleId: string; participants: BattleParticipant[] }) => {
+        if (payload.battleId === battleId) {
+          setGroupParticipants(payload.participants);
+        }
+      },
+    );
 
     socket.on('battleFinished', (payload: BattleFinishedPayload) => {
       setFinishedPayload(payload);

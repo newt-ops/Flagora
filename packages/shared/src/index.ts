@@ -74,4 +74,3 @@ export * from './battle.js';
 export * from './rewards.js';
 export * from './rank.js';
 export * from './referral.js';
-

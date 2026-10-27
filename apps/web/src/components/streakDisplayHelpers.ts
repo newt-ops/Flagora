@@ -18,8 +18,7 @@ export function getProfileStreakDisplay(
   longestStreak: number,
 ): { title: string; subtitle: string; isActive: boolean } {
   const title = currentStreak > 0 ? `${currentStreak} Day Streak` : '0 Day Streak';
-  const subtitle =
-    longestStreak > 0 ? `Best: ${longestStreak} days` : 'Play daily to build streak';
+  const subtitle = longestStreak > 0 ? `Best: ${longestStreak} days` : 'Play daily to build streak';
   const isActive = currentStreak > 0;
 
   return { title, subtitle, isActive };

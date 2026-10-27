@@ -24,7 +24,11 @@ const CONFETTI_COLORS = [
   '#fbbf24',
 ];
 
-export function createConfettiParticles(count: number, width: number, height: number): ConfettiParticle[] {
+export function createConfettiParticles(
+  count: number,
+  width: number,
+  height: number,
+): ConfettiParticle[] {
   const particles: ConfettiParticle[] = [];
   const originLeft = width * 0.2;
   const originRight = width * 0.8;
@@ -35,7 +39,7 @@ export function createConfettiParticles(count: number, width: number, height: nu
     const originY = height * 0.25;
     const angle = isLeft
       ? -Math.PI / 4 + (Math.random() - 0.5) * 0.7
-      : -3 * Math.PI / 4 + (Math.random() - 0.5) * 0.7;
+      : (-3 * Math.PI) / 4 + (Math.random() - 0.5) * 0.7;
     const speed = 7 + Math.random() * 9;
     const shapeRandom = Math.random();
     const shape = shapeRandom > 0.6 ? 'rect' : shapeRandom > 0.3 ? 'circle' : 'strip';
@@ -149,9 +153,6 @@ export function ConfettiCanvas({
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none fixed inset-0 z-50 h-full w-full"
-    />
+    <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-50 h-full w-full" />
   );
 }

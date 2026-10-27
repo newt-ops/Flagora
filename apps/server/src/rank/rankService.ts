@@ -9,10 +9,7 @@ import {
   getUtcSeasonString,
   getRankedLeaderboardKey,
 } from '@flagora/shared';
-import {
-  getTopLeaderboard,
-  getPlayerLeaderboardRank,
-} from '../leaderboard/leaderboardService.js';
+import { getTopLeaderboard, getPlayerLeaderboardRank } from '../leaderboard/leaderboardService.js';
 import { getRedis } from '../db/redis.js';
 
 function getSafeRedis(redis?: RedisClient | null): RedisClient | null {
@@ -71,12 +68,10 @@ export async function ensureCurrentSeason(
 
     if (finalRank === null) {
       try {
-        const higherCount = await db
-          .collection<PlayerProfile>('profiles')
-          .countDocuments({
-            currentSeason: lastSeason,
-            battleRating: { $gt: finalRating },
-          });
+        const higherCount = await db.collection<PlayerProfile>('profiles').countDocuments({
+          currentSeason: lastSeason,
+          battleRating: { $gt: finalRating },
+        });
         finalRank = higherCount + 1;
       } catch {
         finalRank = null;
@@ -91,11 +86,13 @@ export async function ensureCurrentSeason(
       archivedAt: now,
     };
 
-    await db.collection<SeasonResult>('season_results').updateOne(
-      { telegramUserId: profile.telegramUserId, season: lastSeason },
-      { $set: seasonResult },
-      { upsert: true },
-    );
+    await db
+      .collection<SeasonResult>('season_results')
+      .updateOne(
+        { telegramUserId: profile.telegramUserId, season: lastSeason },
+        { $set: seasonResult },
+        { upsert: true },
+      );
 
     await db.collection<PlayerProfile>('profiles').updateOne(
       { telegramUserId: profile.telegramUserId },
@@ -147,9 +144,7 @@ export async function processBattleRatingUpdate(
   season: string;
   archivedPreviousSeason?: SeasonResult | null;
 }> {
-  const rawProfile = await db
-    .collection<PlayerProfile>('profiles')
-    .findOne({ telegramUserId });
+  const rawProfile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId });
 
   if (!rawProfile) {
     const defaultSeason = getUtcSeasonString(now);
@@ -184,11 +179,7 @@ export async function processBattleRatingUpdate(
   const effectiveRedis = getSafeRedis(redis);
   if (effectiveRedis) {
     try {
-      await effectiveRedis.zadd(
-        getRankedLeaderboardKey(season),
-        newRating,
-        String(telegramUserId),
-      );
+      await effectiveRedis.zadd(getRankedLeaderboardKey(season), newRating, String(telegramUserId));
     } catch {
       void 0;
     }
@@ -209,9 +200,7 @@ export async function getRankStatus(
   now: Date = new Date(),
 ): Promise<RankStatusResponse> {
   const currentSeason = getUtcSeasonString(now);
-  const rawProfile = await db
-    .collection<PlayerProfile>('profiles')
-    .findOne({ telegramUserId });
+  const rawProfile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId });
 
   if (!rawProfile) {
     return {
@@ -248,9 +237,7 @@ export async function getRankedLeaderboard(
   now: Date = new Date(),
 ): Promise<RankedLeaderboardResponse> {
   const season = getUtcSeasonString(now);
-  const rawProfile = await db
-    .collection<PlayerProfile>('profiles')
-    .findOne({ telegramUserId });
+  const rawProfile = await db.collection<PlayerProfile>('profiles').findOne({ telegramUserId });
 
   if (rawProfile) {
     await ensureCurrentSeason(rawProfile, db, redis, now);

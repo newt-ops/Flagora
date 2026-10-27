@@ -8,6 +8,9 @@ dist/
 !.env.example
 
 prompt/
+docs/
+load-tests/
+logo/
 
 .vscode/
 .idea/

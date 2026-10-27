@@ -46,10 +46,12 @@ export async function registerReferralSignup(
 
   try {
     await db.collection<Referral>('referrals').insertOne({ ...referral });
-    await db.collection<PlayerProfile>('profiles').updateOne(
-      { telegramUserId: newPlayerUserId, referredBy: null },
-      { $set: { referredBy: inviterUserId } },
-    );
+    await db
+      .collection<PlayerProfile>('profiles')
+      .updateOne(
+        { telegramUserId: newPlayerUserId, referredBy: null },
+        { $set: { referredBy: inviterUserId } },
+      );
     return referral;
   } catch (error: unknown) {
     const err = error as { code?: number; name?: string };
@@ -85,10 +87,12 @@ export async function processReferralOnFirstRun(
     return null;
   }
 
-  await db.collection<PlayerProfile>('profiles').updateOne(
-    { telegramUserId: newPlayerUserId },
-    { $inc: { pins: REFERRAL_NEW_PLAYER_PIN_REWARD } },
-  );
+  await db
+    .collection<PlayerProfile>('profiles')
+    .updateOne(
+      { telegramUserId: newPlayerUserId },
+      { $inc: { pins: REFERRAL_NEW_PLAYER_PIN_REWARD } },
+    );
 
   let isUnderCap = true;
   if (redis) {
@@ -102,10 +106,12 @@ export async function processReferralOnFirstRun(
   }
 
   if (isUnderCap) {
-    await db.collection<PlayerProfile>('profiles').updateOne(
-      { telegramUserId: updated.inviterTelegramUserId },
-      { $inc: { pins: REFERRAL_INVITER_PIN_REWARD, referralCount: 1 } },
-    );
+    await db
+      .collection<PlayerProfile>('profiles')
+      .updateOne(
+        { telegramUserId: updated.inviterTelegramUserId },
+        { $inc: { pins: REFERRAL_INVITER_PIN_REWARD, referralCount: 1 } },
+      );
 
     const newPlayerProfile = await db
       .collection<PlayerProfile>('profiles')

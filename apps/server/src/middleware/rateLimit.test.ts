@@ -2,11 +2,7 @@ import { describe, it, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import express, { type Request, type Response } from 'express';
-import {
-  rateLimit,
-  defaultRateLimitKey,
-  clearRateLimiters,
-} from './rateLimit.js';
+import { rateLimit, defaultRateLimitKey, clearRateLimiters } from './rateLimit.js';
 import type { AuthenticatedSessionRequest } from '../session/requireSession.js';
 
 describe('Rate Limiter Middleware', () => {

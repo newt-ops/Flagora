@@ -101,7 +101,10 @@ describe('continentMapHelpers', () => {
     it('returns unselected styling when another continent is selected', () => {
       const style = getContinentStyle('asia', false, 'europe');
       assert.equal(style.fill, 'var(--tg-theme-secondary-bg-color, #232e3c)');
-      assert.equal(style.stroke, 'var(--tg-theme-section-separator-color, rgba(128, 128, 128, 0.25))');
+      assert.equal(
+        style.stroke,
+        'var(--tg-theme-section-separator-color, rgba(128, 128, 128, 0.25))',
+      );
       assert.equal(style.strokeWidth, 0.5);
       assert.equal(style.isClickable, true);
       assert.ok(style.className.includes('cursor-pointer'));

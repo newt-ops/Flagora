@@ -7,7 +7,10 @@ import { MongoClient, type Db } from 'mongodb';
 import type { Redis as RedisClient } from 'ioredis';
 import type { PlayerProfile } from '@flagora/shared';
 import { initRedis, closeRedis } from '../db/redis.js';
-import { createRequireSessionMiddleware, type AuthenticatedSessionRequest } from '../session/requireSession.js';
+import {
+  createRequireSessionMiddleware,
+  type AuthenticatedSessionRequest,
+} from '../session/requireSession.js';
 import { createSessionToken } from '../session/tokens.js';
 import { createRun, finishRun } from '../game/runService.js';
 import type { GameRun } from '../game/runTypes.js';
@@ -39,32 +42,40 @@ describe('leaderboard backend and Redis integration', () => {
     app.use(express.json());
     const sessionMiddleware = createRequireSessionMiddleware(sessionSecret);
 
-    app.get('/api/leaderboard/top', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const rawLimit = Number(req.query.limit);
-        const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 50;
-        const entries = await getTopLeaderboard(limit, db, redis);
-        res.status(200).json(entries);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to fetch leaderboard';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
-
-    app.get('/api/leaderboard/me', sessionMiddleware, async (req: AuthenticatedSessionRequest, res) => {
-      try {
-        const telegramUserId = req.sessionUser?.telegramUserId;
-        if (!telegramUserId) {
-          res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
-          return;
+    app.get(
+      '/api/leaderboard/top',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const rawLimit = Number(req.query.limit);
+          const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 50;
+          const entries = await getTopLeaderboard(limit, db, redis);
+          res.status(200).json(entries);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to fetch leaderboard';
+          res.status(500).json({ error: 'Internal server error', message });
         }
-        const rankInfo = await getPlayerLeaderboardRank(telegramUserId, redis);
-        res.status(200).json(rankInfo);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to fetch player rank';
-        res.status(500).json({ error: 'Internal server error', message });
-      }
-    });
+      },
+    );
+
+    app.get(
+      '/api/leaderboard/me',
+      sessionMiddleware,
+      async (req: AuthenticatedSessionRequest, res) => {
+        try {
+          const telegramUserId = req.sessionUser?.telegramUserId;
+          if (!telegramUserId) {
+            res.status(401).json({ error: 'Unauthorized', message: 'Missing session user' });
+            return;
+          }
+          const rankInfo = await getPlayerLeaderboardRank(telegramUserId, redis);
+          res.status(200).json(rankInfo);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to fetch player rank';
+          res.status(500).json({ error: 'Internal server error', message });
+        }
+      },
+    );
 
     server = http.createServer(app);
     await new Promise<void>((resolve) => {
@@ -111,10 +122,12 @@ describe('leaderboard backend and Redis integration', () => {
     await updateLeaderboardScore(userId, 200, redis);
 
     const run1 = await createRun(userId, db);
-    await db.collection<GameRun>('runs').updateOne(
-      { runId: run1.runId },
-      { $set: { runningTotal: 600, startedAt: new Date(Date.now() - 60_000) } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne(
+        { runId: run1.runId },
+        { $set: { runningTotal: 600, startedAt: new Date(Date.now() - 60_000) } },
+      );
     const finish1 = await finishRun(run1.runId, userId, db, redis);
     assert.equal(finish1.bestScore, 600);
     assert.equal(finish1.isNewBest, true);
@@ -123,10 +136,12 @@ describe('leaderboard backend and Redis integration', () => {
     assert.equal(Number(scoreAfterHigh), 600);
 
     const run2 = await createRun(userId, db);
-    await db.collection<GameRun>('runs').updateOne(
-      { runId: run2.runId },
-      { $set: { runningTotal: 350, startedAt: new Date(Date.now() - 60_000) } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne(
+        { runId: run2.runId },
+        { $set: { runningTotal: 350, startedAt: new Date(Date.now() - 60_000) } },
+      );
     const finish2 = await finishRun(run2.runId, userId, db, redis);
     assert.equal(finish2.bestScore, 600);
     assert.equal(finish2.isNewBest, false);
@@ -253,10 +268,12 @@ describe('leaderboard backend and Redis integration', () => {
     } as unknown as RedisClient;
 
     const run = await createRun(userId, db);
-    await db.collection<GameRun>('runs').updateOne(
-      { runId: run.runId },
-      { $set: { runningTotal: 850, startedAt: new Date(Date.now() - 60_000) } },
-    );
+    await db
+      .collection<GameRun>('runs')
+      .updateOne(
+        { runId: run.runId },
+        { $set: { runningTotal: 850, startedAt: new Date(Date.now() - 60_000) } },
+      );
 
     const finish = await finishRun(run.runId, userId, db, failingRedis);
     assert.equal(finish.totalScore, 850);

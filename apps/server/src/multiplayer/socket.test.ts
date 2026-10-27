@@ -21,7 +21,6 @@ import type {
 
 const TEST_SECRET = 'multiplayer_socket_test_secret_32_characters_123';
 
-
 describe('multiplayer socket infrastructure', () => {
   let httpServer: http.Server;
   let serverUrl: string;
@@ -180,7 +179,8 @@ describe('multiplayer socket infrastructure', () => {
 
       let restUserId: number | undefined;
       const mockReq = {
-        header: (name: string) => (name.toLowerCase() === 'authorization' ? `Bearer ${token}` : undefined),
+        header: (name: string) =>
+          name.toLowerCase() === 'authorization' ? `Bearer ${token}` : undefined,
       } as unknown as AuthenticatedSessionRequest;
       const mockRes = {} as unknown as Response;
       restMiddleware(mockReq, mockRes, () => {
@@ -191,7 +191,12 @@ describe('multiplayer socket infrastructure', () => {
       const mockSocket = {
         handshake: { auth: { token } },
         data: {},
-      } as unknown as Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
+      } as unknown as Socket<
+        ClientToServerEvents,
+        ServerToClientEvents,
+        Record<string, never>,
+        SocketData
+      >;
       socketMiddleware(mockSocket, (err) => {
         assert.ifError(err);
         socketUserId = mockSocket.data.telegramUserId;
@@ -208,7 +213,8 @@ describe('multiplayer socket infrastructure', () => {
       let restStatus: number | undefined;
       let restMessage: string | undefined;
       const mockReq = {
-        header: (name: string) => (name.toLowerCase() === 'authorization' ? `Bearer ${expiredToken}` : undefined),
+        header: (name: string) =>
+          name.toLowerCase() === 'authorization' ? `Bearer ${expiredToken}` : undefined,
       } as unknown as AuthenticatedSessionRequest;
       const mockRes = {
         status: (code: number) => {
@@ -228,7 +234,12 @@ describe('multiplayer socket infrastructure', () => {
       const mockSocket = {
         handshake: { auth: { token: expiredToken } },
         data: {},
-      } as unknown as Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
+      } as unknown as Socket<
+        ClientToServerEvents,
+        ServerToClientEvents,
+        Record<string, never>,
+        SocketData
+      >;
       socketMiddleware(mockSocket, (err) => {
         socketError = err;
       });
@@ -244,7 +255,8 @@ describe('multiplayer socket infrastructure', () => {
       let restStatus: number | undefined;
       let restMessage: string | undefined;
       const mockReq = {
-        header: (name: string) => (name.toLowerCase() === 'authorization' ? `Bearer ${tamperedToken}` : undefined),
+        header: (name: string) =>
+          name.toLowerCase() === 'authorization' ? `Bearer ${tamperedToken}` : undefined,
       } as unknown as AuthenticatedSessionRequest;
       const mockRes = {
         status: (code: number) => {
@@ -264,7 +276,12 @@ describe('multiplayer socket infrastructure', () => {
       const mockSocket = {
         handshake: { auth: { token: tamperedToken } },
         data: {},
-      } as unknown as Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
+      } as unknown as Socket<
+        ClientToServerEvents,
+        ServerToClientEvents,
+        Record<string, never>,
+        SocketData
+      >;
       socketMiddleware(mockSocket, (err) => {
         socketError = err;
       });

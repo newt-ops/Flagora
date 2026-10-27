@@ -77,7 +77,9 @@ export async function saveStreak(
     if (used === 1) {
       await options.redis.expire(dailyKey, 86400 * 2);
     } else if (used > 1) {
-      const tomorrowMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      const tomorrowMidnight = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
+      );
       throw new RewardCapReachedError(
         telegramUserId,
         'streak-save',
@@ -90,9 +92,7 @@ export async function saveStreak(
   }
 
   const updateResult = await profilesCollection.findOneAndUpdate(
-    pinsCost > 0
-      ? { telegramUserId, pins: { $gte: pinsCost } }
-      : { telegramUserId },
+    pinsCost > 0 ? { telegramUserId, pins: { $gte: pinsCost } } : { telegramUserId },
     {
       $inc: pinsCost > 0 ? { pins: -pinsCost } : {},
       $set: {
@@ -103,7 +103,9 @@ export async function saveStreak(
     { returnDocument: 'after' },
   );
 
-  const updatedDoc = (updateResult && 'value' in updateResult ? updateResult.value : updateResult) as PlayerProfile | null;
+  const updatedDoc = (
+    updateResult && 'value' in updateResult ? updateResult.value : updateResult
+  ) as PlayerProfile | null;
   if (!updatedDoc) {
     throw new InsufficientPinsError('Insufficient pins to save streak');
   }

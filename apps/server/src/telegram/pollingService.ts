@@ -40,10 +40,14 @@ export function startTelegramPolling(
         process.stderr.write(`[Telegram Bot] Notice on deleteWebhook: ${delRes.description}\n`);
       }
     } catch (err) {
-      process.stderr.write(`[Telegram Bot] Warning: Failed to clean webhook before polling: ${String(err)}\n`);
+      process.stderr.write(
+        `[Telegram Bot] Warning: Failed to clean webhook before polling: ${String(err)}\n`,
+      );
     }
 
-    process.stdout.write('[Telegram Bot] Long-polling active. Listening for messages & commands...\n');
+    process.stdout.write(
+      '[Telegram Bot] Long-polling active. Listening for messages & commands...\n',
+    );
 
     let consecutiveErrors = 0;
 
@@ -80,7 +84,10 @@ export function startTelegramPolling(
         if (err?.name === 'AbortError') break;
 
         consecutiveErrors++;
-        const backoff = Math.min(30000, baseBackoff * Math.pow(2, Math.min(consecutiveErrors - 1, 4)));
+        const backoff = Math.min(
+          30000,
+          baseBackoff * Math.pow(2, Math.min(consecutiveErrors - 1, 4)),
+        );
         process.stderr.write(
           `[Telegram Bot] Polling error (${consecutiveErrors}): ${err?.message || String(err)}. Retrying in ${backoff}ms...\n`,
         );

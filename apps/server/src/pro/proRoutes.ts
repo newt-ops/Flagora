@@ -8,12 +8,12 @@ export const proRouter: Router = Router();
 proRouter.post('/create-invoice-link', async (req: AuthenticatedSessionRequest, res: Response) => {
   try {
     const priceAmount = Number(process.env.PRO_SUBSCRIPTION_STARS || 1);
-    
+
     if (!req.sessionUser) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
-    
+
     const payload = `pro_sub_${req.sessionUser.telegramUserId}_${Date.now()}`;
 
     const invoiceLink = await createInvoiceLink(
@@ -21,7 +21,7 @@ proRouter.post('/create-invoice-link', async (req: AuthenticatedSessionRequest, 
       'Get an official verified checkmark badge next to your name!',
       payload,
       'XTR',
-      [{ label: 'Flagora Pro — 1 month', amount: priceAmount }]
+      [{ label: 'Flagora Pro — 1 month', amount: priceAmount }],
     );
 
     if (!invoiceLink) {
@@ -44,13 +44,11 @@ proRouter.get('/status', async (req: AuthenticatedSessionRequest, res: Response)
     }
     const sub = await getSubscription(req.sessionUser.telegramUserId);
     const isActive = sub ? sub.status === 'active' && sub.currentPeriodEnd > new Date() : false;
-    
+
     res.json({
       isActive,
       currentPeriodEnd: sub?.currentPeriodEnd || null,
-      perks: [
-        'verified_badge',
-      ],
+      perks: ['verified_badge'],
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to get subscription status';

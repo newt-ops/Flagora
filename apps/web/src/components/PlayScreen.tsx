@@ -11,8 +11,8 @@ import {
   Globe,
   Sliders,
   Users,
-  Loader2,
 } from './icons.js';
+import { ButtonLoader } from './ButtonLoader.js';
 import type {
   PlayerProfile,
   DailyChallengeStatusResponse,
@@ -22,6 +22,7 @@ import type {
 import { getDisplayName } from '@flagora/shared';
 import { getDailyResultSummary } from './dailyChallengeHelpers.js';
 import { CustomGameModal, type CustomGameConfig } from './CustomGameModal.js';
+import { GroupBattleCustomModal, type GroupBattleCustomConfig } from './GroupBattleCustomModal.js';
 import { StreakSaveBanner } from './StreakSaveBanner.js';
 import { formatSeasonName } from './rankHelpers.js';
 import { VerifiedBadge } from './VerifiedBadge.js';
@@ -36,7 +37,7 @@ interface PlayScreenProps {
   onStartDaily: () => void;
   onChallengeFriend: () => void;
   onBattleFriend: () => void;
-  onStartGroupBattle?: () => void;
+  onStartGroupBattle?: (config: GroupBattleCustomConfig) => void;
   onStartCustomGame?: (config: CustomGameConfig) => void;
   onViewDailyLeaderboard: () => void;
   onNavigateToProfile: () => void;
@@ -74,6 +75,7 @@ export function PlayScreen({
   isStartingGroupBattle = false,
 }: PlayScreenProps) {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  const [isGroupCustomModalOpen, setIsGroupCustomModalOpen] = useState(false);
   const displayName = getDisplayName(profile);
   const firstName = profile.firstName || displayName;
   const initial = profile.firstName ? profile.firstName.charAt(0).toUpperCase() : 'P';
@@ -83,7 +85,7 @@ export function PlayScreen({
   const seasonName = formatSeasonName(rankStatus?.season);
 
   return (
-    <div className="flex w-full max-w-md mx-auto flex-col gap-4 text-tg-text pb-20">
+    <div className="flex w-full max-w-md mx-auto flex-col gap-4 text-tg-text pb-28">
       <div
         role="button"
         tabIndex={0}
@@ -104,9 +106,7 @@ export function PlayScreen({
                 className="h-10 w-10 rounded-full object-cover bg-tg-section"
               />
             ) : (
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text"
-              >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tg-button text-xl font-bold text-tg-button-text">
                 {initial}
               </div>
             )}
@@ -121,7 +121,9 @@ export function PlayScreen({
             <div className="flex items-center gap-2 text-xs text-tg-hint flex-wrap">
               <span>Level {profile.level}</span>
               <span>•</span>
-              <span className="font-semibold text-tg-button">{currentRating.toLocaleString()} Rating</span>
+              <span className="font-semibold text-tg-button">
+                {currentRating.toLocaleString()} Rating
+              </span>
               {profile.username && (
                 <span className="truncate">• @{profile.username.replace(/^@/, '')}</span>
               )}
@@ -155,14 +157,13 @@ export function PlayScreen({
         className="flex cursor-pointer items-center justify-between flex-wrap gap-2 rounded-2xl bg-tg-section px-4 py-2.5 shadow-none transition-all hover:opacity-95 active:scale-[0.99]"
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tg-button/10 text-tg-button"
-          >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tg-button/10 text-tg-button">
             <Trophy className="h-4 w-4" />
           </div>
           <div className="flex items-center gap-2 text-left min-w-0 flex-wrap">
             <span className="text-xs font-extrabold text-tg-text">
-              {currentRating.toLocaleString()} <span className="font-medium text-tg-hint">Battle Rating</span>
+              {currentRating.toLocaleString()}{' '}
+              <span className="font-medium text-tg-hint">Battle Rating</span>
             </span>
           </div>
         </div>
@@ -245,7 +246,7 @@ export function PlayScreen({
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-opacity hover:opacity-90 active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
             >
               {isStartingDaily ? (
-                <Loader2 className="h-4 w-4 animate-spin text-tg-button-text shrink-0" />
+                <ButtonLoader className="text-tg-button-text" />
               ) : (
                 <Play className="h-4 w-4 fill-current shrink-0" />
               )}
@@ -256,9 +257,7 @@ export function PlayScreen({
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-tg-hint">
-          Game Modes
-        </h2>
+        <h2 className="px-1 text-xs font-bold uppercase tracking-wider text-tg-hint">Game Modes</h2>
 
         <div className="rounded-2xl bg-tg-section p-4 shadow-sm">
           <div className="flex items-center justify-between">
@@ -268,7 +267,9 @@ export function PlayScreen({
               </div>
               <div className="text-left min-w-0">
                 <h3 className="text-sm font-bold text-tg-text truncate">Practice Solo</h3>
-                <p className="text-xs text-tg-hint truncate">60s speed blitz with combo multipliers</p>
+                <p className="text-xs text-tg-hint truncate">
+                  60s speed blitz with combo multipliers
+                </p>
               </div>
             </div>
           </div>
@@ -279,7 +280,7 @@ export function PlayScreen({
             className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
             {isStarting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+              <ButtonLoader className="text-tg-button-text" />
             ) : (
               <Play className="h-3.5 w-3.5 fill-current shrink-0" />
             )}
@@ -295,7 +296,9 @@ export function PlayScreen({
               </div>
               <div className="text-left min-w-0">
                 <h3 className="text-sm font-bold text-tg-text truncate">Custom Mode</h3>
-                <p className="text-xs text-tg-hint truncate">Choose continents, flag count & timer</p>
+                <p className="text-xs text-tg-hint truncate">
+                  Choose continents, flag count & timer
+                </p>
               </div>
             </div>
           </div>
@@ -328,7 +331,7 @@ export function PlayScreen({
             className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
             {isStartingBattle ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+              <ButtonLoader className="text-tg-button-text" />
             ) : (
               <Zap className="h-3.5 w-3.5 shrink-0" />
             )}
@@ -344,7 +347,9 @@ export function PlayScreen({
               </div>
               <div className="text-left min-w-0">
                 <h3 className="text-sm font-bold text-tg-text truncate">Duel a Friend</h3>
-                <p className="text-xs text-tg-hint truncate">Send a challenge score to any Telegram chat</p>
+                <p className="text-xs text-tg-hint truncate">
+                  Send a challenge score to any Telegram chat
+                </p>
               </div>
             </div>
           </div>
@@ -355,7 +360,7 @@ export function PlayScreen({
             className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
           >
             {isStartingChallenge ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+              <ButtonLoader className="text-tg-button-text" />
             ) : (
               <Swords className="h-3.5 w-3.5 shrink-0" />
             )}
@@ -371,23 +376,29 @@ export function PlayScreen({
                   <Users className="h-5 w-5 animate-float" />
                 </div>
                 <div className="text-left min-w-0">
-                  <h3 className="text-sm font-bold text-tg-text truncate">Group Battle (2–15 Players)</h3>
-                  <p className="text-xs text-tg-hint truncate">Host a multiplayer room for friends or groups</p>
+                  <h3 className="text-sm font-bold text-tg-text truncate">
+                    Group Battle (2–15 Players)
+                  </h3>
+                  <p className="text-xs text-tg-hint truncate">
+                    Host a multiplayer room for friends or groups
+                  </p>
                 </div>
               </div>
             </div>
             <button
               type="button"
-              onClick={onStartGroupBattle}
+              onClick={() => setIsGroupCustomModalOpen(true)}
               disabled={isStartingGroupBattle}
               className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-tg-button font-bold text-tg-button-text shadow-sm transition-all hover:opacity-90 active:scale-[0.98] active:opacity-75 disabled:pointer-events-none disabled:opacity-50"
             >
               {isStartingGroupBattle ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-tg-button-text shrink-0" />
+                <ButtonLoader className="text-tg-button-text" />
               ) : (
                 <Users className="h-3.5 w-3.5 shrink-0" />
               )}
-              <span>{isStartingGroupBattle ? 'Creating Group Lobby...' : 'Host Group Battle'}</span>
+              <span>
+                {isStartingGroupBattle ? 'Creating Group Lobby...' : 'Customize & Host Battle'}
+              </span>
             </button>
           </div>
         )}
@@ -401,6 +412,16 @@ export function PlayScreen({
           onStartCustomGame?.(config);
         }}
         loading={isStarting}
+      />
+
+      <GroupBattleCustomModal
+        isOpen={isGroupCustomModalOpen}
+        onClose={() => setIsGroupCustomModalOpen(false)}
+        onStart={(config) => {
+          setIsGroupCustomModalOpen(false);
+          onStartGroupBattle?.(config);
+        }}
+        loading={isStartingGroupBattle}
       />
     </div>
   );

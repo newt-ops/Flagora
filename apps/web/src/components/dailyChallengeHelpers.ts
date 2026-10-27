@@ -9,7 +9,9 @@ export function shouldShowPlayAgain(mode?: 'practice' | 'daily' | 'challenge' | 
   return mode === 'practice' || mode === 'custom' || mode === undefined;
 }
 
-export function shouldShowDailyLeaderboardButton(mode?: 'practice' | 'daily' | 'challenge' | 'custom'): boolean {
+export function shouldShowDailyLeaderboardButton(
+  mode?: 'practice' | 'daily' | 'challenge' | 'custom',
+): boolean {
   return mode === 'daily';
 }
 
@@ -39,7 +41,10 @@ export function getLeaderboardTitle(mode: 'global' | 'daily' | 'ranked'): string
   return 'Global Leaderboard';
 }
 
-export function getLeaderboardSubtitle(mode: 'global' | 'daily' | 'ranked', season?: string | null): string {
+export function getLeaderboardSubtitle(
+  mode: 'global' | 'daily' | 'ranked',
+  season?: string | null,
+): string {
   if (mode === 'daily') {
     return "Ranked by today's challenge score";
   }

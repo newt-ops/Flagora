@@ -1,10 +1,5 @@
 import { useState } from 'react';
-import {
-  Crown,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-} from './icons.js';
+import { Crown, Loader2, CheckCircle2, AlertCircle } from './icons.js';
 import { VerifiedBadge } from './VerifiedBadge.js';
 import { createProInvoiceLink } from '../api/client.js';
 import { openTelegramInvoice } from '../telegram/telegramWebApp.js';
@@ -145,7 +140,8 @@ export function ProUpgradeModal({
               <VerifiedBadge className="h-3.5 w-3.5 text-[#2AABEE]" />
             </p>
             <p className="text-xs text-tg-hint mt-0.5 leading-relaxed">
-              Stand out with an official blue checkmark badge next to your name across your Profile, Live 1v1 Battles, and Leaderboards.
+              Stand out with an official blue checkmark badge next to your name across your Profile,
+              Live 1v1 Battles, and Leaderboards.
             </p>
           </div>
         </div>
@@ -157,8 +153,8 @@ export function ProUpgradeModal({
             statusMessage.type === 'success'
               ? 'bg-tg-button/15 text-tg-button'
               : statusMessage.type === 'error'
-              ? 'bg-tg-destructive/15 text-tg-destructive'
-              : 'bg-tg-secondary-bg text-tg-hint'
+                ? 'bg-tg-destructive/15 text-tg-destructive'
+                : 'bg-tg-secondary-bg text-tg-hint'
           }`}
         >
           {statusMessage.type === 'success' ? (

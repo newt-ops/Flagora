@@ -12,12 +12,12 @@ import {
   STREAK_SAVE_PIN_COST,
 } from '@flagora/shared';
 import { initRedis, closeRedis } from '../db/redis.js';
-import { createRequireSessionMiddleware, type AuthenticatedSessionRequest } from '../session/requireSession.js';
-import { createSessionToken } from '../session/tokens.js';
 import {
-  getStreakStatus,
-  saveStreak,
-} from './streakSaveService.js';
+  createRequireSessionMiddleware,
+  type AuthenticatedSessionRequest,
+} from '../session/requireSession.js';
+import { createSessionToken } from '../session/tokens.js';
+import { getStreakStatus, saveStreak } from './streakSaveService.js';
 import {
   StreakNotAtRiskError,
   RewardCapReachedError,
@@ -140,7 +140,9 @@ describe('Ad-Free Streak-Save Backend', () => {
         for (const doc of docs) flagsMap.set(doc.isoCode, { ...doc });
         return { insertedCount: docs.length };
       },
-      bulkWrite: async (ops: Array<{ updateOne: { filter: { isoCode: string }; update: { $set: CountryFlag } } }>) => {
+      bulkWrite: async (
+        ops: Array<{ updateOne: { filter: { isoCode: string }; update: { $set: CountryFlag } } }>,
+      ) => {
         for (const op of ops) {
           flagsMap.set(op.updateOne.filter.isoCode, op.updateOne.update.$set);
         }
@@ -277,7 +279,10 @@ describe('Ad-Free Streak-Save Backend', () => {
     await redis.flushall();
   });
 
-  function createTestProfile(userId: number, overrides: Partial<PlayerProfile> = {}): PlayerProfile {
+  function createTestProfile(
+    userId: number,
+    overrides: Partial<PlayerProfile> = {},
+  ): PlayerProfile {
     const profile: PlayerProfile = {
       telegramUserId: userId,
       username: `user_${userId}`,
@@ -461,7 +466,7 @@ describe('Ad-Free Streak-Save Backend', () => {
         },
       });
       assert.equal(res.status, 400);
-      const data = await res.json() as { error: string };
+      const data = (await res.json()) as { error: string };
       assert.equal(data.error, 'Streak not at risk');
     });
 
@@ -482,7 +487,7 @@ describe('Ad-Free Streak-Save Backend', () => {
         },
       });
       assert.equal(res.status, 400);
-      const data = await res.json() as { error: string };
+      const data = (await res.json()) as { error: string };
       assert.equal(data.error, 'Insufficient pins');
     });
 
@@ -503,7 +508,7 @@ describe('Ad-Free Streak-Save Backend', () => {
         },
       });
       assert.equal(res.status, 200);
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         ok: boolean;
         saved: boolean;
         pinsDeducted: number;

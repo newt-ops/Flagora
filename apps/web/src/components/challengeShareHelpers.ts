@@ -12,20 +12,15 @@ export function getTelegramShareUrl(deepLink: string, text: string): string {
   return `https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent(text)}`;
 }
 
-export function shareChallenge(
-  challengeId: string,
-  score: number,
-  botUsername?: string,
-): void {
+export function shareChallenge(challengeId: string, score: number, botUsername?: string): void {
   const deepLink = getChallengeDeepLink(challengeId, botUsername);
   const text = formatChallengeShareText(score);
   const shareUrl = getTelegramShareUrl(deepLink, text);
 
-  const telegramWebApp = (
+  const telegramWebApp =
     typeof window !== 'undefined'
       ? (window as unknown as { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp
-      : undefined
-  );
+      : undefined;
 
   if (typeof telegramWebApp?.openTelegramLink === 'function') {
     telegramWebApp.openTelegramLink(shareUrl);

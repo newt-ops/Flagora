@@ -81,9 +81,7 @@ export function ConfirmationModal({
     >
       <div className="flex flex-col items-center text-center pt-2 pb-1">
         <AnimatedIcon type={resolvedIconType} size="lg" className="mb-3.5" />
-        <h3 className="text-base sm:text-lg font-bold text-tg-text leading-snug">
-          {title}
-        </h3>
+        <h3 className="text-base sm:text-lg font-bold text-tg-text leading-snug">{title}</h3>
         <p className="text-xs sm:text-sm text-tg-hint mt-1.5 max-w-xs leading-relaxed">
           {description}
         </p>
