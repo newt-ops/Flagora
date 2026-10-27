@@ -250,4 +250,19 @@ describe('Phase 9 Prompt 01: Database Indexing Audit', () => {
     assert.ok(battlePartial.status?.$in?.includes('expired'));
     assert.equal(battlePartial.status?.$in?.includes('completed'), false);
   });
+
+  it('throws an error when critical unique index creation encounters conflicting duplicate data', async () => {
+    const conflictDb = client.db('test-indexing-conflict');
+    await conflictDb.collection('profiles').insertOne({ telegramUserId: 12345 });
+    await conflictDb.collection('profiles').insertOne({ telegramUserId: 12345 });
+
+    await assert.rejects(
+      async () => {
+        await ensureIndexes(conflictDb);
+      },
+      (err: unknown) => {
+        return err instanceof Error;
+      },
+    );
+  });
 });

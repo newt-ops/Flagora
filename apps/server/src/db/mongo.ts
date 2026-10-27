@@ -1,4 +1,9 @@
-import { MongoClient, type Db } from 'mongodb';
+import {
+  MongoClient,
+  type Db,
+  type IndexSpecification,
+  type CreateIndexesOptions,
+} from 'mongodb';
 
 let client: MongoClient | null = null;
 let database: Db | null = null;
@@ -43,34 +48,55 @@ export async function initDatabase(uri: string): Promise<Db> {
   return database;
 }
 
+async function createCriticalIndex(
+  db: Db,
+  collectionName: string,
+  spec: IndexSpecification,
+  options?: CreateIndexesOptions,
+): Promise<void> {
+  try {
+    await db.collection(collectionName).createIndex(spec, options);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    process.stderr.write(
+      `Critical index failure on collection '${collectionName}' with spec ${JSON.stringify(spec)}: ${msg}\n`,
+    );
+    throw error;
+  }
+}
+
+async function createOptionalIndex(
+  db: Db,
+  collectionName: string,
+  spec: IndexSpecification,
+  options?: CreateIndexesOptions,
+): Promise<void> {
+  try {
+    await db.collection(collectionName).createIndex(spec, options);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    process.stderr.write(
+      `Warning: Optional index creation failed on '${collectionName}': ${msg}\n`,
+    );
+  }
+}
+
 export async function ensureIndexes(db: Db): Promise<void> {
-  const safeIndex = async (action: () => Promise<unknown>) => {
-    try {
-      await action();
-    } catch {
-      void 0;
-    }
-  };
+  await createCriticalIndex(db, 'profiles', { telegramUserId: 1 }, { unique: true });
+  await createOptionalIndex(db, 'profiles', { bestScore: -1 });
+  await createOptionalIndex(db, 'profiles', { currentSeason: 1, battleRating: -1 });
 
-  await safeIndex(() =>
-    db.collection('profiles').createIndex({ telegramUserId: 1 }, { unique: true }),
-  );
-  await safeIndex(() => db.collection('profiles').createIndex({ bestScore: -1 }));
-  await safeIndex(() =>
-    db.collection('profiles').createIndex({ currentSeason: 1, battleRating: -1 }),
-  );
+  await createCriticalIndex(db, 'runs', { runId: 1 }, { unique: true });
+  await createOptionalIndex(db, 'runs', { telegramUserId: 1, createdAt: -1 });
+  await createOptionalIndex(db, 'runs', {
+    mode: 1,
+    dailyDate: 1,
+    'finalScore.totalScore': -1,
+  });
 
-  await safeIndex(() => db.collection('runs').createIndex({ runId: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('runs').createIndex({ telegramUserId: 1, createdAt: -1 }));
-  await safeIndex(() =>
-    db.collection('runs').createIndex({ mode: 1, dailyDate: 1, 'finalScore.totalScore': -1 }),
-  );
-
-  await safeIndex(() =>
-    db.collection('challenges').createIndex({ challengeId: 1 }, { unique: true }),
-  );
-  await safeIndex(() => db.collection('challenges').createIndex({ challengerUserId: 1 }));
-  await safeIndex(() => db.collection('challenges').createIndex({ opponentUserId: 1 }));
+  await createCriticalIndex(db, 'challenges', { challengeId: 1 }, { unique: true });
+  await createOptionalIndex(db, 'challenges', { challengerUserId: 1 });
+  await createOptionalIndex(db, 'challenges', { opponentUserId: 1 });
 
   try {
     const existingChallengeIndexes = await db.collection('challenges').indexes();
@@ -80,25 +106,26 @@ export async function ensureIndexes(db: Db): Promise<void> {
     if (legacyExpiresAt) {
       await db.collection('challenges').dropIndex('expiresAt_1');
     }
-  } catch {
-    void 0;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`Notice: Failed to drop legacy challenge index: ${msg}\n`);
   }
 
-  await safeIndex(() =>
-    db.collection('challenges').createIndex(
-      { expiresAt: 1 },
-      {
-        expireAfterSeconds: 0,
-        partialFilterExpression: { status: { $in: ['pending', 'expired'] } },
-      },
-    ),
+  await createOptionalIndex(
+    db,
+    'challenges',
+    { expiresAt: 1 },
+    {
+      expireAfterSeconds: 0,
+      partialFilterExpression: { status: { $in: ['pending', 'expired'] } },
+    },
   );
 
-  await safeIndex(() => db.collection('battles').createIndex({ battleId: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('battles').createIndex({ challengerUserId: 1 }));
-  await safeIndex(() => db.collection('battles').createIndex({ opponentUserId: 1 }));
-  await safeIndex(() => db.collection('battles').createIndex({ chatId: 1, status: 1 }));
-  await safeIndex(() => db.collection('battles').createIndex({ 'participants.userId': 1 }));
+  await createCriticalIndex(db, 'battles', { battleId: 1 }, { unique: true });
+  await createOptionalIndex(db, 'battles', { challengerUserId: 1 });
+  await createOptionalIndex(db, 'battles', { opponentUserId: 1 });
+  await createOptionalIndex(db, 'battles', { chatId: 1, status: 1 });
+  await createOptionalIndex(db, 'battles', { 'participants.userId': 1 });
 
   try {
     const existingBattleIndexes = await db.collection('battles').indexes();
@@ -108,50 +135,45 @@ export async function ensureIndexes(db: Db): Promise<void> {
     if (legacyExpiresAt) {
       await db.collection('battles').dropIndex('expiresAt_1');
     }
-  } catch {
-    void 0;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`Notice: Failed to drop legacy battle index: ${msg}\n`);
   }
 
-  await safeIndex(() =>
-    db.collection('battles').createIndex(
-      { expiresAt: 1 },
-      {
-        expireAfterSeconds: 0,
-        partialFilterExpression: { status: { $in: ['waiting', 'expired'] } },
-      },
-    ),
+  await createOptionalIndex(
+    db,
+    'battles',
+    { expiresAt: 1 },
+    {
+      expireAfterSeconds: 0,
+      partialFilterExpression: { status: { $in: ['waiting', 'expired'] } },
+    },
   );
 
-  await safeIndex(() =>
-    db.collection('daily_challenge_definitions').createIndex({ date: 1 }, { unique: true }),
-  );
-  await safeIndex(() =>
-    db
-      .collection('daily_challenge_attempts')
-      .createIndex({ telegramUserId: 1, date: 1 }, { unique: true }),
+  await createCriticalIndex(db, 'daily_challenge_definitions', { date: 1 }, { unique: true });
+  await createCriticalIndex(
+    db,
+    'daily_challenge_attempts',
+    { telegramUserId: 1, date: 1 },
+    { unique: true },
   );
 
-  await safeIndex(() => db.collection('flags').createIndex({ isoCode: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('flags').createIndex({ tier: 1 }));
+  await createCriticalIndex(db, 'flags', { isoCode: 1 }, { unique: true });
+  await createOptionalIndex(db, 'flags', { tier: 1 });
 
-  await safeIndex(() => db.collection('cosmetics').createIndex({ id: 1 }, { unique: true }));
-  await safeIndex(() => db.collection('cosmetics').createIndex({ category: 1 }));
+  await createCriticalIndex(db, 'cosmetics', { id: 1 }, { unique: true });
+  await createOptionalIndex(db, 'cosmetics', { category: 1 });
 
-  await safeIndex(() =>
-    db.collection('subscriptions').createIndex({ telegramUserId: 1 }, { unique: true }),
+  await createCriticalIndex(db, 'subscriptions', { telegramUserId: 1 }, { unique: true });
+  await createCriticalIndex(
+    db,
+    'season_results',
+    { telegramUserId: 1, season: 1 },
+    { unique: true },
   );
-  await safeIndex(() =>
-    db.collection('season_results').createIndex({ telegramUserId: 1, season: 1 }, { unique: true }),
-  );
-  await safeIndex(() =>
-    db.collection('processed_payments').createIndex({ chargeId: 1 }, { unique: true }),
-  );
-  await safeIndex(() =>
-    db.collection('referrals').createIndex({ newPlayerTelegramUserId: 1 }, { unique: true }),
-  );
-  await safeIndex(() =>
-    db.collection('referrals').createIndex({ inviterTelegramUserId: 1, status: 1 }),
-  );
+  await createCriticalIndex(db, 'processed_payments', { chargeId: 1 }, { unique: true });
+  await createCriticalIndex(db, 'referrals', { newPlayerTelegramUserId: 1 }, { unique: true });
+  await createOptionalIndex(db, 'referrals', { inviterTelegramUserId: 1, status: 1 });
 }
 
 export function getDatabase(): Db {

@@ -40,6 +40,42 @@ import {
 export interface SocketServerOptions {
   countdownDelayMs?: number;
   redis?: RedisClient | null;
+  allowedOrigins?: string[];
+}
+
+export function isAllowedSocketOrigin(origin?: string, customOrigins?: string[]): boolean {
+  if (!origin) {
+    return true;
+  }
+
+  const configuredClient =
+    process.env.CLIENT_URL ||
+    process.env.FRONTEND_URL ||
+    process.env.MINI_APP_URL ||
+    'https://flagora-delta.vercel.app';
+
+  const allowedOrigins = new Set([
+    configuredClient,
+    'https://flagora-delta.vercel.app',
+    'https://web.telegram.org',
+    'https://webk.telegram.org',
+    'https://webz.telegram.org',
+    ...(customOrigins ?? []),
+  ]);
+
+  if (allowedOrigins.has(origin)) {
+    return true;
+  }
+
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    (/^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+      /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin))
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 export function initSocketServer(
@@ -55,7 +91,14 @@ export function initSocketServer(
     SocketData
   >(httpServer, {
     cors: {
-      origin: '*',
+      origin: (requestOrigin, callback) => {
+        if (isAllowedSocketOrigin(requestOrigin, options?.allowedOrigins)) {
+          callback(null, true);
+        } else {
+          callback(new Error(`CORS origin ${requestOrigin} not allowed`));
+        }
+      },
+      credentials: true,
       methods: ['GET', 'POST'],
     },
   });

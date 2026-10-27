@@ -546,5 +546,87 @@ describe('Ad-Free Streak-Save Backend', () => {
       assert.equal(finishRes.currentStreak, 7);
       assert.equal(finishRes.streakChange, 'incremented');
     });
+
+    it('rolls back Redis daily key when MongoDB update throws an error', async () => {
+      const fixedNow = new Date('2026-09-08T12:00:00Z');
+      const todayStr = getUtcDateString(fixedNow);
+      createTestProfile(901, {
+        pins: 100,
+        currentStreak: 5,
+        lastPlayedDate: '2026-09-06',
+      });
+
+      const failingDb = {
+        collection: (name: string) => {
+          if (name === 'profiles') {
+            return {
+              findOne: async () => profilesMap.get(901),
+              findOneAndUpdate: async () => {
+                throw new Error('Database write failure');
+              },
+            };
+          }
+          if (name === 'subscriptions') {
+            return { findOne: async () => null };
+          }
+          return db.collection(name);
+        },
+      } as unknown as Db;
+
+      await assert.rejects(
+        async () => {
+          await saveStreak(901, failingDb, { redis, now: fixedNow });
+        },
+        {
+          message: 'Database write failure',
+        },
+      );
+
+      const dailyKey = `streak_save:daily:901:${todayStr}`;
+      const count = await redis.get(dailyKey);
+      assert.equal(count, null);
+
+      const retryRes = await saveStreak(901, db, { redis, now: fixedNow });
+      assert.equal(retryRes.ok, true);
+      assert.equal(retryRes.saved, true);
+    });
+
+    it('rolls back Redis daily key when findOneAndUpdate returns null due to insufficient pins race', async () => {
+      const fixedNow = new Date('2026-09-08T12:00:00Z');
+      const todayStr = getUtcDateString(fixedNow);
+      createTestProfile(902, {
+        pins: 50,
+        currentStreak: 5,
+        lastPlayedDate: '2026-09-06',
+      });
+
+      const failingDb = {
+        collection: (name: string) => {
+          if (name === 'profiles') {
+            return {
+              findOne: async () => profilesMap.get(902),
+              findOneAndUpdate: async () => null,
+            };
+          }
+          if (name === 'subscriptions') {
+            return { findOne: async () => null };
+          }
+          return db.collection(name);
+        },
+      } as unknown as Db;
+
+      await assert.rejects(
+        async () => {
+          await saveStreak(902, failingDb, { redis, now: fixedNow });
+        },
+        (err: unknown) => {
+          return err instanceof InsufficientPinsError;
+        },
+      );
+
+      const dailyKey = `streak_save:daily:902:${todayStr}`;
+      const count = await redis.get(dailyKey);
+      assert.equal(count, null);
+    });
   });
 });

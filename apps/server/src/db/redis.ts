@@ -30,14 +30,22 @@ export async function initRedis(url: string): Promise<RedisClient> {
     return redisClient;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown Redis connection error';
-    process.stderr.write(
-      `Warning: Failed to connect to Redis (${message}). Falling back to in-memory store.\n`,
-    );
     try {
       client.disconnect();
     } catch {
       void 0;
     }
+
+    const allowMemoryFallback =
+      process.env.NODE_ENV !== 'production' || process.env.ALLOW_MEMORY_REDIS === 'true';
+
+    if (!allowMemoryFallback) {
+      throw new Error(`Critical Redis connection failure in production: ${message}`);
+    }
+
+    process.stderr.write(
+      `Warning: Failed to connect to Redis (${message}). Falling back to in-memory store in non-production environment.\n`,
+    );
     const { default: RedisMock } = await import('ioredis-mock');
     redisClient = new RedisMock() as unknown as RedisClient;
     return redisClient;

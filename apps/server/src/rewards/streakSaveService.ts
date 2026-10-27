@@ -71,11 +71,15 @@ export async function saveStreak(
     throw new InsufficientPinsError('Insufficient pins to save streak');
   }
 
+  let redisKeyIncremented = false;
+  let dailyKey = '';
+
   if (options?.redis) {
-    const dailyKey = `streak_save:daily:${telegramUserId}:${todayStr}`;
+    dailyKey = `streak_save:daily:${telegramUserId}:${todayStr}`;
     const used = await options.redis.incr(dailyKey);
     if (used === 1) {
       await options.redis.expire(dailyKey, 86400 * 2);
+      redisKeyIncremented = true;
     } else if (used > 1) {
       const tomorrowMidnight = new Date(
         Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
@@ -91,23 +95,35 @@ export async function saveStreak(
     }
   }
 
-  const updateResult = await profilesCollection.findOneAndUpdate(
-    pinsCost > 0 ? { telegramUserId, pins: { $gte: pinsCost } } : { telegramUserId },
-    {
-      $inc: pinsCost > 0 ? { pins: -pinsCost } : {},
-      $set: {
-        lastPlayedDate: yesterdayStr,
-        updatedAt: new Date(),
+  let updatedDoc: PlayerProfile | null = null;
+  try {
+    const updateResult = await profilesCollection.findOneAndUpdate(
+      pinsCost > 0 ? { telegramUserId, pins: { $gte: pinsCost } } : { telegramUserId },
+      {
+        $inc: pinsCost > 0 ? { pins: -pinsCost } : {},
+        $set: {
+          lastPlayedDate: yesterdayStr,
+          updatedAt: new Date(),
+        },
       },
-    },
-    { returnDocument: 'after' },
-  );
+      { returnDocument: 'after' },
+    );
 
-  const updatedDoc = (
-    updateResult && 'value' in updateResult ? updateResult.value : updateResult
-  ) as PlayerProfile | null;
-  if (!updatedDoc) {
-    throw new InsufficientPinsError('Insufficient pins to save streak');
+    updatedDoc = (
+      updateResult && 'value' in updateResult ? updateResult.value : updateResult
+    ) as PlayerProfile | null;
+    if (!updatedDoc) {
+      throw new InsufficientPinsError('Insufficient pins to save streak');
+    }
+  } catch (error) {
+    if (redisKeyIncremented && options?.redis && dailyKey) {
+      try {
+        await options.redis.del(dailyKey);
+      } catch {
+        void 0;
+      }
+    }
+    throw error;
   }
 
   const newPins = updatedDoc.pins ?? 0;

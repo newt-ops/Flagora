@@ -290,5 +290,16 @@ describe('multiplayer socket infrastructure', () => {
       assert.ok(restMessage?.includes('invalid'));
       assert.ok(socketError?.message.includes('invalid'));
     });
+
+    it('verifies origin filtering via isAllowedSocketOrigin', async () => {
+      const { isAllowedSocketOrigin } = await import('./socketServer.js');
+      assert.equal(isAllowedSocketOrigin(undefined), true);
+      assert.equal(isAllowedSocketOrigin('https://web.telegram.org'), true);
+      assert.equal(isAllowedSocketOrigin('https://webk.telegram.org'), true);
+      assert.equal(isAllowedSocketOrigin('https://webz.telegram.org'), true);
+      assert.equal(isAllowedSocketOrigin('https://flagora-delta.vercel.app'), true);
+      assert.equal(isAllowedSocketOrigin('http://localhost:5173'), true);
+      assert.equal(isAllowedSocketOrigin('https://malicious-attacker.com'), false);
+    });
   });
 });
