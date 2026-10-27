@@ -57,34 +57,28 @@ describe('Phase 10 Prompt 03: Pro Perks Backend', () => {
             !Array.isArray(pinnedIsoCodes) ||
             pinnedIsoCodes.some((code) => typeof code !== 'string')
           ) {
-            res
-              .status(400)
-              .json({
-                error: 'Bad request',
-                message: 'pinnedIsoCodes must be an array of strings',
-              });
+            res.status(400).json({
+              error: 'Bad request',
+              message: 'pinnedIsoCodes must be an array of strings',
+            });
             return;
           }
 
           const isPro = await hasActiveSubscription(telegramUserId, db);
           if (!isPro) {
-            res
-              .status(403)
-              .json({
-                error: 'Forbidden',
-                message: 'Active Pro subscription required to pin flags',
-              });
+            res.status(403).json({
+              error: 'Forbidden',
+              message: 'Active Pro subscription required to pin flags',
+            });
             return;
           }
 
           const updated = await updatePinnedFlags(telegramUserId, pinnedIsoCodes, db);
-          res
-            .status(200)
-            .json({
-              success: true,
-              pinnedIsoCodes: updated.pinnedIsoCodes ?? [],
-              profile: updated,
-            });
+          res.status(200).json({
+            success: true,
+            pinnedIsoCodes: updated.pinnedIsoCodes ?? [],
+            profile: updated,
+          });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to update pinned flags';
           res.status(500).json({ error: 'Internal server error', message });

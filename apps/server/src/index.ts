@@ -310,12 +310,10 @@ async function bootstrap() {
           pinnedIsoCodes.length > 10 ||
           pinnedIsoCodes.some((code) => typeof code !== 'string' || code.length !== 2)
         ) {
-          res
-            .status(400)
-            .json({
-              error: 'Bad request',
-              message: 'pinnedIsoCodes must be an array of at most 10 2-letter country codes',
-            });
+          res.status(400).json({
+            error: 'Bad request',
+            message: 'pinnedIsoCodes must be an array of at most 10 2-letter country codes',
+          });
           return;
         }
 
