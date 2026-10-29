@@ -51,15 +51,61 @@ export async function hasEarlyAccess(
   return hasActiveSubscription(telegramUserId, db);
 }
 
+export interface ProcessedPayment {
+  chargeId: string;
+  telegramUserId: number;
+  amount?: number;
+  currency?: string;
+  payload?: string;
+  createdAt: Date;
+}
+
 export async function processSuccessfulPayment(
   telegramUserId: number,
   telegramChargeId: string,
   db?: Db,
+  details?: {
+    amount?: number;
+    currency?: string;
+    payload?: string;
+  },
 ): Promise<Subscription> {
-  const collection = getCollection(db);
-  const existingSub = await getSubscription(telegramUserId, db);
+  const targetDb = db ?? getDatabase();
+  const collection = getCollection(targetDb);
   const now = new Date();
 
+  const paymentsCol = targetDb.collection<ProcessedPayment>('processed_payments');
+  try {
+    await paymentsCol.insertOne({
+      chargeId: telegramChargeId,
+      telegramUserId,
+      amount: details?.amount,
+      currency: details?.currency,
+      payload: details?.payload,
+      createdAt: now,
+    });
+  } catch (err: unknown) {
+    const isDuplicate =
+      typeof err === 'object' &&
+      err !== null &&
+      (('code' in err && (err as { code: number }).code === 11000) ||
+        ('message' in err && String((err as { message: string }).message).includes('E11000')));
+
+    if (isDuplicate) {
+      let existing = await getSubscription(telegramUserId, targetDb);
+      if (!existing) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        existing = await getSubscription(telegramUserId, targetDb);
+      }
+      if (existing && existing.telegramChargeId === telegramChargeId) {
+        return existing;
+      }
+    } else {
+      throw err;
+    }
+  }
+
+  const existingSub = await getSubscription(telegramUserId, targetDb);
   let newPeriodEnd: Date;
   if (existingSub && existingSub.currentPeriodEnd > now) {
     newPeriodEnd = new Date(existingSub.currentPeriodEnd);

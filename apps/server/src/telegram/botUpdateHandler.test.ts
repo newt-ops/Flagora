@@ -200,4 +200,64 @@ describe('Telegram Bot Update Handler', () => {
     assert.ok(answerReq);
     assert.equal(answerReq.body.ok, true);
   });
+
+  it('rejects pre_checkout_query with invalid currency, amount, or user payload mismatch', async () => {
+    receivedRequests.length = 0;
+    const invalidCurrencyUpdate = {
+      update_id: 402,
+      pre_checkout_query: {
+        id: 'pcq_invalid_curr',
+        currency: 'USD',
+        total_amount: 100,
+        invoice_payload: 'pro_sub_100',
+      },
+    };
+
+    await handleTelegramUpdate(invalidCurrencyUpdate, db, {
+      botToken: 'mock-bot-token',
+      apiBaseUrl: mockServerUrl,
+    });
+    const currReq = receivedRequests.find((r) => r.url?.includes('/answerPreCheckoutQuery'));
+    assert.ok(currReq);
+    assert.equal(currReq.body.ok, false);
+
+    receivedRequests.length = 0;
+    const invalidAmountUpdate = {
+      update_id: 403,
+      pre_checkout_query: {
+        id: 'pcq_invalid_amt',
+        currency: 'XTR',
+        total_amount: -10,
+        invoice_payload: 'pro_sub_100',
+      },
+    };
+
+    await handleTelegramUpdate(invalidAmountUpdate, db, {
+      botToken: 'mock-bot-token',
+      apiBaseUrl: mockServerUrl,
+    });
+    const amtReq = receivedRequests.find((r) => r.url?.includes('/answerPreCheckoutQuery'));
+    assert.ok(amtReq);
+    assert.equal(amtReq.body.ok, false);
+
+    receivedRequests.length = 0;
+    const mismatchUserUpdate = {
+      update_id: 404,
+      pre_checkout_query: {
+        id: 'pcq_mismatch',
+        from: { id: 12345 },
+        currency: 'XTR',
+        total_amount: 100,
+        invoice_payload: 'pro_sub_99999_timestamp',
+      },
+    };
+
+    await handleTelegramUpdate(mismatchUserUpdate, db, {
+      botToken: 'mock-bot-token',
+      apiBaseUrl: mockServerUrl,
+    });
+    const mismatchReq = receivedRequests.find((r) => r.url?.includes('/answerPreCheckoutQuery'));
+    assert.ok(mismatchReq);
+    assert.equal(mismatchReq.body.ok, false);
+  });
 });

@@ -118,7 +118,10 @@ export async function saveStreak(
   } catch (error) {
     if (redisKeyIncremented && options?.redis && dailyKey) {
       try {
-        await options.redis.del(dailyKey);
+        const remaining = await options.redis.decr(dailyKey);
+        if (remaining <= 0) {
+          await options.redis.del(dailyKey);
+        }
       } catch {
         void 0;
       }

@@ -447,17 +447,26 @@ export async function handleTelegramUpdate(
     // 2. Pre-checkout query handling (Telegram Stars payments)
     if (update.pre_checkout_query) {
       const query = update.pre_checkout_query;
-      const isStars = !query.currency || query.currency === 'XTR';
+      const isStars = query.currency === 'XTR';
+      const hasValidAmount =
+        query.total_amount === undefined ||
+        (typeof query.total_amount === 'number' && query.total_amount > 0);
+      const payload = query.invoice_payload;
+      const userId = query.from?.id;
       const isProPayload =
-        !query.invoice_payload ||
-        (typeof query.invoice_payload === 'string' && query.invoice_payload.startsWith('pro_sub_'));
-      if (isStars && isProPayload) {
+        typeof payload === 'string' &&
+        payload.startsWith('pro_sub_') &&
+        (payload.split('_').length < 3 ||
+          isNaN(Number(payload.split('_')[2])) ||
+          Number(payload.split('_')[2]) === userId);
+
+      if (isStars && hasValidAmount && isProPayload) {
         await answerPreCheckoutQuery(query.id, true, undefined, botToken, apiBaseUrl);
       } else {
         await answerPreCheckoutQuery(
           query.id,
           false,
-          'Invalid currency or payment payload',
+          'Invalid currency, amount, or payment payload',
           botToken,
           apiBaseUrl,
         );
@@ -467,7 +476,6 @@ export async function handleTelegramUpdate(
 
     const message = update.message;
 
-    // 3. New chat members (Bot added to group)
     const newMembers =
       message?.new_chat_members ||
       (message?.new_chat_participant ? [message.new_chat_participant] : []);
@@ -496,18 +504,28 @@ export async function handleTelegramUpdate(
       }
     }
 
-    // 4. Successful Stars Payment
     if (message?.successful_payment) {
       const payment = message.successful_payment;
       const userId = Number(message.from?.id);
-      const isStars = !payment.currency || payment.currency === 'XTR';
+      const isStars = payment.currency === 'XTR';
+      const hasValidAmount =
+        payment.total_amount === undefined ||
+        (typeof payment.total_amount === 'number' && payment.total_amount > 0);
+      const payload = payment.invoice_payload;
       const isProPayload =
-        !payment.invoice_payload ||
-        (typeof payment.invoice_payload === 'string' &&
-          payment.invoice_payload.startsWith('pro_sub_'));
+        typeof payload === 'string' &&
+        payload.startsWith('pro_sub_') &&
+        (payload.split('_').length < 3 ||
+          isNaN(Number(payload.split('_')[2])) ||
+          Number(payload.split('_')[2]) === userId);
+      const chargeId = payment.telegram_payment_charge_id;
 
-      if (isStars && isProPayload && userId) {
-        await processSuccessfulPayment(userId, payment.telegram_payment_charge_id, db);
+      if (isStars && hasValidAmount && isProPayload && chargeId && userId) {
+        await processSuccessfulPayment(userId, chargeId, db, {
+          amount: payment.total_amount,
+          currency: payment.currency,
+          payload: payment.invoice_payload,
+        });
 
         await sendTelegramMessage({
           chatId: userId,

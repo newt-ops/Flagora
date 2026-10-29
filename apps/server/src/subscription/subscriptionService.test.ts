@@ -23,6 +23,7 @@ describe('Subscription Service', () => {
 
   beforeEach(async () => {
     await db.collection('subscriptions').deleteMany({});
+    await db.collection('processed_payments').deleteMany({});
   });
 
   it('returns false for hasActiveSubscription when no subscription exists', async () => {
@@ -69,5 +70,51 @@ describe('Subscription Service', () => {
 
     const active = await hasActiveSubscription(12345);
     assert.equal(active, false);
+  });
+
+  it('processes payment idempotently when identical chargeId is delivered multiple times', async () => {
+    const firstSub = await processSuccessfulPayment(12345, 'charge_dup_1', db, {
+      amount: 250,
+      currency: 'XTR',
+      payload: 'pro_sub_12345_1',
+    });
+
+    const secondSub = await processSuccessfulPayment(12345, 'charge_dup_1', db, {
+      amount: 250,
+      currency: 'XTR',
+      payload: 'pro_sub_12345_1',
+    });
+
+    assert.equal(secondSub.currentPeriodEnd.getTime(), firstSub.currentPeriodEnd.getTime());
+    assert.equal(secondSub.telegramChargeId, 'charge_dup_1');
+
+    const paymentRecords = await db
+      .collection('processed_payments')
+      .find({ chargeId: 'charge_dup_1' })
+      .toArray();
+    assert.equal(paymentRecords.length, 1);
+    assert.equal(paymentRecords[0].amount, 250);
+    assert.equal(paymentRecords[0].currency, 'XTR');
+  });
+
+  it('handles concurrent delivery of the same payment chargeId idempotently', async () => {
+    const [sub1, sub2] = await Promise.all([
+      processSuccessfulPayment(777, 'charge_concurrent', db, {
+        amount: 250,
+        currency: 'XTR',
+        payload: 'pro_sub_777_1',
+      }),
+      processSuccessfulPayment(777, 'charge_concurrent', db, {
+        amount: 250,
+        currency: 'XTR',
+        payload: 'pro_sub_777_1',
+      }),
+    ]);
+
+    assert.equal(sub1.currentPeriodEnd.getTime(), sub2.currentPeriodEnd.getTime());
+    const count = await db
+      .collection('processed_payments')
+      .countDocuments({ chargeId: 'charge_concurrent' });
+    assert.equal(count, 1);
   });
 });

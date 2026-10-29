@@ -1,9 +1,4 @@
-import {
-  MongoClient,
-  type Db,
-  type IndexSpecification,
-  type CreateIndexesOptions,
-} from 'mongodb';
+import { MongoClient, type Db, type IndexSpecification, type CreateIndexesOptions } from 'mongodb';
 
 let client: MongoClient | null = null;
 let database: Db | null = null;
